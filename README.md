@@ -71,4 +71,7 @@ This project is proprietary and maintained by Demirti Technologies Limited. © 2
 
 ## 🌐 Live Website
 
-Visit our website: [Demirti Technologies Training](https://iamdejman.github.io/demirti-web) 
+The website is deployed on multiple platforms:
+
+- Vercel (Primary): [demirti-web.vercel.app](https://demirti-web.vercel.app)
+- GitHub Pages: [iamdejman.github.io/demirti-web](https://iamdejman.github.io/demirti-web) 

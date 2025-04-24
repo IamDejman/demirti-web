@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVERSE | Demirti's Digital Training School</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --data-science-accent: #006D77; /* Deep teal */
+            --tpm-accent: #E76F51; /* Vibrant orange */
+            --gray-light: #F5F5F5;
+            --gray-medium: #E0E0E0;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--black);
+            background-color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header & Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--white);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--black);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            opacity: 0.7;
+        }
+
+        .nav-links a.active {
+            font-weight: 600;
+            position: relative;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--black);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            background-color: var(--white);
+            padding-top: 80px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero-logo {
+            height: 80px;
+            margin-bottom: 30px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--black);
+            color: var(--white);
+            padding: 15px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* About Section */
+        .about {
+            padding: 100px 0;
+            background-color: var(--gray-light);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .about-text p {
+            margin-bottom: 20px;
+        }
+
+        /* Tracks Overview */
+        .tracks-overview {
+            padding: 100px 0;
+        }
+
+        .tracks-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .track-card {
+            padding: 40px;
+            border-radius: 8px;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .track-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .data-science-card {
+            background-color: rgba(0, 109, 119, 0.1);
+            border: 2px solid var(--data-science-accent);
+        }
+
+        .tpm-card {
+            background-color: rgba(231, 111, 81, 0.1);
+            border: 2px solid var(--tpm-accent);
+        }
+
+        .track-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .track-card p {
+            margin-bottom: 30px;
+        }
+
+        .track-button {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .data-science-button {
+            background-color: var(--data-science-accent);
+            color: var(--white);
+        }
+
+        .tpm-button {
+            background-color: var(--tpm-accent);
+            color: var(--white);
+        }
+
+        /* Track Details Sections */
+        .track-details {
+            padding: 100px 0;
+        }
+
+        .data-science-details {
+            background-color: rgba(0, 109, 119, 0.05);
+        }
+
+        .tpm-details {
+            background-color: rgba(231, 111, 81, 0.05);
+        }
+
+        .track-details-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .track-details-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+        }
+
+        .track-details-content h3 {
+            font-size: 1.5rem;
+            margin: 25px 0 15px;
+        }
+
+        .track-details-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .track-details-content li {
+            margin-bottom: 10px;
+        }
+
+        /* Instructors Section */
+        .instructors {
+            padding: 100px 0;
+            background-color: var(--white);
+        }
+
+        .instructors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .instructor-card {
+            text-align: center;
+        }
+
+        .instructor-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            filter: grayscale(100%);
+            transition: var(--transition);
+        }
+
+        .instructor-card:hover .instructor-image {
+            filter: grayscale(0);
+        }
+
+        .instructor-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .instructor-card p {
+            font-size: 0.9rem;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 100px 0;
+            background-color: var(--gray-light);
+        }
+
+        .testimonials-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            padding: 30px;
+            margin-bottom: 30px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .testimonial-text::before {
+            content: '"';
+            font-size: 4rem;
+            position: absolute;
+            left: -20px;
+            top: -20px;
+            opacity: 0.1;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+        }
+
+        /* Admissions Section */
+        .admissions {
+            padding: 100px 0;
+        }
+
+        .admissions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .process-steps {
+            counter-reset: step-counter;
+        }
+
+        .process-step {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 30px;
+        }
+
+        .process-step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 35px;
+            height: 35px;
+            background-color: var(--black);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .process-step h3 {
+            margin-bottom: 10px;
+        }
+
+        .faq-item {
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .faq-question {
+            padding: 15px 0;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            padding: 0 0 15px;
+            display: none;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 100px 0;
+            background-color: var(--gray-light);
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .contact-form {
+            background-color: var(--white);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-medium);
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-button {
+            background-color: var(--black);
+            color: var(--white);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .submit-button:hover {
+            background-color: #333;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .contact-info h3 {
+            margin-bottom: 20px;
+        }
+
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .contact-detail i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .map-container {
+            height: 300px;
+            margin-top: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--black);
+            color: var(--white);
+            padding: 60px 0 30px;
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 20px;
+            filter: invert(1);
+        }
+
+        .footer-about p {
+            margin-bottom: 20px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-links a {
+            color: var(--white);
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
+
+        .footer-links h4 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--gray-medium);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--black);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--black);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            transition: var(--transition);
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: var(--white);
+        }
+
+        body.dark-mode header {
+            background-color: #1E1E1E;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .nav-links a {
+            color: var(--white);
+        }
+
+        body.dark-mode .about,
+        body.dark-mode .testimonials,
+        body.dark-mode .contact {
+            background-color: #1E1E1E;
+        }
+
+        body.dark-mode .track-card,
+        body.dark-mode .testimonial-card,
+        body.dark-mode .contact-form {
+            background-color: #2D2D2D;
+        }
+
+        body.dark-mode .dark-mode-toggle {
+            background-color: var(--white);
+            color: var(--black);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .about-content,
+            .track-details-container,
+            .admissions-container,
+            .contact-container,
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .tracks-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 15px 0;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background-color: var(--white);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+                transform: translateY(-150%);
+                transition: var(--transition);
+            }
+
+            .nav-links.active {
+                transform: translateY(0);
+            }
+
+            .nav-links li {
+                margin: 15px 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero {
+                height: auto;
+                padding: 150px 0 100px;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            body.dark-mode .nav-links {
+                background-color: #1E1E1E;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-logo {
+                height: 60px;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .track-card,
+            .contact-form {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <img src="logo.svg" alt="CVERSE Logo" class="logo">
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#home" class="active">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#tracks">Tracks</a></li>
+                    <li><a href="#instructors">Instructors</a></li>
+                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#admissions">Admissions</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="mobile-menu-btn">☰</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <img src="logo.svg" alt="CVERSE Logo" class="hero-logo">
+                <h1>Transform Your Career Through Digital Skills</h1>
+                <p>CVERSE is Demirti's premier digital training initiative, designed to equip you with the skills needed to excel in today's technology-driven world.</p>
+                <a href="#tracks" class="cta-button">Explore Our Courses</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">About CVERSE</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Our Mission</h3>
+                    <p>At CVERSE, we're committed to bridging the digital skills gap by providing world-class education in Data Science and Technical Product Management. Our mission is to empower individuals with the knowledge and practical skills needed to thrive in the digital economy.</p>
+                    
+                    <h3>Our Approach</h3>
+                    <p>We believe in learning by doing. Our curriculum combines theoretical foundations with hands-on projects that simulate real-world challenges. Small class sizes ensure personalized attention, while our industry-experienced instructors bring practical insights to every lesson.</p>
+                </div>
+                <div class="about-image">
+                    <img src="about-image.jpg" alt="Students learning at CVERSE" style="width: 100%; border-radius: 8px;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tracks Overview -->
+    <section class="tracks-overview" id="tracks">
+        <div class="container">
+            <h2 class="section-title">Our Specialized Tracks</h2>
+            <div class="tracks-container">
+                <div class="track-card data-science-card">
+                    <h3>Data Science</h3>
+                    <p>Master the skills to transform data into actionable insights. Learn programming, statistics, machine learning, and data visualization to solve complex business problems.</p>
+                    <a href="#data-science" class="track-button data-science-button">Learn More</a>
+                </div>
+                <div class="track-card tpm-card">
+                    <h3>Technical Product Management</h3>
+                    <p>Bridge the gap between business and technology. Develop the skills to lead product development, understand user needs, and drive technical innovation.</p>
+                    <a href="#tpm" class="track-button tpm-button">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Science Track Details -->
+    <section class="track-details data-science-details" id="data-science">
+        <div class="container">
+            <div class="track-details-container">
+                <div class="track-details-content">
+                    <h2>Data Science Track</h2>
+                    <p>Our comprehensive Data Science program equips you with the technical skills and analytical mindset needed to extract valuable insights from complex data sets.</p>
+                    
+                    <h3>Curriculum Overview</h3>
+                    <ul>
+                        <li>Programming fundamentals with Python</li>
+                        <li>Statistical analysis and probability</li>
+                        <li>Data cleaning and preprocessing</li>
+                        <li>Machine learning algorithms</li>
+                        <li>Deep learning and neural networks</li>
+                        <li>Data visualization and storytelling</li>
+                        <li>Big data technologies</li>
+                        <li>Capstone project with real-world data</li>
+                    </ul>
+                    
+                    <h3>Learning Outcomes</h3>
+                    <p>By the end of this track, you'll be able to implement end-to-end data science projects, from data collection to model deployment, and communicate insights effectively to stakeholders.</p>
+                    
+                    <h3>Prerequisites</h3>
+                    <p>Basic programming knowledge and familiarity with mathematics concepts. Our pre-course materials will help you prepare.</p>
+                    
+                    <h3>Course Format</h3>
+                    <p>16-week intensive program with both in-person and online options available. Classes are held evenings and weekends to accommodate working professionals.</p>
+                </div>
+                <div class="track-image">
+                    <img src="data-science-image.jpg" alt="Data Science visualization" style="width: 100%; border-radius: 8px;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TPM Track Details -->
+    <section class="track-details tpm-details" id="tpm">
+        <div class="container">
+            <div class="track-details-container">
+                <div class="track-image">
+                    <img src="tpm-image.jpg" alt="Technical Product Management" style="width: 100%; border-radius: 8px;">
+                </div>
+                <div class="track-details-content">
+                    <h2>Technical Product Management Track</h2>
+                    <p>Our TPM program prepares you to lead product development in technology companies, bridging business strategy with technical execution.</p>
+                    
+                    <h3>Curriculum Overview</h3>
+                    <ul>
+                        <li>Product strategy and roadmapping</li>
+                        <li>User research and requirements gathering</li>
+                        <li>Agile methodologies and project management</li>
+                        <li>Technical architecture fundamentals</li>
+                        <li>Data-driven decision making</li>
+                        <li>Product analytics and metrics</li>
+                        <li>Stakeholder management</li>
+                        <li>Product launch and go-to-market strategies</li>
+                    </ul>
+                    
+                    <h3>Learning Outcomes</h3>
+                    <p>Graduates will be able to lead cross-functional teams, translate business requirements into technical specifications, and drive product development from conception to launch.</p>
+                    
+                    <h3>Prerequisites</h3>
+                    <p>Basic understanding of software development concepts. Professional experience in either business or technical roles is beneficial but not required.</p>
+                    
+                    <h3>Course Format</h3>
+                    <p>12-week program with flexible learning options. Includes hands-on workshops, case studies, and a capstone project where you'll develop a product from idea to implementation plan.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructors Section -->
+    <section class="instructors" id="instructors">
+        <div class="container">
+            <h2 class="section-title">Meet Our Instructors</h2>
+            <div class="instructors-grid">
+                <div class="instructor-card">
+                    <img src="instructor-1.jpg" alt="Dr. Sarah Chen" class="instructor-image">
+                    <h3>Dr. Sarah Chen</h3>
+                    <p>Data Science Lead</p>
+                    <p>Former Lead Data Scientist at Amazon with PhD in Computer Science. Specializes in machine learning and AI applications.</p>
+                </div>
+                <div class="instructor-card">
+                    <img src="instructor-2.jpg" alt="Marcus Johnson" class="instructor-image">
+                    <h3>Marcus Johnson</h3>
+                    <p>Technical Product Management Lead</p>
+                    <p>15+ years of product leadership experience at Google and Microsoft. Expert in scaling products from concept to market.</p>
+                </div>
+                <div class="instructor-card">
+                    <img src="instructor-3.jpg" alt="Dr. Aisha Patel" class="instructor-image">
+                    <h3>Dr. Aisha Patel</h3>
+                    <p>Machine Learning Specialist</p>
+                    <p>Research scientist with expertise in deep learning and natural language processing. Previously at DeepMind.</p>
+                </div>
+                <div class="instructor-card">
+                    <img src="instructor-4.jpg" alt="David Kim" class="instructor-image">
+                    <h3>David Kim</h3>
+                    <p>Product Strategy Advisor</p>
+                    <p>Serial entrepreneur and former VP of Product at Salesforce. Mentors startups on product-market fit and growth strategies.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <h2 class="section-title">Student Success Stories</h2>
+            <div class="testimonials-container">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        <p>The Data Science track at CVERSE completely transformed my career. The curriculum was challenging but incredibly rewarding, and the instructors were always available to provide guidance. Within two months of graduating, I landed a role as a Data Scientist at a fintech startup.</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Jennifer L., Data Science Graduate</p>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        <p>As someone transitioning from engineering to product, the TPM track gave me exactly what I needed - a solid foundation in product management with the technical depth that employers value. The real-world projects and industry connections were invaluable.</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Michael T., Technical Product Management Graduate</p>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        <p>What sets CVERSE apart is their commitment to practical, job-ready skills. The capstone project became the centerpiece of my portfolio and impressed interviewers. I'm now earning double my previous salary as a Machine Learning Engineer.</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <p>- Sophia R., Data Science Graduate</p>
+                    </div>
+

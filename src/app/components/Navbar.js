@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function Navbar() {
   const [activeLink, setActiveLink] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isTracksDropdownOpen, setIsTracksDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,49 +60,79 @@ export default function Navbar() {
         <nav>
           <ul className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <li>
-              <a 
-                href="#home" 
+              <Link 
+                href="/" 
                 className={activeLink === 'home' ? 'active' : ''}
-                onClick={(e) => handleNavClick(e, 'home')}
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    handleNavClick(e, 'home');
+                  }
+                }}
               >
                 Home
-              </a>
+              </Link>
             </li>
             <li>
-              <a 
-                href="#about" 
+              <Link 
+                href="/#about" 
                 className={activeLink === 'about' ? 'active' : ''}
-                onClick={(e) => handleNavClick(e, 'about')}
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    handleNavClick(e, 'about');
+                  }
+                }}
               >
                 About
-              </a>
+              </Link>
             </li>
-            <li>
+            <li 
+              className="nav-item-dropdown"
+              onMouseEnter={() => !isMobileMenuOpen && setIsTracksDropdownOpen(true)}
+              onMouseLeave={() => !isMobileMenuOpen && setIsTracksDropdownOpen(false)}
+            >
               <a 
                 href="#tracks" 
                 className={activeLink === 'tracks' ? 'active' : ''}
-                onClick={(e) => handleNavClick(e, 'tracks')}
+                onClick={(e) => {
+                  // Toggle dropdown on mobile
+                  if (isMobileMenuOpen) {
+                    e.preventDefault();
+                    setIsTracksDropdownOpen(!isTracksDropdownOpen);
+                  } else if (window.location.pathname === '/') {
+                    handleNavClick(e, 'tracks');
+                  }
+                }}
               >
                 Tracks
+                <span className="dropdown-arrow">▼</span>
               </a>
+              {isTracksDropdownOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link href="/data-science" onClick={() => setIsMobileMenuOpen(false)}>
+                      Data Science
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/project-management" onClick={() => setIsMobileMenuOpen(false)}>
+                      Project Management
+                    </Link>
+                  </li>
+                </ul>
+              )}
             </li>
             <li>
-              <a 
-                href="#apply" 
-                className={activeLink === 'apply' ? 'active' : ''}
-                onClick={(e) => handleNavClick(e, 'apply')}
-              >
-                Apply
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#contact" 
+              <Link 
+                href="/#contact" 
                 className={activeLink === 'contact' ? 'active' : ''}
-                onClick={(e) => handleNavClick(e, 'contact')}
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    handleNavClick(e, 'contact');
+                  }
+                }}
               >
                 Contact
-              </a>
+              </Link>
             </li>
           </ul>
           <button 

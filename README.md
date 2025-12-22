@@ -26,6 +26,9 @@ A modern, responsive website for Demirti Technologies' digital training programs
 
 ## 💻 Technologies Used
 
+- Next.js 14
+- React 18
+- Brevo (Email Service)
 - HTML5
 - CSS3
 - Font Awesome Icons
@@ -45,7 +48,30 @@ A modern, responsive website for Demirti Technologies' digital training programs
    cd demirti-web
    ```
 
-3. Open `index.html` in your browser to view the website locally.
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+4. Set up environment variables:
+   Create a `.env.local` file in the root directory with the following:
+   ```env
+   BREVO_API_KEY=your_brevo_api_key_here
+   BREVO_TO_EMAIL=admin@demirti.com
+   ```
+   
+   To get your Brevo API key:
+   - Sign up or log in at [Brevo](https://www.brevo.com/)
+   - Go to Settings > API Keys
+   - Create a new API key or use an existing one
+   - Copy the API key and paste it in your `.env.local` file
+
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📱 Responsive Design
 

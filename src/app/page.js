@@ -1,5 +1,6 @@
 import Navbar from './components/Navbar';
 import ContactForm from './components/ContactForm';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -12,7 +13,7 @@ export default function Home() {
         <div className="container">
           <div className="hero-content">
             <h1>Build Skills. Boost Confidence. Transform Your Career.</h1>
-            <p>CVERSE is Demirti's premier digital training initiative, designed to equip you with the skills needed to excel in today's technology-driven world.</p>
+            <p>CVERSE is Demirti&apos;s premier digital training initiative, designed to equip you with the skills needed to excel in today&apos;s technology-driven world.</p>
             <a href="#tracks" className="cta-button">Explore Our Courses</a>
           </div>
         </div>
@@ -25,7 +26,7 @@ export default function Home() {
             <h2 className="section-title">About CVERSE</h2>
             <div className="about-text">
               <h3>Our Mission</h3>
-              <p>At CVERSE, we're committed to bridging the digital skills gap by delivering world-class technology education such as Data Science and Technical Product Management. Our mission is to empower individuals with the knowledge and practical skills needed to thrive in the digital economy.</p>
+              <p>At CVERSE, we&apos;re committed to bridging the digital skills gap by delivering world-class technology education such as Data Science and Technical Product Management. Our mission is to empower individuals with the knowledge and practical skills needed to thrive in the digital economy.</p>
               
               <h3>Our Approach</h3>
               <p>We believe in learning by doing. Our curriculum combines theoretical foundations with hands-on projects that simulate real-world challenges. Small class sizes ensure personalized attention, while our industry-experienced instructors bring practical insights to every lesson.</p>
@@ -42,25 +43,12 @@ export default function Home() {
             <div className="track-card data-science-card">
               <h3>Data Science</h3>
               <p>Master the skills to turn raw data into real-world insights. Learn programming, statistics, machine learning, and data visualization to solve with complex problems and drive smarter business decisions.</p>
-              <a href="#contact" className="track-button data-science-button">Learn More</a>
+              <Link href="/data-science" className="track-button data-science-button">Learn More</Link>
             </div>
             <div className="track-card tpm-card">
-              <h3>Technical Product Management</h3>
+              <h3>Project Management</h3>
               <p>Bridge the gap between business and technology. Learn how to lead cross-functional teams, translate user needs into product strategy, and drive technical innovation from idea to launch.</p>
-              <a href="#contact" className="track-button tpm-button">Learn More</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Apply Now Section */}
-      <section className="apply-now" id="apply">
-        <div className="container">
-          <div className="apply-now-container">
-            <div className="apply-now-content">
-              <h2>Apply Now</h2>
-              <p>Ready to take the next step in your career? Apply to our program today and join a community of ambitious professionals.</p>
-              <a href="#contact" className="cta-button">Apply Now</a>
+              <Link href="/project-management" className="track-button tpm-button">Learn More</Link>
             </div>
           </div>
         </div>
@@ -74,7 +62,7 @@ export default function Home() {
             <div className="contact-grid">
               <div className="contact-info">
                 <h3>Get in Touch</h3>
-                <p>Have questions about our programs or the application process? We're here to help!</p>
+                <p>Have questions about our programs or the application process? We&apos;re here to help!</p>
                 
                 <div className="contact-details">
                   <p><strong>Email:</strong> admin@demirti.com</p>

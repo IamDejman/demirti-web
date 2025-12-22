@@ -1,4 +1,6 @@
 import './globals.css'
+import { ToastProvider } from './components/ToastProvider'
+import Script from 'next/script'
 
 export const metadata = {
   title: 'CVERSE by Demirti - Digital Skills Training',
@@ -22,7 +24,10 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        {children}
+        <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" />
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

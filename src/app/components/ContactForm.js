@@ -1,36 +1,52 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from './ToastProvider';
 
 export default function ContactForm() {
-  const [formStatus, setFormStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setFormStatus('');
 
     const form = e.target;
-    const formData = new FormData(form);
+    const formData = {
+      name: form.name.value,
+      email: form.email.value,
+      message: form.message.value,
+    };
 
     try {
-      const response = await fetch('https://formspree.io/f/meopqjvg', {
+      const response = await fetch('/api/send-email', {
         method: 'POST',
-        body: formData,
         headers: {
-          'Accept': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setFormStatus('success');
+        showToast({
+          type: 'success',
+          message: "Thank you! Your message has been sent successfully. We'll get back to you soon.",
+        });
         form.reset();
       } else {
-        setFormStatus('error');
+        showToast({
+          type: 'error',
+          message: data.error || 'There was a problem sending your message. Please try again.',
+        });
       }
     } catch (error) {
-      setFormStatus('error');
+      showToast({
+        type: 'error',
+        message: 'There was a problem sending your message. Please try again or email admin@demirti.com directly.',
+      });
+      console.error('Error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -39,17 +55,6 @@ export default function ContactForm() {
   return (
     <div className="contact-form">
       <form onSubmit={handleSubmit}>
-        {formStatus === 'success' && (
-          <div className="success-message">
-            Thank you! Your message has been sent successfully. We'll get back to you soon.
-          </div>
-        )}
-        {formStatus === 'error' && (
-          <div className="error-message">
-            Oops! There was a problem sending your message. Please try again or email us directly at admin@demirti.com.
-          </div>
-        )}
-        
         <div className="form-group">
           <label htmlFor="name">Name</label>
           <input 

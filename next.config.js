@@ -14,43 +14,6 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           {
-            key: 'Content-Security-Policy',
-            value: (() => {
-              const isDev = process.env.NODE_ENV === 'development';
-              const scriptSrc = [
-                "'self'",
-                "'unsafe-inline'",
-                "https://js.paystack.co",
-                "https://*.paystack.co"
-              ];
-              
-              // React Refresh in development requires unsafe-eval
-              if (isDev) {
-                scriptSrc.push("'unsafe-eval'");
-              }
-              
-              return [
-                "default-src 'self'",
-                // Note: 'unsafe-inline' is required for payment callback redirect scripts
-                // 'unsafe-eval' is only allowed in development for React Refresh
-                // Consider implementing nonces in the future for better security
-                `script-src ${scriptSrc.join(' ')}`,
-                // 'unsafe-inline' needed for React inline styles and dynamic styling
-                // Font Awesome CDN added for icon stylesheet
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
-                "img-src 'self' data: https: blob:",
-                "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-                "connect-src 'self' https://api.paystack.co https://*.paystack.co https://api.getbrevo.com",
-                "frame-src 'self' https://*.paystack.co https://checkout.paystack.com",
-                "frame-ancestors 'self'",
-                "object-src 'none'",
-                "base-uri 'self'",
-                "form-action 'self'",
-                "upgrade-insecure-requests"
-              ].join('; ');
-            })()
-          },
-          {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN'
           },
@@ -63,25 +26,8 @@ const nextConfig = {
             value: 'strict-origin-when-cross-origin'
           },
           {
-            key: 'Permissions-Policy',
-            value: [
-              'camera=()',
-              'microphone=()',
-              'geolocation=()',
-              'payment=()',
-              'usb=()',
-              'magnetometer=()',
-              'gyroscope=()',
-              'accelerometer=()'
-            ].join(', ')
-          },
-          {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
           }
         ],
       },

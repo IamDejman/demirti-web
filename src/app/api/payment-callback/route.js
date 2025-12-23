@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { updateApplicationPayment, saveApplication, incrementScholarshipCount } from '@/lib/db';
+import { sql } from '@vercel/postgres';
+import { updateApplicationPayment, saveApplication, incrementScholarshipCount, getApplicationByEmailAndTrack } from '@/lib/db';
 import * as brevo from '@getbrevo/brevo';
 
 export async function GET(request) {
@@ -39,6 +40,159 @@ export async function GET(request) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
     if (data.status && data.data && data.data.status === 'success') {
+      // Payment successful - update application status in database
+      const paymentData = data.data;
+      const customer = paymentData.customer;
+      const amount = paymentData.amount;
+      const metadata = paymentData.metadata || {};
+      const customFields = metadata.custom_fields || [];
+      
+      const email = customer?.email || '';
+      const trackName = customFields.find(f => f.variable_name === 'track')?.value || 
+                       metadata.track || '';
+      
+      console.log('Payment verification successful:', {
+        reference,
+        email,
+        trackName,
+        amount,
+        hasMetadata: !!metadata,
+        customFieldsCount: customFields.length
+      });
+      
+      // Update application status if we have email and track
+      if (email && trackName) {
+        try {
+          const updated = await updateApplicationPayment(email, trackName, reference, amount);
+          
+          if (updated) {
+            console.log('Application status updated to paid via GET callback');
+            
+            // Increment scholarship count
+            try {
+              await incrementScholarshipCount(trackName);
+              console.log(`Scholarship count incremented for track: ${trackName}`);
+            } catch (error) {
+              console.error('Error updating scholarship count:', error);
+            }
+          } else {
+            // If updateApplicationPayment returned null, try to find and update by reference
+            console.log('No application found by email/track, trying to update by reference...');
+            const result = await sql`
+              UPDATE applications
+              SET 
+                payment_reference = ${reference},
+                amount = ${amount},
+                status = 'paid',
+                paid_at = CURRENT_TIMESTAMP
+              WHERE payment_reference IS NULL
+                AND email = ${email}
+                AND track_name = ${trackName}
+              RETURNING *;
+            `;
+            
+            if (result.rows.length > 0) {
+              console.log('Application updated by reference');
+              // Increment scholarship count
+              try {
+                await incrementScholarshipCount(trackName);
+                console.log(`Scholarship count incremented for track: ${trackName}`);
+              } catch (error) {
+                console.error('Error updating scholarship count:', error);
+              }
+            } else {
+              // Last resort: try to update any application with this email and track, regardless of payment_reference
+              console.log('Trying to update any application with this email and track...');
+              const fallbackResult = await sql`
+                UPDATE applications
+                SET 
+                  payment_reference = ${reference},
+                  amount = ${amount},
+                  status = 'paid',
+                  paid_at = CURRENT_TIMESTAMP
+                WHERE email = ${email}
+                  AND track_name = ${trackName}
+                  AND status = 'pending'
+                RETURNING *;
+              `;
+              
+              if (fallbackResult.rows.length > 0) {
+                console.log('Application updated via fallback query');
+                // Increment scholarship count
+                try {
+                  await incrementScholarshipCount(trackName);
+                  console.log(`Scholarship count incremented for track: ${trackName}`);
+                } catch (error) {
+                  console.error('Error updating scholarship count:', error);
+                }
+              } else {
+                console.log('No pending application found to update');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error updating application status:', error);
+          // Continue even if update fails - webhook will handle it
+        }
+      } else {
+        console.log('Missing email or trackName in payment callback:', { 
+          email, 
+          trackName, 
+          hasCustomer: !!customer,
+          hasMetadata: !!metadata,
+          metadataKeys: metadata ? Object.keys(metadata) : []
+        });
+        
+        // Try to find application by payment reference as last resort
+        if (reference) {
+          try {
+            const refResult = await sql`
+              SELECT * FROM applications
+              WHERE payment_reference = ${reference}
+              LIMIT 1;
+            `;
+            
+            if (refResult.rows.length > 0) {
+              console.log('Found application by payment reference, but already has reference set');
+            } else {
+              // Try to find any pending application and update it
+              const pendingResult = await sql`
+                UPDATE applications
+                SET 
+                  payment_reference = ${reference},
+                  amount = ${amount},
+                  status = 'paid',
+                  paid_at = CURRENT_TIMESTAMP
+                WHERE id = (
+                  SELECT id FROM applications
+                  WHERE status = 'pending'
+                  ORDER BY created_at DESC
+                  LIMIT 1
+                )
+                RETURNING *;
+              `;
+              
+              if (pendingResult.rows.length > 0) {
+                const updatedApp = pendingResult.rows[0];
+                console.log('Updated most recent pending application:', updatedApp);
+                
+                // Try to increment scholarship count if we have track name
+                if (updatedApp.track_name) {
+                  try {
+                    await incrementScholarshipCount(updatedApp.track_name);
+                    console.log(`Scholarship count incremented for track: ${updatedApp.track_name}`);
+                  } catch (error) {
+                    console.error('Error updating scholarship count:', error);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error in fallback update by reference:', error);
+          }
+        }
+      }
+      
       // Payment successful - close popup and redirect parent window
       const html = `
         <!DOCTYPE html>
@@ -159,29 +313,48 @@ export async function POST(request) {
       // Update or create application with payment details
       let savedApplication = null;
       try {
-        // Try to update existing pending application
-        savedApplication = await updateApplicationPayment(
-          customer.email,
-          trackName,
-          reference,
-          amount
-        );
-
-        // If no existing application found, create a new one
-        if (!savedApplication) {
-          savedApplication = await saveApplication({
-            firstName,
-            lastName,
-            email: customer.email,
-            phone,
+        if (!customer?.email || !trackName) {
+          console.error('Webhook: Missing email or trackName:', { 
+            email: customer?.email, 
             trackName,
-            paymentOption: 'paystack',
-            paymentReference: reference,
-            amount: amount,
+            hasCustomer: !!customer,
+            hasMetadata: !!metadata
+          });
+        } else {
+          // Try to update existing pending application
+          savedApplication = await updateApplicationPayment(
+            customer.email,
+            trackName,
+            reference,
+            amount
+          );
+
+          console.log('Webhook: updateApplicationPayment result:', {
+            found: !!savedApplication,
+            email: customer.email,
+            trackName
+          });
+
+          // If no existing application found, create a new one
+          if (!savedApplication) {
+            console.log('Webhook: No existing application found, creating new one');
+            savedApplication = await saveApplication({
+              firstName,
+              lastName,
+              email: customer.email,
+              phone,
+              trackName,
+              paymentOption: 'paystack',
+              paymentReference: reference,
+              amount: amount,
+            });
+          }
+
+          console.log('Webhook: Application saved with payment details:', {
+            id: savedApplication?.id,
+            status: savedApplication?.status
           });
         }
-
-        console.log('Application saved with payment details');
 
         // Send email notification
         try {
@@ -252,10 +425,12 @@ export async function POST(request) {
         console.error('Error saving application with payment:', error);
       }
 
-      // Increment scholarship count if payment is successful
+      // Increment scholarship count for this specific track if payment is successful
       try {
-        await incrementScholarshipCount();
-        console.log('Scholarship count incremented');
+        if (trackName) {
+          await incrementScholarshipCount(trackName);
+          console.log(`Scholarship count incremented for track: ${trackName}`);
+        }
       } catch (error) {
         console.error('Error updating scholarship count:', error);
       }

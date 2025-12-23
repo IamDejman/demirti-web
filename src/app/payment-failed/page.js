@@ -54,7 +54,7 @@ function PaymentFailedContent() {
               </p>
             )}
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/data-science#apply-section" className="cta-button" style={{
+              <Link href="/datascience#apply-section" className="cta-button" style={{
                 display: 'inline-block',
                 backgroundColor: '#0066cc',
                 color: 'white',
@@ -66,7 +66,7 @@ function PaymentFailedContent() {
               }}>
                 Try Again - Data Science
               </Link>
-              <Link href="/project-management#apply-section" className="cta-button" style={{
+              <Link href="/projectmanagement#apply-section" className="cta-button" style={{
                 display: 'inline-block',
                 backgroundColor: '#00c896',
                 color: 'white',

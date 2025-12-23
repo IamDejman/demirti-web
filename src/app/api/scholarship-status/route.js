@@ -1,20 +1,41 @@
 import { NextResponse } from 'next/server';
-import { getScholarshipCount, incrementScholarshipCount } from '@/lib/db';
+import { getScholarshipCount, incrementScholarshipCount, getTrackConfig } from '@/lib/db';
 
-const SCHOLARSHIP_LIMIT = 10;
-
-// GET - Check scholarship availability
-export async function GET() {
+// GET - Check scholarship availability for a specific track
+export async function GET(request) {
   try {
-    const { count } = await getScholarshipCount();
-    const available = count < SCHOLARSHIP_LIMIT;
-    const remaining = Math.max(0, SCHOLARSHIP_LIMIT - count);
+    const { searchParams } = new URL(request.url);
+    const trackName = searchParams.get('track');
+    
+    if (!trackName) {
+      return NextResponse.json(
+        { error: 'Track name is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get track configuration from database
+    const trackConfig = await getTrackConfig(trackName);
+    if (!trackConfig) {
+      return NextResponse.json(
+        { error: 'Track not found' },
+        { status: 404 }
+      );
+    }
+
+    const scholarshipLimit = trackConfig.scholarship_limit || 10;
+    const { count } = await getScholarshipCount(trackName);
+    const available = count < scholarshipLimit;
+    const remaining = Math.max(0, scholarshipLimit - count);
     
     return NextResponse.json({
       available,
       count,
-      limit: SCHOLARSHIP_LIMIT,
-      remaining
+      limit: scholarshipLimit,
+      remaining,
+      trackName,
+      coursePrice: trackConfig.course_price,
+      discountPercentage: trackConfig.scholarship_discount_percentage
     });
   } catch (error) {
     console.error('Error checking scholarship status:', error);
@@ -25,24 +46,45 @@ export async function GET() {
   }
 }
 
-// POST - Increment scholarship count (called after successful payment)
-export async function POST() {
+// POST - Increment scholarship count for a specific track (called after successful payment)
+export async function POST(request) {
   try {
-    const { count } = await getScholarshipCount();
+    const body = await request.json();
+    const { trackName } = body;
     
-    if (count >= SCHOLARSHIP_LIMIT) {
+    if (!trackName) {
       return NextResponse.json(
-        { error: 'Scholarship limit reached' },
+        { error: 'Track name is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get track configuration from database
+    const trackConfig = await getTrackConfig(trackName);
+    if (!trackConfig) {
+      return NextResponse.json(
+        { error: 'Track not found' },
+        { status: 404 }
+      );
+    }
+
+    const scholarshipLimit = trackConfig.scholarship_limit || 10;
+    const { count } = await getScholarshipCount(trackName);
+    
+    if (count >= scholarshipLimit) {
+      return NextResponse.json(
+        { error: 'Scholarship limit reached for this track' },
         { status: 400 }
       );
     }
     
-    const newCount = await incrementScholarshipCount();
+    const newCount = await incrementScholarshipCount(trackName);
     
     return NextResponse.json({
       success: true,
       count: newCount,
-      remaining: SCHOLARSHIP_LIMIT - newCount
+      remaining: scholarshipLimit - newCount,
+      trackName
     });
   } catch (error) {
     console.error('Error incrementing scholarship count:', error);

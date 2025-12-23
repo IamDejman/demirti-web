@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Navbar() {
   const [activeLink, setActiveLink] = useState('home');
@@ -56,7 +57,7 @@ export default function Navbar() {
   return (
     <header>
       <div className="container header-container">
-        <img src="/logo.png" alt="CVERSE Logo" className="logo" />
+        <Image src="/logo.png" alt="CVERSE Logo" className="logo" width={150} height={50} />
         <nav>
           <ul className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <li>
@@ -109,12 +110,12 @@ export default function Navbar() {
               {isTracksDropdownOpen && (
                 <ul className="dropdown-menu">
                   <li>
-                    <Link href="/data-science" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href="/datascience" onClick={() => setIsMobileMenuOpen(false)}>
                       Data Science
                     </Link>
                   </li>
                   <li>
-                    <Link href="/project-management" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href="/projectmanagement" onClick={() => setIsMobileMenuOpen(false)}>
                       Project Management
                     </Link>
                   </li>

@@ -1,13 +1,43 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get('reference');
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+
+  // Verify payment on page load
+  useEffect(() => {
+    if (reference && !verified) {
+      setVerifying(true);
+      fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reference }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          setVerifying(false);
+          if (data.success) {
+            setVerified(true);
+            console.log('Payment verified and application updated');
+          } else {
+            console.error('Payment verification failed:', data.error);
+          }
+        })
+        .catch(error => {
+          setVerifying(false);
+          console.error('Error verifying payment:', error);
+        });
+    }
+  }, [reference, verified]);
 
   return (
     <main>
@@ -50,6 +80,24 @@ function PaymentSuccessContent() {
                 marginBottom: '2rem'
               }}>
                 Reference: <strong>{reference}</strong>
+              </p>
+            )}
+            {verifying && (
+              <p style={{ 
+                fontSize: '0.9rem', 
+                color: '#0066cc', 
+                marginBottom: '1rem'
+              }}>
+                Verifying payment...
+              </p>
+            )}
+            {verified && (
+              <p style={{ 
+                fontSize: '0.9rem', 
+                color: '#00c896', 
+                marginBottom: '1rem'
+              }}>
+                ✓ Payment verified and application updated
               </p>
             )}
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>

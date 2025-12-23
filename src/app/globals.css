@@ -1078,6 +1078,151 @@ section {
   }
 }
 
+/* Application Form Modal/Card Responsive Styles */
+@media (max-width: 768px) {
+  .application-form-card {
+    padding: 2rem 1.5rem !important;
+    max-width: 100% !important;
+    margin: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .application-form-card {
+    padding: 1.5rem 1rem !important;
+    border-radius: 12px !important;
+  }
+  
+  .application-form-card .close-button {
+    top: 1rem !important;
+    right: 1rem !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Track Page Hero Responsive */
+@media (max-width: 768px) {
+  .track-hero h1 {
+    font-size: 2.5rem !important;
+  }
+  
+  .track-hero p {
+    font-size: 1.1rem !important;
+  }
+  
+  .track-hero {
+    padding: 6rem 0 4rem !important;
+    margin-top: 80px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .track-hero h1 {
+    font-size: 2rem !important;
+  }
+  
+  .track-hero p {
+    font-size: 1rem !important;
+  }
+  
+  .track-hero {
+    padding: 5rem 0 3rem !important;
+  }
+}
+
+/* Admin Dashboard Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 1rem !important;
+  }
+  
+  .admin-dashboard h1 {
+    font-size: 2rem !important;
+  }
+  
+  .admin-filters {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .admin-filters label {
+    margin-left: 0 !important;
+  }
+  
+  .admin-filters button {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .admin-table {
+    min-width: 800px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  .admin-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .admin-stats-grid > div {
+    padding: 1rem !important;
+  }
+  
+  .admin-stats-grid h3 {
+    font-size: 0.8rem !important;
+  }
+  
+  .admin-stats-grid p {
+    font-size: 1.5rem !important;
+  }
+  
+  .admin-table {
+    min-width: 700px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Application Form Component Responsive */
+@media (max-width: 768px) {
+  .contact-form {
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-form {
+    padding: 1rem !important;
+  }
+  
+  .form-group-radio-card {
+    padding: 1rem !important;
+  }
+}
+
 /* ============================================
    MOBILE TOUCH IMPROVEMENTS
 ============================================ */

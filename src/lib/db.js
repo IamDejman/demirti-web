@@ -3,6 +3,27 @@ import { sql } from '@vercel/postgres';
 // Initialize database tables
 export async function initializeDatabase() {
   try {
+    // Create admins table
+    await sql`
+      CREATE TABLE IF NOT EXISTS admins (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP
+      );
+    `;
+
+    // Create index on email
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_admins_email 
+      ON admins(email);
+    `;
+
     // Create tracks table to store track configuration
     await sql`
       CREATE TABLE IF NOT EXISTS tracks (

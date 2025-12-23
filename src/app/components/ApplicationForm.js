@@ -13,7 +13,6 @@ export default function ApplicationForm({ trackName }) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
-  const [scholarshipRemaining, setScholarshipRemaining] = useState(0);
   const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
   const [discountPercentage, setDiscountPercentage] = useState(50); // Default fallback
   const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
@@ -37,7 +36,6 @@ export default function ApplicationForm({ trackName }) {
         }
         if (data.available) {
           setScholarshipAvailable(true);
-          setScholarshipRemaining(data.remaining);
         }
       } catch (error) {
         console.error('Error loading track data:', error);
@@ -141,7 +139,7 @@ export default function ApplicationForm({ trackName }) {
                     window.location.href = `/payment-success?reference=${paymentReference}`;
                   }
                 }
-              } catch (error) {
+              } catch {
                 // Silent fail - continue polling
               }
             }, 2000); // Poll every 2 seconds

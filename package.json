@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:eslint": "eslint . --ext .js,.jsx"
   },
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
     "@vercel/postgres": "^0.10.0",
+    "bcryptjs": "^3.0.3",
     "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

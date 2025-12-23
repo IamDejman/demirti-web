@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { getTrackConfig, getAllTracks } from '@/lib/db';
+import { getAllTracks } from '@/lib/db';
 
 // GET - Get scholarship status for all tracks
 export async function GET() {

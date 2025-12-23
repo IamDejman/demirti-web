@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as brevo from '@getbrevo/brevo';
 
-export async function GET(request) {
+export async function GET(_request) {
   try {
     // Validate API key
     if (!process.env.BREVO_API_KEY) {

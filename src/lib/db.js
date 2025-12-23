@@ -1,7 +1,48 @@
 import { sql } from '@vercel/postgres';
 
+// Check if database is initialized
+let dbInitialized = false;
+let initializationPromise = null;
+
+export async function ensureDatabaseInitialized() {
+  if (dbInitialized) {
+    return;
+  }
+
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    try {
+      // Check if tracks table exists (one of our main tables)
+      const tableCheck = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'tracks'
+        );
+      `;
+
+      if (!tableCheck.rows[0].exists) {
+        console.log('Database tables not found. Initializing...');
+        await initializeDatabase();
+        console.log('Database initialized successfully');
+      }
+      dbInitialized = true;
+    } catch (error) {
+      console.error('Error checking/initializing database:', error);
+      // Don't throw - let the calling function handle the error
+    } finally {
+      initializationPromise = null;
+    }
+  })();
+
+  return initializationPromise;
+}
+
 // Initialize database tables
 export async function initializeDatabase() {
+  console.log('Starting database initialization...');
   try {
     // Create admins table
     await sql`
@@ -209,6 +250,7 @@ export async function saveApplication(application) {
 }
 
 export async function getAllApplications() {
+  await ensureDatabaseInitialized();
   const result = await sql`
     SELECT * FROM applications
     ORDER BY created_at DESC;
@@ -218,6 +260,7 @@ export async function getAllApplications() {
 }
 
 export async function updateApplicationPayment(email, trackName, paymentReference, amount) {
+  await ensureDatabaseInitialized();
   const result = await sql`
     UPDATE applications
     SET 
@@ -241,6 +284,7 @@ export async function updateApplicationPayment(email, trackName, paymentReferenc
 }
 
 export async function getApplicationByEmailAndTrack(email, trackName) {
+  await ensureDatabaseInitialized();
   const result = await sql`
     SELECT * FROM applications
     WHERE email = ${email} AND track_name = ${trackName}
@@ -252,6 +296,7 @@ export async function getApplicationByEmailAndTrack(email, trackName) {
 
 // Scholarship functions (per track)
 export async function getScholarshipCount(trackName) {
+  await ensureDatabaseInitialized();
   if (!trackName) {
     return { count: 0 };
   }
@@ -279,6 +324,7 @@ export async function getScholarshipCount(trackName) {
 }
 
 export async function incrementScholarshipCount(trackName) {
+  await ensureDatabaseInitialized();
   if (!trackName) {
     throw new Error('Track name is required to increment scholarship count');
   }
@@ -306,6 +352,7 @@ export async function incrementScholarshipCount(trackName) {
 
 // Track configuration functions
 export async function getTrackConfig(trackName) {
+  await ensureDatabaseInitialized();
   if (!trackName) {
     return null;
   }
@@ -320,6 +367,7 @@ export async function getTrackConfig(trackName) {
 }
 
 export async function getAllTracks() {
+  await ensureDatabaseInitialized();
   const result = await sql`
     SELECT * FROM tracks
     WHERE is_active = true
@@ -330,6 +378,7 @@ export async function getAllTracks() {
 }
 
 export async function updateTrackConfig(trackName, updates) {
+  await ensureDatabaseInitialized();
   // Build update query dynamically based on provided fields
   let updateFields = [];
   let updateValues = [];

@@ -6,18 +6,18 @@ import { updateApplicationPayment, saveApplication, incrementScholarshipCount } 
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-// Helper function to send payment confirmation email to user via Resend
+// Helper function to send payment confirmation email via Resend
 async function sendPaymentConfirmationEmail({ email, firstName = '', lastName = '', trackName, reference, amount }) {
-  if (!process.env.RESEND_API_KEY || !email || !trackName) {
-    console.error('Resend configuration missing or email/trackName not provided. Skipping user confirmation email.', {
+  if (!process.env.RESEND_API_KEY || !email) {
+    console.error('Resend configuration missing or email not provided. Skipping user confirmation email.', {
       hasApiKey: !!process.env.RESEND_API_KEY,
-      hasEmail: !!email,
-      hasTrackName: !!trackName
+      hasEmail: !!email
     });
     return;
   }
 
   try {
+    const resolvedTrackName = trackName && trackName.trim().length > 0 ? trackName : 'your course';
     const paymentDate = new Date().toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',

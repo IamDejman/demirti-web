@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { sql } from '@vercel/postgres';
+import { Resend } from 'resend';
 import { updateApplicationPayment, saveApplication, incrementScholarshipCount } from '@/lib/db';
-import * as brevo from '@getbrevo/brevo';
 
-// Helper function to send payment confirmation email to user
-// Note: we only require API key, email and trackName. Names are optional.
+const resend = new Resend(process.env.RESEND_API_KEY || '');
+
+// Helper function to send payment confirmation email to user via Resend
 async function sendPaymentConfirmationEmail({ email, firstName = '', lastName = '', trackName, reference, amount }) {
-  if (!process.env.BREVO_API_KEY || !email || !trackName) {
+  if (!process.env.RESEND_API_KEY || !email || !trackName) {
+    console.error('Resend configuration missing or email/trackName not provided. Skipping user confirmation email.', {
+      hasApiKey: !!process.env.RESEND_API_KEY,
+      hasEmail: !!email,
+      hasTrackName: !!trackName
+    });
     return;
   }
 
   try {
-    const apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-    
     const paymentDate = new Date().toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -22,10 +25,9 @@ async function sendPaymentConfirmationEmail({ email, firstName = '', lastName = 
       hour: '2-digit',
       minute: '2-digit'
     });
-    
     const amountFormatted = (amount / 100).toLocaleString();
     const websiteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com';
-    
+
     const userEmailHtml = `
 <!DOCTYPE html>
 <html>
@@ -267,20 +269,23 @@ async function sendPaymentConfirmationEmail({ email, firstName = '', lastName = 
 </body>
 </html>
     `;
-    
-    const userEmail = new brevo.SendSmtpEmail();
-    userEmail.sender = {
-      name: 'CVERSE',
-      email: process.env.BREVO_FROM_EMAIL || 'noreply@demirti.com'
-    };
-    userEmail.to = [{ email: email, name: `${firstName} ${lastName}` }];
-    userEmail.subject = `Payment Confirmed - Welcome to CVERSE ${trackName} Bootcamp! 🎉`;
-    userEmail.htmlContent = userEmailHtml;
-    
-    await apiInstance.sendTransacEmail(userEmail);
-    console.log(`Payment confirmation email sent to user: ${email}`);
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@demirti.com';
+
+    const { error } = await resend.emails.send({
+      from: `CVERSE <${fromEmail}>`,
+      to: email,
+      subject: `Payment Confirmed - Welcome to CVERSE ${trackName} Bootcamp! 🎉`,
+      html: userEmailHtml
+    });
+
+    if (error) {
+      console.error('Resend user confirmation email failed', error);
+    } else {
+      console.log(`Payment confirmation email sent to user via Resend: ${email}`);
+    }
   } catch (error) {
-    console.error('Error sending payment confirmation email to user:', error);
+    console.error('Error sending payment confirmation email via Resend:', error);
   }
 }
 

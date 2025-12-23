@@ -1,33 +1,22 @@
 import { NextResponse } from 'next/server';
 import { saveApplication, getAllApplications } from '@/lib/db';
-import * as brevo from '@getbrevo/brevo';
+import { Resend } from 'resend';
 
-// Send email notification to admin
+const resend = new Resend(process.env.RESEND_API_KEY || '');
+
+// Send email notification to admin via Resend
 async function sendApplicationEmail(application, isPaid = false) {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is not configured');
+    return;
+  }
+
   try {
-    if (!process.env.BREVO_API_KEY) {
-      console.error('Brevo API key is not configured');
-      return;
-    }
-
-    const apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    
-    sendSmtpEmail.sender = {
-      name: 'CVERSE Application System',
-      email: process.env.BREVO_FROM_EMAIL || 'noreply@demirti.com'
-    };
-
-    sendSmtpEmail.to = [{ email: 'admin@demirti.com' }];
-
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@demirti.com';
     const statusText = isPaid ? 'PAID' : 'PENDING PAYMENT';
     const statusColor = isPaid ? '#00c896' : '#ffc107';
 
-    sendSmtpEmail.subject = `New ${statusText} Application: ${application.track_name} - ${application.first_name} ${application.last_name}`;
-
-    sendSmtpEmail.htmlContent = `
+    const html = `
       <html>
         <head>
           <style>
@@ -110,8 +99,12 @@ async function sendApplicationEmail(application, isPaid = false) {
       </html>
     `;
 
-    sendSmtpEmail.textContent = `
-New Application Received - ${statusText}
+    const { error } = await resend.emails.send({
+      from: `CVERSE Application System <${fromEmail}>`,
+      to: 'admin@demirti.com',
+      subject: `New ${statusText} Application: ${application.track_name} - ${application.first_name} ${application.last_name}`,
+      html,
+      text: `New Application Received - ${statusText}
 
 Track: ${application.track_name}
 Name: ${application.first_name} ${application.last_name}
@@ -120,14 +113,17 @@ Phone: ${application.phone}
 Payment Method: ${application.payment_option}
 ${application.payment_reference ? `Payment Reference: ${application.payment_reference}` : ''}
 ${application.amount ? `Amount: ₦${(application.amount / 100).toLocaleString()}` : ''}
-Application Date: ${new Date(application.created_at).toLocaleString()}
-    `;
+Application Date: ${new Date(application.created_at).toLocaleString()}`
+    });
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('Application email sent to admin@demirti.com');
+    if (error) {
+      console.error('Resend admin application email failed', error);
+    } else {
+      console.log('Application email sent to admin@demirti.com via Resend');
+    }
   } catch (error) {
-    console.error('Error sending application email:', error);
-    throw error;
+    console.error('Error sending application email via Resend:', error);
+    // Don't throw to avoid failing the main request
   }
 }
 

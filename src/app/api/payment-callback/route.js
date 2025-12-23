@@ -5,8 +5,9 @@ import { updateApplicationPayment, saveApplication, incrementScholarshipCount } 
 import * as brevo from '@getbrevo/brevo';
 
 // Helper function to send payment confirmation email to user
-async function sendPaymentConfirmationEmail({ email, firstName, lastName, trackName, reference, amount }) {
-  if (!process.env.BREVO_API_KEY || !email || !firstName || !lastName || !trackName) {
+// Note: we only require API key, email and trackName. Names are optional.
+async function sendPaymentConfirmationEmail({ email, firstName = '', lastName = '', trackName, reference, amount }) {
+  if (!process.env.BREVO_API_KEY || !email || !trackName) {
     return;
   }
 
@@ -366,17 +367,15 @@ export async function GET(request) {
               console.error('Error updating scholarship count:', error);
             }
             
-            // Send confirmation email to user
-            if (firstName && lastName) {
-              await sendPaymentConfirmationEmail({
-                email,
-                firstName,
-                lastName,
-                trackName,
-                reference,
-                amount
-              });
-            }
+            // Send confirmation email to user (names optional)
+            await sendPaymentConfirmationEmail({
+              email,
+              firstName,
+              lastName,
+              trackName,
+              reference,
+              amount
+            });
           } else {
             // If updateApplicationPayment returned null, try to find and update by reference
             console.log('No application found by email/track, trying to update by reference...');
@@ -724,8 +723,8 @@ export async function POST(request) {
           console.error('Error sending payment email:', emailError);
         }
 
-        // Send payment confirmation email to user
-        if (customer?.email && firstName && lastName && trackName) {
+        // Send payment confirmation email to user (names optional)
+        if (customer?.email && trackName) {
           await sendPaymentConfirmationEmail({
             email: customer.email,
             firstName,

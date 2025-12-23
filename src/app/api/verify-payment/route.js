@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { incrementScholarshipCount } from '@/lib/db';
+import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
 
 // POST - Manually verify and update payment status
 export async function POST(request) {
@@ -128,7 +129,7 @@ export async function POST(request) {
       }
     }
 
-    // Increment scholarship count if update was successful
+    // Increment scholarship count and send confirmation email if update was successful
     if (updated && updatedApplication) {
       console.log('Processing successful update:', {
         updated,
@@ -146,6 +147,20 @@ export async function POST(request) {
           console.error('Error updating scholarship count:', error);
           // Don't fail the request if scholarship increment fails
         }
+      }
+
+      // Send payment confirmation email to user via Resend
+      try {
+        await sendPaymentConfirmationEmail({
+          email: updatedApplication.email,
+          firstName: updatedApplication.first_name || '',
+          lastName: updatedApplication.last_name || '',
+          trackName: appTrackName,
+          reference,
+          amount,
+        });
+      } catch (emailError) {
+        console.error('Error sending payment confirmation email from verify-payment:', emailError);
       }
 
       // Return success response

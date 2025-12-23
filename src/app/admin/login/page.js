@@ -162,7 +162,6 @@ export default function AdminLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isSubmitting}
-                  placeholder="Enter your password"
                   style={{
                     width: '100%',
                     padding: '0.875rem 4.5rem 0.875rem 0.875rem',

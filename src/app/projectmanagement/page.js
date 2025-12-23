@@ -3,27 +3,36 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Link from 'next/link';
+import Image from 'next/image';
 import ApplicationForm from '../components/ApplicationForm';
 
-export default function DataSciencePage() {
+export default function ProjectManagementPage() {
   const [showForm, setShowForm] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
+  const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
+  const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
 
-  // Check scholarship availability on component mount
+  // Load track configuration and scholarship status from database
   useEffect(() => {
-    const checkScholarshipStatus = async () => {
+    const loadTrackData = async () => {
       try {
-        const response = await fetch('/api/scholarship-status');
+        const response = await fetch('/api/scholarship-status?track=Project Management');
         const data = await response.json();
+        if (data.coursePrice) {
+          setCoursePrice(data.coursePrice);
+        }
+        if (data.limit) {
+          setScholarshipLimit(data.limit);
+        }
         if (data.available) {
           setScholarshipAvailable(true);
         }
       } catch (error) {
-        console.error('Error checking scholarship status:', error);
+        console.error('Error loading track data:', error);
       }
     };
     
-    checkScholarshipStatus();
+    loadTrackData();
   }, []);
   return (
     <main>
@@ -32,7 +41,7 @@ export default function DataSciencePage() {
       {/* Hero Section */}
       <section className="track-hero" style={{ 
         padding: '10rem 0 6rem', 
-        background: 'linear-gradient(135deg, #0066cc 0%, #004d99 100%)',
+        background: 'linear-gradient(135deg, #00c896 0%, #00a578 100%)',
         color: 'white',
         textAlign: 'center',
         marginTop: '140px',
@@ -40,10 +49,10 @@ export default function DataSciencePage() {
       }}>
         <div className="container">
           <h1 style={{ fontSize: '3.5rem', fontWeight: '800', marginBottom: '1rem' }}>
-            Data Science Track
+            Project Management Track
           </h1>
           <p style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto 2rem', opacity: 0.95 }}>
-            Master the skills to turn raw data into real-world insights. Learn programming, statistics, machine learning, and data visualization to solve complex problems and drive smarter business decisions.
+            Bridge the gap between business and technology. Learn how to lead cross-functional teams, translate user needs into product strategy, and drive technical innovation from idea to launch.
           </p>
           <a 
             href="#apply-section" 
@@ -58,7 +67,7 @@ export default function DataSciencePage() {
             style={{
               display: 'inline-block',
               backgroundColor: 'white',
-              color: '#0066cc',
+              color: '#00c896',
               padding: '1rem 2.5rem',
               borderRadius: '50px',
               fontWeight: '600',
@@ -89,13 +98,13 @@ export default function DataSciencePage() {
                 backgroundColor: '#f8f9fa',
                 padding: '2rem',
                 borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
+                borderLeft: '4px solid #00c896'
               }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
                   Target Audience
                 </h3>
                 <p style={{ color: '#666666', lineHeight: '1.7' }}>
-                  Beginners, Professionals, Students, and anyone looking to transition into data science.
+                  Beginners, Professionals, Students, and anyone looking to excel in project management.
                 </p>
               </div>
 
@@ -103,9 +112,9 @@ export default function DataSciencePage() {
                 backgroundColor: '#f8f9fa',
                 padding: '2rem',
                 borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
+                borderLeft: '4px solid #00c896'
               }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
                   Duration
                 </h3>
                 <p style={{ color: '#666666', lineHeight: '1.7', fontSize: '1.1rem', fontWeight: '600' }}>
@@ -117,9 +126,9 @@ export default function DataSciencePage() {
                 backgroundColor: '#f8f9fa',
                 padding: '2rem',
                 borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
+                borderLeft: '4px solid #00c896'
               }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
                   Schedule
                 </h3>
                 <p style={{ color: '#666666', lineHeight: '1.7' }}>
@@ -131,9 +140,9 @@ export default function DataSciencePage() {
                 backgroundColor: '#f8f9fa',
                 padding: '2rem',
                 borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
+                borderLeft: '4px solid #00c896'
               }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
                   Dates
                 </h3>
                 <p style={{ color: '#666666', lineHeight: '1.7' }}>
@@ -144,14 +153,14 @@ export default function DataSciencePage() {
 
             <div style={{ marginTop: '3rem', backgroundColor: '#fff3cd', padding: '2rem', borderRadius: '12px', border: '1px solid #ffc107' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1a1a1a' }}>
-                Cost: ₦150,000
+                Cost: ₦{coursePrice.toLocaleString()}
               </h3>
               <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '0.5rem' }}>
                 Includes certificate and class recordings
               </p>
               {scholarshipAvailable && (
-                <p style={{ color: '#0066cc', fontWeight: '600' }}>
-                  🎉 First 10 paid learners get 50% discount!
+                <p style={{ color: '#00c896', fontWeight: '600' }}>
+                  🎉 First {scholarshipLimit} paid learners get 50% discount!
                 </p>
               )}
             </div>
@@ -172,357 +181,265 @@ export default function DataSciencePage() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
             }}>
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 1 — Data Science Foundations
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 1 – Project Management Fundamentals
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    What is Data Science? Overview of roles (Data Analyst, Data Scientist, ML Engineer)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Introduction to project management concepts & terminology
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data Science project lifecycle (CRISP-DM)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Understanding the Project Life Cycle (initiation → planning → execution → monitoring → closure)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Understanding structured vs unstructured data
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Roles and responsibilities of a project manager
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Introduction to Python for Data Science
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Setup: Anaconda, Jupyter Notebook, Git/GitHub
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Overview of frameworks: Waterfall vs Agile
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 2 — Python for Data Analysis
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 2 – Project Initiation
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Python essentials: variables, loops, functions, modules
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Project selection and prioritization
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Working with NumPy arrays
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Developing a Project Charter
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data manipulation with Pandas
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Stakeholder identification and analysis
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Exploratory Data Analysis (EDA) basics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project Setup: Define project topic, scope, goals
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Organizational governance and compliance basics
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 3 — Data Wrangling & Cleaning
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 3 – Project Planning: Scope & Work Breakdown
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Handling missing data, duplicates, and formatting issues
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Defining and managing project scope
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data normalization & standardization
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Creating a Work Breakdown Structure (WBS)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Feature extraction & feature engineering fundamentals
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Dealing with categorical variables
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Practical hands-on with real messy datasets
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Raw data collection & cleaning plan
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Defining deliverables, assumptions, and constraints
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 4 — Data Visualization & Storytelling
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 4 – Project Schedule & Cost Planning
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Visualization best practices
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Scheduling techniques (Gantt charts, critical path)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Matplotlib, Seaborn, Plotly fundamentals
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Estimating durations and dependencies
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Dashboard introduction (Tableau or Power BI)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Communicating insights with narrative clarity
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: EDA + Visual summaries
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Introduction to cost budgeting and cost estimation principles
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 5 — Statistics for Data Science
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 5 – Risk & Quality Planning
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Descriptive & inferential statistics
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Identifying project risks and risk analysis
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Probability distributions
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Developing risk response strategies
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Hypothesis testing (t-test, chi-square, ANOVA)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Quality planning and standards
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Correlation vs causation
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Statistical significance for business decisions
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Statistical analysis of a dataset
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Creating communication plans
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 6 — Machine Learning Foundations
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 6 – Project Execution Essentials
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    What is Machine Learning?
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Project team leadership and building team dynamics
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Supervised vs unsupervised learning
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Communication best practices for project teams
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Train/validation/test splits
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Managing stakeholder expectations
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Feature selection techniques
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Bias-variance tradeoff, overfitting, underfitting
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Identify ML approach for your problem
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Mid-bootcamp project milestone check-in
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 7 — Supervised Learning Algorithms
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 7 – Agile and Hybrid Approaches
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Linear and Logistic Regression
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Introduction to Agile principles and frameworks (Scrum, Kanban)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    k-Nearest Neighbors
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Adaptive planning and iterative delivery
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Decision Trees & Random Forests
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    How and when to blend Agile with traditional methods
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Gradient Boosting (XGBoost/LightGBM)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Model evaluation metrics (AUC, F1, RMSE, MAPE, etc.)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Train baseline models
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Tools: product backlog, sprint planning, burndown charts
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 8 — Unsupervised Learning Algorithms
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 8 – Project Monitoring & Control
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Clustering: K-Means, DBSCAN, Hierarchical
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Tracking project progress with KPIs
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Dimensionality reduction with PCA
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Earned Value & performance measurement
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Association rule mining
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Anomaly detection basics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Consider unsupervised techniques where applicable
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Handling scope changes and change control processes
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 9 — Deep Learning & Neural Networks (Intro)
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 9 – Tools, Software & Collaboration
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Introduction to neural networks
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Hands-on with industry tools (e.g., Jira, MS Project, Trello)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Fundamentals of TensorFlow/Keras or PyTorch
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Managing task tracking, reporting, and dashboards
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Building your first neural model
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Collaboration with stakeholders via tools like Confluence
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Deep learning for classification & regression
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Optional deep learning model iteration
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Integrated reporting practice
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 10 — Model Tuning, Optimization & Deployment
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 10 – Closure & Lessons Learned
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Hyperparameter tuning (GridSearch, RandomSearch, Optuna)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Project close-out processes
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Model interpretability (SHAP, LIME)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Finalizing deliverables, contracts, and financials
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Deploying models using Flask/FastAPI
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Streamlit for ML apps
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Build a deployable model prototype
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Capturing lessons learned and documentation
                   </li>
                 </ul>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 11 — Real-World Data Science Practices
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 11 – Live Project Progress & Refinement
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data pipelines & workflow automation
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Working on your real-life project
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Working with cloud tools (AWS/GCP/Azure intro)
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Weekly project stand-ups and mentor check-ins
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    SQL for data science (queries, joins, aggregations)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Version control & reproducibility
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Finalize model + deployment + documentation
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Applying all PM principles to your project environment
                   </li>
                 </ul>
               </div>
 
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 12 — Capstone Project Presentation + Career Support
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
+                  Week 12 – Capstone Presentation & Career Readiness
                 </h3>
                 <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Final project presentation to mentors/peers
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Present your project outcome to peers/mentors
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Demo of EDA, models, and deployment
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Reflect on project successes, improvements, and metrics
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Portfolio development: GitHub, Kaggle, personal website
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Resume optimization (data-science specific)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Mock interviews — technical + behavioural
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Career roadmap: Data Analyst → Data Scientist → ML Engineer
+                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                    Career support: resume & LinkedIn polish + interview preparation
                   </li>
                 </ul>
               </div>
@@ -542,11 +459,8 @@ export default function DataSciencePage() {
               borderRadius: '12px',
               marginTop: '2rem'
             }}>
-              <p style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#666666', marginBottom: '1.5rem' }}>
-                Graduates will be able to clean and analyze complex datasets, build predictive models, and communicate data-driven insights effectively to stakeholders.
-              </p>
               <p style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#666666' }}>
-                By the end of the 12-week Data Science bootcamp, learners will be able to confidently work with real-world datasets, clean and prepare data, perform statistical analysis, and create compelling visual insights. They will understand the full data science lifecycle and be capable of building, evaluating, and improving machine learning models using industry-standard tools. Graduates will also gain hands-on experience deploying models and presenting data-driven solutions, enabling them to step into data-focused roles with a strong portfolio project that showcases their technical and analytical abilities.
+                Upon completing the 12-week Project Management bootcamp, learners will be equipped to lead projects through all phases of the project lifecycle, from initiation to closure. They will develop the skills to create project charters, work breakdown structures, schedules, risk plans, and stakeholder communication strategies. Participants will gain practical experience using project management tools, managing project teams, adapting to Agile and hybrid environments, and monitoring project performance. Graduates will be prepared to manage real projects confidently and contribute effectively to project teams in a professional setting.
               </p>
             </div>
           </div>
@@ -570,13 +484,13 @@ export default function DataSciencePage() {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
                 gap: '1.5rem' 
               }}>
-                {['Mayowa', 'Sipo', 'Posi', 'Chioma', 'Alex'].map((name, index) => (
+                {['Bolaji', 'Ogey'].map((name, index) => (
                   <div key={index} style={{
                     padding: '1.5rem',
                     backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     textAlign: 'center',
-                    borderLeft: '3px solid #0066cc'
+                    borderLeft: '3px solid #00c896'
                   }}>
                     <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1a1a1a' }}>
                       {name}
@@ -608,7 +522,7 @@ export default function DataSciencePage() {
                 color: '#666666',
                 lineHeight: '1.7'
               }}>
-                Join our 12-week Data Science bootcamp and transform your career with hands-on skills.
+                Join our 12-week Project Management bootcamp and transform your career with hands-on skills.
               </p>
               <button
                 onClick={() => {
@@ -623,24 +537,24 @@ export default function DataSciencePage() {
                 className="cta-button"
                 style={{
                   display: 'inline-block',
-                  backgroundColor: '#0066cc',
+                  backgroundColor: '#00c896',
                   color: 'white',
                   padding: '1.25rem 3rem',
                   borderRadius: '50px',
                   fontWeight: '600',
                   fontSize: '1.1rem',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 15px rgba(0, 102, 204, 0.3)',
+                  boxShadow: '0 4px 15px rgba(0, 200, 150, 0.3)',
                   border: 'none',
                   cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(0, 102, 204, 0.4)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 200, 150, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 15px rgba(0, 102, 204, 0.3)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 200, 150, 0.3)';
                 }}
               >
                 Apply Now
@@ -700,7 +614,7 @@ export default function DataSciencePage() {
               }}>
                 Please fill out the form below to complete your application.
               </p>
-              <ApplicationForm trackName="Data Science" coursePrice={150000} />
+              <ApplicationForm trackName="Project Management" />
             </div>
           )}
         </div>
@@ -711,7 +625,7 @@ export default function DataSciencePage() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <img src="/logo.svg" alt="CVERSE Logo" className="footer-logo" />
+              <Image src="/logo.svg" alt="CVERSE Logo" className="footer-logo" width={150} height={50} />
               <p>Empowering the next generation of digital professionals through world-class education and practical training.</p>
             </div>
             <div className="footer-section">

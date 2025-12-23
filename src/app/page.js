@@ -1,6 +1,7 @@
 import Navbar from './components/Navbar';
 import ContactForm from './components/ContactForm';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -43,12 +44,12 @@ export default function Home() {
             <div className="track-card data-science-card">
               <h3>Data Science</h3>
               <p>Master the skills to turn raw data into real-world insights. Learn programming, statistics, machine learning, and data visualization to solve with complex problems and drive smarter business decisions.</p>
-              <Link href="/data-science" className="track-button data-science-button">Learn More</Link>
+              <Link href="/datascience" className="track-button data-science-button">Learn More</Link>
             </div>
             <div className="track-card tpm-card">
               <h3>Project Management</h3>
               <p>Bridge the gap between business and technology. Learn how to lead cross-functional teams, translate user needs into product strategy, and drive technical innovation from idea to launch.</p>
-              <Link href="/project-management" className="track-button tpm-button">Learn More</Link>
+              <Link href="/projectmanagement" className="track-button tpm-button">Learn More</Link>
             </div>
           </div>
         </div>
@@ -80,7 +81,7 @@ export default function Home() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <img src="/logo.svg" alt="CVERSE Logo" className="footer-logo" />
+              <Image src="/logo.svg" alt="CVERSE Logo" className="footer-logo" width={150} height={50} />
               <p>Empowering the next generation of digital professionals through world-class education and practical training.</p>
             </div>
             <div className="footer-section">

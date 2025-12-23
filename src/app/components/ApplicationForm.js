@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from './ToastProvider';
 
-export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
+export default function ApplicationForm({ trackName }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,25 +14,38 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
   const [scholarshipRemaining, setScholarshipRemaining] = useState(0);
+  const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
+  const [discountPercentage, setDiscountPercentage] = useState(50); // Default fallback
+  const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
   const { showToast } = useToast();
 
-  // Check scholarship availability on component mount
+  // Load track configuration and scholarship status from database
   useEffect(() => {
-    const checkScholarshipStatus = async () => {
+    const loadTrackData = async () => {
       try {
-        const response = await fetch('/api/scholarship-status');
+        const response = await fetch(`/api/scholarship-status?track=${encodeURIComponent(trackName)}`);
         const data = await response.json();
+        
+        if (data.coursePrice) {
+          setCoursePrice(data.coursePrice);
+        }
+        if (data.discountPercentage) {
+          setDiscountPercentage(data.discountPercentage);
+        }
+        if (data.limit) {
+          setScholarshipLimit(data.limit);
+        }
         if (data.available) {
           setScholarshipAvailable(true);
           setScholarshipRemaining(data.remaining);
         }
       } catch (error) {
-        console.error('Error checking scholarship status:', error);
+        console.error('Error loading track data:', error);
       }
     };
     
-    checkScholarshipStatus();
-  }, []);
+    loadTrackData();
+  }, [trackName]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,6 +60,22 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
     setIsSubmitting(true);
 
     try {
+      // Re-check scholarship status at submission time to ensure accuracy (per track)
+      let finalScholarshipAvailable = scholarshipAvailable;
+      try {
+        const statusResponse = await fetch(`/api/scholarship-status?track=${encodeURIComponent(trackName)}`);
+        const statusData = await statusResponse.json();
+        finalScholarshipAvailable = statusData.available || false;
+      } catch (error) {
+        console.error('Error checking scholarship status:', error);
+        // Use cached value if check fails
+      }
+
+      // Calculate the actual price to charge (discount percentage from database if scholarship available)
+      const discountMultiplier = finalScholarshipAvailable ? (1 - discountPercentage / 100) : 1;
+      const actualPrice = coursePrice * discountMultiplier;
+      const amountInKobo = Math.round(actualPrice * 100);
+
       // First, save the application (without payment reference - will be updated after payment)
       try {
         await fetch('/api/save-application', {
@@ -57,7 +86,7 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
           body: JSON.stringify({
             ...formData,
             trackName,
-            amount: coursePrice * 100,
+            amount: amountInKobo,
           }),
         });
       } catch (saveError) {
@@ -78,7 +107,7 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
         body: JSON.stringify({
           ...formData,
           trackName,
-          amount: coursePrice * 100, // Convert to kobo (Paystack uses smallest currency unit)
+          amount: amountInKobo, // Convert to kobo (Paystack uses smallest currency unit)
         }),
       });
 
@@ -294,7 +323,7 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
                 color: '#00c896', 
                 fontWeight: '600'
               }}>
-                🎉 First 10 paid learners get 50% discount!
+                🎉 First {scholarshipLimit} paid learners get {Math.round(discountPercentage)}% discount!
               </p>
             </div>
           )}
@@ -306,7 +335,7 @@ export default function ApplicationForm({ trackName, coursePrice = 150000 }) {
           disabled={isSubmitting}
           style={{ width: '100%' }}
         >
-          {isSubmitting ? 'Processing...' : `Proceed to Payment (₦${coursePrice.toLocaleString()})`}
+          {isSubmitting ? 'Processing...' : `Proceed to Payment (₦${scholarshipAvailable ? (coursePrice * (1 - discountPercentage / 100)).toLocaleString() : coursePrice.toLocaleString()})`}
         </button>
       </form>
     </div>

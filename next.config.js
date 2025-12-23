@@ -41,7 +41,7 @@ const nextConfig = {
                 "img-src 'self' data: https: blob:",
                 "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
                 "connect-src 'self' https://api.paystack.co https://*.paystack.co https://api.getbrevo.com",
-                "frame-src 'self' https://*.paystack.co",
+                "frame-src 'self' https://*.paystack.co https://checkout.paystack.com",
                 "frame-ancestors 'self'",
                 "object-src 'none'",
                 "base-uri 'self'",

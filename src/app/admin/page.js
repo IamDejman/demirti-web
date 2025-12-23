@@ -1,21 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
+import { useRouter } from 'next/navigation';
+import AdminNavbar from '../components/AdminNavbar';
 
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
-  const [scholarships, setScholarships] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [activeTab, setActiveTab] = useState('applications'); // 'applications' or 'scholarships'
+  const router = useRouter();
+
+  // Check authentication on mount
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
+    if (!isAuthenticated) {
+      router.push('/admin/login');
+    }
+  }, [router]);
+
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Note: loadData is intentionally excluded from deps to prevent infinite loops
   }, [selectedTrack, selectedStatus]);
+
 
   const loadData = async () => {
     setLoading(true);
@@ -31,13 +41,7 @@ export default function AdminDashboard() {
         setStats(appsData.stats);
       }
 
-      // Load scholarships
-      const scholarshipsResponse = await fetch('/api/admin/scholarships');
-      const scholarshipsData = await scholarshipsResponse.json();
-      
-      if (scholarshipsData.success) {
-        setScholarships(scholarshipsData.scholarships);
-      }
+
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -50,6 +54,7 @@ export default function AdminDashboard() {
     return new Date(dateString).toLocaleString();
   };
 
+  // Format payment amounts - these are stored in kobo (from Paystack)
   const formatCurrency = (amount) => {
     if (!amount) return '₦0';
     return `₦${(amount / 100).toLocaleString()}`;
@@ -62,71 +67,42 @@ export default function AdminDashboard() {
 
   return (
     <main>
-      <Navbar />
-      <div style={{ 
-        marginTop: '140px', 
+      <AdminNavbar />
+      <div className="admin-dashboard" style={{ 
+        marginTop: '70px', 
         padding: '2rem',
         backgroundColor: '#f8f9fa',
         minHeight: 'calc(100vh - 140px)'
       }}>
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <h1 style={{ 
-            fontSize: '2.5rem', 
-            fontWeight: '700', 
-            marginBottom: '2rem',
-            color: '#1a1a1a'
-          }}>
-            Admin Dashboard
-          </h1>
-
-          {/* Tabs */}
           <div style={{ 
             display: 'flex', 
-            gap: '1rem', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
             marginBottom: '2rem',
-            borderBottom: '2px solid #e1e4e8'
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
-            <button
-              onClick={() => setActiveTab('applications')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: activeTab === 'applications' ? '#0066cc' : 'transparent',
-                color: activeTab === 'applications' ? 'white' : '#666',
-                border: 'none',
-                borderRadius: '8px 8px 0 0',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '1rem'
-              }}
-            >
+            <h1 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: '700', 
+              color: '#1a1a1a',
+              margin: 0
+            }}>
               Applications
-            </button>
-            <button
-              onClick={() => setActiveTab('scholarships')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: activeTab === 'scholarships' ? '#0066cc' : 'transparent',
-                color: activeTab === 'scholarships' ? 'white' : '#666',
-                border: 'none',
-                borderRadius: '8px 8px 0 0',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '1rem'
-              }}
-            >
-              Scholarships
-            </button>
+            </h1>
           </div>
+
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: '4rem' }}>
               <p style={{ fontSize: '1.25rem', color: '#666' }}>Loading...</p>
             </div>
-          ) : activeTab === 'applications' ? (
+          ) : (
             <>
               {/* Statistics Cards */}
               {stats && (
-                <div style={{ 
+                <div className="admin-stats-grid" style={{ 
                   display: 'grid', 
                   gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
                   gap: '1.5rem',
@@ -195,7 +171,7 @@ export default function AdminDashboard() {
               )}
 
               {/* Filters */}
-              <div style={{
+              <div className="admin-filters" style={{ 
                 backgroundColor: 'white',
                 padding: '1.5rem',
                 borderRadius: '12px',
@@ -257,7 +233,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Applications Table */}
-              <div style={{
+              <div className="admin-table-container" style={{
                 backgroundColor: 'white',
                 padding: '1.5rem',
                 borderRadius: '12px',
@@ -273,7 +249,7 @@ export default function AdminDashboard() {
                     No applications found
                   </p>
                 ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid #e1e4e8' }}>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Name</th>
@@ -305,7 +281,7 @@ export default function AdminDashboard() {
                               backgroundColor: app.status === 'paid' ? '#d4edda' : '#fff3cd',
                               color: app.status === 'paid' ? '#155724' : '#856404'
                             }}>
-                              {app.status === 'paid' ? '✓ Paid' : '⏳ Pending'}
+                              {app.status === 'paid' ? 'Paid' : '⏳ Pending'}
                             </span>
                           </td>
                           <td style={{ padding: '1rem', color: '#1a1a1a', fontWeight: '600' }}>
@@ -361,7 +337,7 @@ export default function AdminDashboard() {
                             <strong>Pending:</strong> {trackStats.pending}
                           </p>
                           <p style={{ margin: 0, color: '#28a745', fontWeight: '600' }}>
-                            <strong>Revenue:</strong> ₦{trackStats.revenue.toLocaleString()}
+                            <strong>Revenue:</strong> ₦{(trackStats.revenue / 100).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -370,98 +346,6 @@ export default function AdminDashboard() {
                 </div>
               )}
             </>
-          ) : (
-            /* Scholarships Tab */
-            <div style={{
-              backgroundColor: 'white',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-                Scholarship Status by Track
-              </h2>
-              
-              {scholarships.length === 0 ? (
-                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  No scholarship data available
-                </p>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                  {scholarships.map((scholarship) => (
-                    <div key={scholarship.trackName} style={{
-                      padding: '1.5rem',
-                      backgroundColor: scholarship.available ? '#e8f5e9' : '#fff3cd',
-                      borderRadius: '12px',
-                      border: `2px solid ${scholarship.available ? '#00c896' : '#ffc107'}`,
-                      borderLeft: `6px solid ${scholarship.available ? '#00c896' : '#ffc107'}`
-                    }}>
-                      <h3 style={{ 
-                        fontSize: '1.5rem', 
-                        fontWeight: '700', 
-                        marginBottom: '1rem',
-                        color: '#1a1a1a'
-                      }}>
-                        {scholarship.trackName}
-                      </h3>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#666', fontWeight: '600' }}>Scholarship Limit:</span>
-                          <span style={{ color: '#1a1a1a', fontWeight: '700', fontSize: '1.1rem' }}>
-                            {scholarship.limit}
-                          </span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#666', fontWeight: '600' }}>Used:</span>
-                          <span style={{ color: '#1a1a1a', fontWeight: '700', fontSize: '1.1rem' }}>
-                            {scholarship.count} / {scholarship.limit}
-                          </span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#666', fontWeight: '600' }}>Remaining:</span>
-                          <span style={{ 
-                            color: scholarship.available ? '#00c896' : '#dc3545',
-                            fontWeight: '700',
-                            fontSize: '1.25rem'
-                          }}>
-                            {scholarship.remaining}
-                          </span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#666', fontWeight: '600' }}>Discount:</span>
-                          <span style={{ color: '#1a1a1a', fontWeight: '700' }}>
-                            {Math.round(scholarship.discountPercentage)}%
-                          </span>
-                        </div>
-                        
-                        <div style={{
-                          marginTop: '1rem',
-                          padding: '0.75rem',
-                          backgroundColor: scholarship.available ? '#c8e6c9' : '#ffe082',
-                          borderRadius: '8px',
-                          textAlign: 'center'
-                        }}>
-                          <p style={{ 
-                            margin: 0, 
-                            fontWeight: '600',
-                            color: scholarship.available ? '#2e7d32' : '#f57c00'
-                          }}>
-                            {scholarship.available 
-                              ? `✅ ${scholarship.remaining} scholarship${scholarship.remaining !== 1 ? 's' : ''} available`
-                              : '❌ All scholarships taken'
-                            }
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           )}
         </div>
       </div>

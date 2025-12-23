@@ -93,19 +93,6 @@ export default function BulkEmailPage() {
     e.target.value = '';
   };
 
-  const handlePasteEmails = (e) => {
-    const text = e.clipboardData.getData('text');
-    const emails = text
-      .split(/[,\n;]/)
-      .map(email => email.trim())
-      .filter(email => email && email.includes('@'));
-    
-    if (emails.length > 0) {
-      const newRecipients = emails.map(email => ({ name: '', email }));
-      setRecipients([...recipients, ...newRecipients]);
-      e.preventDefault();
-    }
-  };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -451,7 +438,6 @@ export default function BulkEmailPage() {
                   type="email"
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  placeholder="admin@demirti.com"
                   style={{
                     width: '100%',
                     padding: '0.75rem',

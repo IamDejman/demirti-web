@@ -656,7 +656,7 @@ export default function DataSciencePage() {
               </button>
             </div>
           ) : (
-            <div style={{
+            <div className="application-form-card" style={{
               backgroundColor: 'white',
               borderRadius: '16px',
               padding: '3rem',
@@ -667,6 +667,7 @@ export default function DataSciencePage() {
               animation: 'fadeIn 0.3s ease-in'
             }}>
               <button
+                className="close-button"
                 onClick={() => setShowForm(false)}
                 style={{
                   position: 'absolute',

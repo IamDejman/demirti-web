@@ -151,7 +151,7 @@ export async function POST(request) {
       // Return success response
       return NextResponse.json({
         success: true,
-        message: 'Payment verified and application updated',
+        message: 'Payment verified',
         application: updatedApplication
       }, { status: 200 });
     }

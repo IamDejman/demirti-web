@@ -91,15 +91,6 @@ function PaymentSuccessContent() {
                 Verifying payment...
               </p>
             )}
-            {verified && (
-              <p style={{ 
-                fontSize: '0.9rem', 
-                color: '#00c896', 
-                marginBottom: '1rem'
-              }}>
-                ✓ Payment verified and application updated
-              </p>
-            )}
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/" className="cta-button" style={{
                 display: 'inline-block',

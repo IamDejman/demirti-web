@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
+import { ensureDatabaseInitialized } from './db';
 
 // Hash password using bcrypt
 async function hashPassword(password) {
@@ -14,6 +15,7 @@ async function verifyPassword(password, hash) {
 
 // Admin CRUD functions
 export async function createAdmin({ email, password, firstName, lastName }) {
+  await ensureDatabaseInitialized();
   if (!email || !password) {
     throw new Error('Email and password are required');
   }
@@ -39,6 +41,7 @@ export async function createAdmin({ email, password, firstName, lastName }) {
 }
 
 export async function getAdminByEmail(email) {
+  await ensureDatabaseInitialized();
   if (!email) {
     return null;
   }

@@ -26,7 +26,7 @@ export async function GET() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('tracks', 'applications', 'admins', 'scholarship_tracking')
+      AND table_name IN ('tracks', 'applications', 'admins', 'scholarship_tracking', 'discounts')
       ORDER BY table_name;
     `;
     
@@ -40,7 +40,7 @@ export async function GET() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('tracks', 'applications', 'admins', 'scholarship_tracking')
+      AND table_name IN ('tracks', 'applications', 'admins', 'scholarship_tracking', 'discounts')
       ORDER BY table_name;
     `;
     

@@ -9,13 +9,16 @@ export default function ApplicationForm({ trackName }) {
     lastName: '',
     email: '',
     phone: '',
-    paymentOption: 'paystack'
+    paymentOption: 'paystack',
+    discountCode: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
   const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
   const [discountPercentage, setDiscountPercentage] = useState(50); // Default fallback
   const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
+  const [appliedDiscount, setAppliedDiscount] = useState(null); // Store validated discount
+  const [validatingDiscount, setValidatingDiscount] = useState(false);
   const { showToast } = useToast();
 
   // Load track configuration and scholarship status from database
@@ -51,6 +54,50 @@ export default function ApplicationForm({ trackName }) {
       ...prev,
       [name]: value
     }));
+    
+    // Clear applied discount if discount code is changed
+    if (name === 'discountCode' && appliedDiscount) {
+      setAppliedDiscount(null);
+    }
+  };
+
+  // Validate discount code when user leaves the field
+  const handleDiscountCodeBlur = async () => {
+    const code = formData.discountCode.trim();
+    
+    if (!code) {
+      setAppliedDiscount(null);
+      return;
+    }
+
+    setValidatingDiscount(true);
+    try {
+      const response = await fetch(`/api/validate-discount?code=${encodeURIComponent(code)}`);
+      const data = await response.json();
+      
+      if (data.valid) {
+        setAppliedDiscount(data.discount);
+        showToast({
+          type: 'success',
+          message: `Discount "${data.discount.name}" applied! ${data.discount.percentage}% off`
+        });
+      } else {
+        setAppliedDiscount(null);
+        showToast({
+          type: 'error',
+          message: data.message || 'Invalid discount code'
+        });
+      }
+    } catch (error) {
+      console.error('Error validating discount:', error);
+      setAppliedDiscount(null);
+      showToast({
+        type: 'error',
+        message: 'Failed to validate discount code'
+      });
+    } finally {
+      setValidatingDiscount(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -69,8 +116,18 @@ export default function ApplicationForm({ trackName }) {
         // Use cached value if check fails
       }
 
-      // Calculate the actual price to charge (discount percentage from database if scholarship available)
-      const discountMultiplier = finalScholarshipAvailable ? (1 - discountPercentage / 100) : 1;
+      // Calculate the actual price to charge
+      // First apply scholarship discount if available
+      let discountMultiplier = finalScholarshipAvailable ? (1 - discountPercentage / 100) : 1;
+      
+      // Then apply discount code if valid (discount codes take precedence or can stack)
+      // For now, we'll apply the discount code if it provides a better discount
+      if (appliedDiscount) {
+        const discountCodeMultiplier = 1 - appliedDiscount.percentage / 100;
+        // Use the better discount (lower multiplier = better discount)
+        discountMultiplier = Math.min(discountMultiplier, discountCodeMultiplier);
+      }
+      
       const actualPrice = coursePrice * discountMultiplier;
       const amountInKobo = Math.round(actualPrice * 100);
 
@@ -85,6 +142,7 @@ export default function ApplicationForm({ trackName }) {
             ...formData,
             trackName,
             amount: amountInKobo,
+            discountCode: appliedDiscount ? appliedDiscount.name : null,
           }),
         });
       } catch (saveError) {
@@ -237,6 +295,30 @@ export default function ApplicationForm({ trackName }) {
         </div>
 
         <div className="form-group">
+          <label htmlFor="discountCode">Discount Code</label>
+          <input
+            type="text"
+            id="discountCode"
+            name="discountCode"
+            value={formData.discountCode}
+            onChange={handleChange}
+            onBlur={handleDiscountCodeBlur}
+            disabled={isSubmitting || validatingDiscount}
+            placeholder="Enter discount code"
+          />
+          {validatingDiscount && (
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#666', fontStyle: 'italic' }}>
+              Validating discount code...
+            </p>
+          )}
+          {appliedDiscount && (
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#00c896', fontWeight: '600' }}>
+              ✓ {appliedDiscount.name} - {appliedDiscount.percentage}% discount applied
+            </p>
+          )}
+        </div>
+
+        <div className="form-group">
           <label style={{ marginBottom: '1rem', display: 'block' }}>
             Payment Method <span style={{ color: 'red' }}>*</span>
           </label>
@@ -331,6 +413,24 @@ export default function ApplicationForm({ trackName }) {
               </p>
             </div>
           )}
+          {appliedDiscount && (
+            <div style={{ 
+              marginTop: '0.75rem',
+              padding: '0.75rem',
+              backgroundColor: '#e8f5e9',
+              borderRadius: '8px',
+              borderLeft: '4px solid #00c896'
+            }}>
+              <p style={{ 
+                margin: 0, 
+                fontSize: '0.9rem', 
+                color: '#2e7d32', 
+                fontWeight: '600'
+              }}>
+                Discount Code Applied: {appliedDiscount.name} - {appliedDiscount.percentage}% off
+              </p>
+            </div>
+          )}
         </div>
 
         <button
@@ -339,7 +439,17 @@ export default function ApplicationForm({ trackName }) {
           disabled={isSubmitting}
           style={{ width: '100%' }}
         >
-          {isSubmitting ? 'Processing...' : `Proceed to Payment (₦${scholarshipAvailable ? (coursePrice * (1 - discountPercentage / 100)).toLocaleString() : coursePrice.toLocaleString()})`}
+          {isSubmitting ? 'Processing...' : (() => {
+            let finalPrice = coursePrice;
+            if (scholarshipAvailable) {
+              finalPrice = coursePrice * (1 - discountPercentage / 100);
+            }
+            if (appliedDiscount) {
+              const discountPrice = coursePrice * (1 - appliedDiscount.percentage / 100);
+              finalPrice = Math.min(finalPrice, discountPrice);
+            }
+            return `Proceed to Payment (₦${finalPrice.toLocaleString()})`;
+          })()}
         </button>
       </form>
     </div>

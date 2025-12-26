@@ -128,6 +128,31 @@ export default function AdminNavbar() {
             Scholarships
           </Link>
           <Link
+            href="/admin/discounts"
+            style={{
+              textDecoration: 'none',
+              color: isActive('/admin/discounts') ? '#0066cc' : '#1a1a1a',
+              fontWeight: isActive('/admin/discounts') ? '600' : '400',
+              fontSize: '1rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              backgroundColor: isActive('/admin/discounts') ? 'rgba(0, 102, 204, 0.1)' : 'transparent',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive('/admin/discounts')) {
+                e.target.style.color = '#0066cc';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive('/admin/discounts')) {
+                e.target.style.color = '#1a1a1a';
+              }
+            }}
+          >
+            Discounts
+          </Link>
+          <Link
             href="/admin/config"
             style={{
               textDecoration: 'none',
@@ -242,6 +267,20 @@ export default function AdminNavbar() {
             }}
           >
             Scholarships
+          </Link>
+          <Link
+            href="/admin/discounts"
+            onClick={() => setIsMenuOpen(false)}
+            style={{
+              textDecoration: 'none',
+              color: isActive('/admin/discounts') ? '#0066cc' : '#1a1a1a',
+              fontWeight: isActive('/admin/discounts') ? '600' : '400',
+              padding: '0.75rem 1rem',
+              borderRadius: '6px',
+              backgroundColor: isActive('/admin/discounts') ? 'rgba(0, 102, 204, 0.1)' : 'transparent'
+            }}
+          >
+            Discounts
           </Link>
           <Link
             href="/admin/config"

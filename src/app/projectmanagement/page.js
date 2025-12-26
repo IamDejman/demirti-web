@@ -898,7 +898,7 @@ export default function ProjectManagementPage() {
                 <a href="https://x.com/CVerse_Academy" className="social-link" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
                   <i className="fab fa-x-twitter"></i>
                 </a>
-                <a href="https://www.instagram.com/cverse_academy?igsh=aHl4cTNhM3l1ZnVi" className="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.instagram.com/cversedemirti/" className="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                   <i className="fab fa-instagram"></i>
                 </a>
                 <a href="https://www.tiktok.com/@cverse_academy" className="social-link" aria-label="TikTok" target="_blank" rel="noopener noreferrer">

@@ -94,6 +94,24 @@ export async function initializeDatabase() {
       ON CONFLICT (track_name) DO NOTHING;
     `;
 
+    // Create discounts table
+    await sql`
+      CREATE TABLE IF NOT EXISTS discounts (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        percentage DECIMAL(5,2) NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Create index on discounts name
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_discounts_name 
+      ON discounts(name);
+    `;
+
     // Create applications table
     await sql`
       CREATE TABLE IF NOT EXISTS applications (
@@ -108,9 +126,23 @@ export async function initializeDatabase() {
         payment_reference VARCHAR(255),
         amount INTEGER,
         status VARCHAR(50) DEFAULT 'pending',
+        discount_code VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         paid_at TIMESTAMP
       );
+    `;
+
+    // Add discount_code column to applications if it doesn't exist (for existing databases)
+    await sql`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'applications' AND column_name = 'discount_code'
+        ) THEN
+          ALTER TABLE applications ADD COLUMN discount_code VARCHAR(255);
+        END IF;
+      END $$;
     `;
 
     // Create index on email and track_name for faster lookups
@@ -229,6 +261,7 @@ export async function saveApplication(application) {
       payment_reference,
       amount,
       status,
+      discount_code,
       created_at
     ) VALUES (
       ${applicationId},
@@ -241,6 +274,7 @@ export async function saveApplication(application) {
       ${application.paymentReference || null},
       ${application.amount || null},
       ${application.paymentReference ? 'paid' : 'pending'},
+      ${application.discountCode || null},
       CURRENT_TIMESTAMP
     )
     RETURNING *;
@@ -425,6 +459,106 @@ export async function updateTrackConfig(trackName, updates) {
     UPDATE tracks
     SET ${setClause}, updated_at = CURRENT_TIMESTAMP
     WHERE track_name = ${trackName}
+    RETURNING *;
+  `;
+  
+  return result.rows[0] || null;
+}
+
+// Discount functions
+export async function getAllDiscounts() {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    SELECT * FROM discounts
+    ORDER BY created_at DESC;
+  `;
+  
+  return result.rows;
+}
+
+export async function getDiscountById(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    SELECT * FROM discounts
+    WHERE id = ${id}
+    LIMIT 1;
+  `;
+  
+  return result.rows[0] || null;
+}
+
+export async function getDiscountByName(name) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    SELECT * FROM discounts
+    WHERE LOWER(name) = LOWER(${name}) AND is_active = true
+    LIMIT 1;
+  `;
+  
+  return result.rows[0] || null;
+}
+
+export async function createDiscount(name, percentage) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    INSERT INTO discounts (name, percentage, is_active)
+    VALUES (${name}, ${percentage}, true)
+    RETURNING *;
+  `;
+  
+  return result.rows[0];
+}
+
+export async function updateDiscount(id, updates) {
+  await ensureDatabaseInitialized();
+  let updateFields = [];
+  let updateValues = [];
+  
+  if (updates.name !== undefined) {
+    updateFields.push('name');
+    updateValues.push(updates.name);
+  }
+  if (updates.percentage !== undefined) {
+    updateFields.push('percentage');
+    updateValues.push(updates.percentage);
+  }
+  if (updates.isActive !== undefined) {
+    updateFields.push('is_active');
+    updateValues.push(updates.isActive);
+  }
+  
+  if (updateFields.length === 0) {
+    return null;
+  }
+  
+  const setParts = updateFields.map((field, index) => {
+    const value = updateValues[index];
+    if (field === 'name') {
+      return sql`name = ${value}`;
+    } else if (field === 'percentage') {
+      return sql`percentage = ${value}`;
+    } else if (field === 'is_active') {
+      return sql`is_active = ${value}`;
+    }
+  }).filter(Boolean);
+  
+  const setClause = sql.join(setParts, sql`, `);
+  
+  const result = await sql`
+    UPDATE discounts
+    SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+    RETURNING *;
+  `;
+  
+  return result.rows[0] || null;
+}
+
+export async function deleteDiscount(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    DELETE FROM discounts
+    WHERE id = ${id}
     RETURNING *;
   `;
   

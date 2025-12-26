@@ -96,6 +96,38 @@ export default function ProjectManagementPage() {
         </div>
       </section>
 
+      {/* Track Image Section */}
+      <section style={{ 
+        padding: '4rem 0', 
+        backgroundColor: '#f8f9fa',
+        position: 'relative'
+      }}>
+        <div className="container">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+            backgroundColor: 'white'
+          }}>
+            <Image
+              src="/CVerse_ProjectMgt.jpg"
+              alt="Project Management Track"
+              width={1200}
+              height={675}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                objectFit: 'cover'
+              }}
+              priority
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Course Overview */}
       <section style={{ padding: '5rem 0', backgroundColor: '#ffffff' }}>
         <div className="container">

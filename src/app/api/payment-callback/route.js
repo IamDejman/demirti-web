@@ -17,15 +17,33 @@ export async function GET(request) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment-failed?error=missing_reference`);
     }
 
+    // Validate and trim Paystack secret key
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
+    if (!paystackSecretKey) {
+      console.error('PAYSTACK_SECRET_KEY is not configured in payment callback');
+      if (checkOnly) {
+        return NextResponse.json({ error: 'Payment service not configured' }, { status: 500 });
+      }
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment-failed?error=service_not_configured`);
+    }
+
     // Verify transaction with Paystack
     const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${paystackSecretKey}`,
       },
     });
 
     const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('Paystack verification error:', {
+        status: response.status,
+        reference,
+        data: data
+      });
+    }
 
     if (checkOnly) {
       // Return JSON for polling
@@ -299,7 +317,14 @@ export async function POST(request) {
     const hash = request.headers.get('x-paystack-signature');
 
     // Verify webhook signature
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = process.env.PAYSTACK_SECRET_KEY?.trim();
+    if (!secret) {
+      console.error('PAYSTACK_SECRET_KEY is not configured in webhook');
+      return NextResponse.json(
+        { error: 'Payment service not configured' },
+        { status: 500 }
+      );
+    }
     const expectedHash = crypto
       .createHmac('sha512', secret)
       .update(body)

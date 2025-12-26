@@ -11,6 +11,7 @@ export default function ProjectManagementPage() {
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
   const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
   const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
+  const [expandedWeeks, setExpandedWeeks] = useState(new Set());
 
   // Load track configuration and scholarship status from database
   useEffect(() => {
@@ -34,6 +35,19 @@ export default function ProjectManagementPage() {
     
     loadTrackData();
   }, []);
+
+  const toggleWeek = (weekNumber) => {
+    setExpandedWeeks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(weekNumber)) {
+        newSet.delete(weekNumber);
+      } else {
+        newSet.add(weekNumber);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <main>
       <Navbar />
@@ -120,48 +134,30 @@ export default function ProjectManagementPage() {
                 <p style={{ color: '#666666', lineHeight: '1.7', fontSize: '1.1rem', fontWeight: '600' }}>
                   12 Weeks
                 </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '2rem',
-                borderRadius: '12px',
-                borderLeft: '4px solid #00c896'
-              }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
-                  Schedule
-                </h3>
-                <p style={{ color: '#666666', lineHeight: '1.7' }}>
-                  Saturday: 9am - 11am & 12pm - 2pm
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '2rem',
-                borderRadius: '12px',
-                borderLeft: '4px solid #00c896'
-              }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#00c896' }}>
-                  Dates
-                </h3>
-                <p style={{ color: '#666666', lineHeight: '1.7' }}>
-                  February 2026 - April 2026
+                <p style={{ color: '#666666', lineHeight: '1.7', fontSize: '1rem', marginTop: '0.5rem' }}>
+                  February 2026 - April 2026 (Weekends)
                 </p>
               </div>
             </div>
 
-            <div style={{ marginTop: '3rem', backgroundColor: '#fff3cd', padding: '2rem', borderRadius: '12px', border: '1px solid #ffc107' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1a1a1a' }}>
-                Cost: ₦{coursePrice.toLocaleString()}
-              </h3>
-              <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '0.5rem' }}>
+            <div style={{ marginTop: '3rem', backgroundColor: 'white', padding: '2.5rem', borderRadius: '12px', border: '2px solid #00c896', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>
+                  Course Fee
+                </h3>
+                <span style={{ fontSize: '2rem', fontWeight: '700', color: '#00c896' }}>
+                  ₦{coursePrice.toLocaleString()}
+                </span>
+              </div>
+              <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '1rem', fontSize: '1rem' }}>
                 Includes certificate and class recordings
               </p>
               {scholarshipAvailable && (
-                <p style={{ color: '#00c896', fontWeight: '600' }}>
-                  🎉 First {scholarshipLimit} paid learners get 50% discount!
-                </p>
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f0fdfa', borderRadius: '8px', borderLeft: '4px solid #00c896' }}>
+                  <p style={{ color: '#00c896', fontWeight: '600', margin: 0, fontSize: '1rem' }}>
+                    Limited Offer: First {scholarshipLimit} paid learners receive a 50% scholarship discount
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -180,268 +176,532 @@ export default function ProjectManagementPage() {
               borderRadius: '12px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
             }}>
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 1 – Project Management Fundamentals
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Introduction to project management concepts & terminology
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Understanding the Project Life Cycle (initiation → planning → execution → monitoring → closure)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Roles and responsibilities of a project manager
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Overview of frameworks: Waterfall vs Agile
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(1)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 1 – Project Management Fundamentals
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(1) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(1) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Introduction to project management concepts & terminology
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Understanding the Project Life Cycle (initiation → planning → execution → monitoring → closure)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Roles and responsibilities of a project manager
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Overview of frameworks: Waterfall vs Agile
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 2 – Project Initiation
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Project selection and prioritization
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Developing a Project Charter
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Stakeholder identification and analysis
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Organizational governance and compliance basics
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(2)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 2 – Project Initiation
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(2) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(2) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Project selection and prioritization
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Developing a Project Charter
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Stakeholder identification and analysis
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Organizational governance and compliance basics
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 3 – Project Planning: Scope & Work Breakdown
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Defining and managing project scope
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Creating a Work Breakdown Structure (WBS)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Defining deliverables, assumptions, and constraints
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(3)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 3 – Project Planning: Scope & Work Breakdown
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(3) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(3) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Defining and managing project scope
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Creating a Work Breakdown Structure (WBS)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Defining deliverables, assumptions, and constraints
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 4 – Project Schedule & Cost Planning
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Scheduling techniques (Gantt charts, critical path)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Estimating durations and dependencies
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Introduction to cost budgeting and cost estimation principles
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(4)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 4 – Project Schedule & Cost Planning
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(4) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(4) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Scheduling techniques (Gantt charts, critical path)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Estimating durations and dependencies
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Introduction to cost budgeting and cost estimation principles
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 5 – Risk & Quality Planning
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Identifying project risks and risk analysis
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Developing risk response strategies
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Quality planning and standards
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Creating communication plans
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(5)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 5 – Risk & Quality Planning
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(5) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(5) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Identifying project risks and risk analysis
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Developing risk response strategies
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Quality planning and standards
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Creating communication plans
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 6 – Project Execution Essentials
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Project team leadership and building team dynamics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Communication best practices for project teams
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Managing stakeholder expectations
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Mid-bootcamp project milestone check-in
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(6)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 6 – Project Execution Essentials
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(6) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(6) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Project team leadership and building team dynamics
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Communication best practices for project teams
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Managing stakeholder expectations
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Mid-bootcamp project milestone check-in
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 7 – Agile and Hybrid Approaches
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Introduction to Agile principles and frameworks (Scrum, Kanban)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Adaptive planning and iterative delivery
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    How and when to blend Agile with traditional methods
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Tools: product backlog, sprint planning, burndown charts
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(7)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 7 – Agile and Hybrid Approaches
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(7) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(7) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Introduction to Agile principles and frameworks (Scrum, Kanban)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Adaptive planning and iterative delivery
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      How and when to blend Agile with traditional methods
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Tools: product backlog, sprint planning, burndown charts
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 8 – Project Monitoring & Control
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Tracking project progress with KPIs
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Earned Value & performance measurement
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Handling scope changes and change control processes
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(8)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 8 – Project Monitoring & Control
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(8) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(8) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Tracking project progress with KPIs
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Earned Value & performance measurement
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Handling scope changes and change control processes
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 9 – Tools, Software & Collaboration
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Hands-on with industry tools (e.g., Jira, MS Project, Trello)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Managing task tracking, reporting, and dashboards
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Collaboration with stakeholders via tools like Confluence
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Integrated reporting practice
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(9)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 9 – Tools, Software & Collaboration
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(9) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(9) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Hands-on with industry tools (e.g., Jira, MS Project, Trello)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Managing task tracking, reporting, and dashboards
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Collaboration with stakeholders via tools like Confluence
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Integrated reporting practice
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 10 – Closure & Lessons Learned
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Project close-out processes
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Finalizing deliverables, contracts, and financials
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Capturing lessons learned and documentation
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(10)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 10 – Closure & Lessons Learned
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(10) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(10) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Project close-out processes
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Finalizing deliverables, contracts, and financials
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Capturing lessons learned and documentation
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 11 – Live Project Progress & Refinement
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Working on your real-life project
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Weekly project stand-ups and mentor check-ins
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Applying all PM principles to your project environment
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(11)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 11 – Live Project Progress & Refinement
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(11) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(11) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Working on your real-life project
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Weekly project stand-ups and mentor check-ins
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Applying all PM principles to your project environment
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#00c896' }}>
-                  Week 12 – Capstone Presentation & Career Readiness
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Present your project outcome to peers/mentors
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Reflect on project successes, improvements, and metrics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
-                    Career support: resume & LinkedIn polish + interview preparation
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(12)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#00c896' }}>
+                    Week 12 – Capstone Presentation & Career Readiness
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#00c896',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(12) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(12) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Present your project outcome to peers/mentors
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Reflect on project successes, improvements, and metrics
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#0066cc', fontWeight: 'bold' }}>•</span>
+                      Career support: resume & LinkedIn polish + interview preparation
+                    </li>
+                  </ul>
+                )}
               </div>
             </div>
           </div>
@@ -468,7 +728,7 @@ export default function ProjectManagementPage() {
       </section>
 
       {/* Facilitators */}
-      <section style={{ padding: '5rem 0', backgroundColor: '#f8f9fa' }}>
+      {/* <section style={{ padding: '5rem 0', backgroundColor: '#f8f9fa' }}>
         <div className="container">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <h2 className="section-title">Facilitators</h2>
@@ -501,7 +761,7 @@ export default function ProjectManagementPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Apply Section */}
       <section id="apply-section" style={{ 

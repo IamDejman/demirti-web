@@ -298,30 +298,36 @@ export default function ApplicationForm({ trackName }) {
         </div>
 
         <div style={{ 
-          backgroundColor: '#f8f9fa', 
+          backgroundColor: 'white', 
           padding: '1.5rem', 
           borderRadius: '12px', 
           marginBottom: '1.5rem',
-          border: '1px solid #e1e4e8'
+          border: '1px solid #e1e4e8',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
         }}>
-          <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600', marginBottom: '0.5rem' }}>
-            Course Fee: ₦{coursePrice.toLocaleString()}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600' }}>
+              Course Fee
+            </p>
+            <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0066cc' }}>
+              ₦{coursePrice.toLocaleString()}
+            </span>
+          </div>
           {scholarshipAvailable && (
             <div style={{ 
               marginTop: '0.75rem',
               padding: '0.75rem',
-              backgroundColor: '#e8f5e9',
+              backgroundColor: '#f0f7ff',
               borderRadius: '8px',
-              border: '1px solid #00c896'
+              borderLeft: '4px solid #0066cc'
             }}>
               <p style={{ 
                 margin: 0, 
                 fontSize: '0.9rem', 
-                color: '#00c896', 
+                color: '#0066cc', 
                 fontWeight: '600'
               }}>
-                🎉 First {scholarshipLimit} paid learners get {Math.round(discountPercentage)}% discount!
+                Limited Offer: First {scholarshipLimit} paid learners receive a {Math.round(discountPercentage)}% scholarship discount
               </p>
             </div>
           )}

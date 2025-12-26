@@ -14,7 +14,9 @@ export async function POST(request) {
     }
 
     // Validate Paystack secret key
-    if (!process.env.PAYSTACK_SECRET_KEY) {
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
+    if (!paystackSecretKey) {
+      console.error('PAYSTACK_SECRET_KEY is not configured');
       return NextResponse.json(
         { error: 'Paystack secret key is not configured' },
         { status: 500 }
@@ -58,7 +60,7 @@ export async function POST(request) {
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${paystackSecretKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(paystackData),
@@ -67,8 +69,16 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('Paystack API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data
+      });
+      
+      // Handle different Paystack error formats
+      const errorMessage = data.message || data.error || 'Failed to initialize payment';
       return NextResponse.json(
-        { error: data.message || 'Failed to initialize payment' },
+        { error: errorMessage, details: data },
         { status: response.status }
       );
     }

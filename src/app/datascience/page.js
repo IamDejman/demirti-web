@@ -11,6 +11,7 @@ export default function DataSciencePage() {
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
   const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
   const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
+  const [expandedWeeks, setExpandedWeeks] = useState(new Set());
 
   // Load track configuration and scholarship status from database
   useEffect(() => {
@@ -34,6 +35,18 @@ export default function DataSciencePage() {
     
     loadTrackData();
   }, []);
+
+  const toggleWeek = (weekNumber) => {
+    setExpandedWeeks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(weekNumber)) {
+        newSet.delete(weekNumber);
+      } else {
+        newSet.add(weekNumber);
+      }
+      return newSet;
+    });
+  };
   return (
     <main>
       <Navbar />
@@ -120,48 +133,30 @@ export default function DataSciencePage() {
                 <p style={{ color: '#666666', lineHeight: '1.7', fontSize: '1.1rem', fontWeight: '600' }}>
                   12 Weeks
                 </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '2rem',
-                borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
-              }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
-                  Schedule
-                </h3>
-                <p style={{ color: '#666666', lineHeight: '1.7' }}>
-                  Saturday: 9am - 11am & 12pm - 2pm
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '2rem',
-                borderRadius: '12px',
-                borderLeft: '4px solid #0066cc'
-              }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.75rem', color: '#0066cc' }}>
-                  Dates
-                </h3>
-                <p style={{ color: '#666666', lineHeight: '1.7' }}>
-                  February 2026 - April 2026
+                <p style={{ color: '#666666', lineHeight: '1.7', fontSize: '1rem', marginTop: '0.5rem' }}>
+                  February 2026 - April 2026 (Weekends)
                 </p>
               </div>
             </div>
 
-            <div style={{ marginTop: '3rem', backgroundColor: '#fff3cd', padding: '2rem', borderRadius: '12px', border: '1px solid #ffc107' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1a1a1a' }}>
-                Cost: ₦{coursePrice.toLocaleString()}
-              </h3>
-              <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '0.5rem' }}>
+            <div style={{ marginTop: '3rem', backgroundColor: 'white', padding: '2.5rem', borderRadius: '12px', border: '2px solid #0066cc', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>
+                  Course Fee
+                </h3>
+                <span style={{ fontSize: '2rem', fontWeight: '700', color: '#0066cc' }}>
+                  ₦{coursePrice.toLocaleString()}
+                </span>
+              </div>
+              <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '1rem', fontSize: '1rem' }}>
                 Includes certificate and class recordings
               </p>
               {scholarshipAvailable && (
-                <p style={{ color: '#0066cc', fontWeight: '600' }}>
-                  🎉 First {scholarshipLimit} paid learners get 50% discount!
-                </p>
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f0f7ff', borderRadius: '8px', borderLeft: '4px solid #0066cc' }}>
+                  <p style={{ color: '#0066cc', fontWeight: '600', margin: 0, fontSize: '1rem' }}>
+                    Limited Offer: First {scholarshipLimit} paid learners receive a 50% scholarship discount
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -180,191 +175,344 @@ export default function DataSciencePage() {
               borderRadius: '12px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
             }}>
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 1 — Data Science Foundations
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    What is Data Science? Overview of roles (Data Analyst, Data Scientist, ML Engineer)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data Science project lifecycle (CRISP-DM)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Understanding structured vs unstructured data
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Introduction to Python for Data Science
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Setup: Anaconda, Jupyter Notebook, Git/GitHub
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(1)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 1 — Data Science Foundations
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(1) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(1) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      What is Data Science? Overview of roles (Data Analyst, Data Scientist, ML Engineer)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Data Science project lifecycle (CRISP-DM)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Understanding structured vs unstructured data
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Introduction to Python for Data Science
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Setup: Anaconda, Jupyter Notebook, Git/GitHub
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 2 — Python for Data Analysis
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Python essentials: variables, loops, functions, modules
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Working with NumPy arrays
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data manipulation with Pandas
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Exploratory Data Analysis (EDA) basics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project Setup: Define project topic, scope, goals
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(2)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 2 — Python for Data Analysis
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(2) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(2) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Python essentials: variables, loops, functions, modules
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Working with NumPy arrays
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Data manipulation with Pandas
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Exploratory Data Analysis (EDA) basics
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Live Project Setup: Define project topic, scope, goals
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 3 — Data Wrangling & Cleaning
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Handling missing data, duplicates, and formatting issues
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data normalization & standardization
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Feature extraction & feature engineering fundamentals
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Dealing with categorical variables
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Practical hands-on with real messy datasets
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Raw data collection & cleaning plan
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(3)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 3 — Data Wrangling & Cleaning
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(3) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(3) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Handling missing data, duplicates, and formatting issues
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Data normalization & standardization
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Feature extraction & feature engineering fundamentals
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Dealing with categorical variables
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Practical hands-on with real messy datasets
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Live Project: Raw data collection & cleaning plan
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 4 — Data Visualization & Storytelling
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Visualization best practices
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Matplotlib, Seaborn, Plotly fundamentals
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Dashboard introduction (Tableau or Power BI)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Communicating insights with narrative clarity
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: EDA + Visual summaries
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(4)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 4 — Data Visualization & Storytelling
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(4) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(4) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Visualization best practices
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Matplotlib, Seaborn, Plotly fundamentals
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Dashboard introduction (Tableau or Power BI)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Communicating insights with narrative clarity
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Live Project: EDA + Visual summaries
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 5 — Statistics for Data Science
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Descriptive & inferential statistics
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Probability distributions
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Hypothesis testing (t-test, chi-square, ANOVA)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Correlation vs causation
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Statistical significance for business decisions
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Statistical analysis of a dataset
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(5)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 5 — Statistics for Data Science
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(5) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(5) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Descriptive & inferential statistics
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Probability distributions
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Hypothesis testing (t-test, chi-square, ANOVA)
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Correlation vs causation
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Statistical significance for business decisions
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Live Project: Statistical analysis of a dataset
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 6 — Machine Learning Foundations
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    What is Machine Learning?
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Supervised vs unsupervised learning
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Train/validation/test splits
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Feature selection techniques
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Bias-variance tradeoff, overfitting, underfitting
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Identify ML approach for your problem
-                  </li>
-                </ul>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(6)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 6 — Machine Learning Foundations
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(6) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(6) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      What is Machine Learning?
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Supervised vs unsupervised learning
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Train/validation/test splits
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Feature selection techniques
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Bias-variance tradeoff, overfitting, underfitting
+                    </li>
+                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
+                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
+                      Live Project: Identify ML approach for your problem
+                    </li>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 7 — Supervised Learning Algorithms
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(7)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 7 — Supervised Learning Algorithms
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(7) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(7) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Linear and Logistic Regression
@@ -389,14 +537,36 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Live Project: Train baseline models
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 8 — Unsupervised Learning Algorithms
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(8)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 8 — Unsupervised Learning Algorithms
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(8) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(8) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Clustering: K-Means, DBSCAN, Hierarchical
@@ -417,14 +587,36 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Live Project: Consider unsupervised techniques where applicable
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 9 — Deep Learning & Neural Networks (Intro)
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(9)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 9 — Deep Learning & Neural Networks (Intro)
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(9) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(9) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Introduction to neural networks
@@ -445,14 +637,36 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Live Project: Optional deep learning model iteration
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 10 — Model Tuning, Optimization & Deployment
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(10)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 10 — Model Tuning, Optimization & Deployment
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(10) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(10) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Hyperparameter tuning (GridSearch, RandomSearch, Optuna)
@@ -473,14 +687,36 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Live Project: Build a deployable model prototype
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
 
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 11 — Real-World Data Science Practices
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(11)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 11 — Real-World Data Science Practices
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(11) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(11) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Data pipelines & workflow automation
@@ -501,14 +737,36 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Live Project: Finalize model + deployment + documentation
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
 
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0066cc' }}>
-                  WEEK 12 — Capstone Project Presentation + Career Support
-                </h3>
-                <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+              <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #e1e4e8' }}>
+                <div
+                  onClick={() => toggleWeek(12)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    padding: '1rem 0',
+                    userSelect: 'none'
+                  }}
+                >
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
+                    WEEK 12 — Capstone Project Presentation + Career Support
+                  </h3>
+                  <span style={{
+                    fontSize: '1.2rem',
+                    color: '#0066cc',
+                    transition: 'transform 0.3s ease',
+                    transform: expandedWeeks.has(12) ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}>
+                    ▼
+                  </span>
+                </div>
+                {expandedWeeks.has(12) && (
+                  <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Final project presentation to mentors/peers
@@ -533,7 +791,8 @@ export default function DataSciencePage() {
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                     Career roadmap: Data Analyst → Data Scientist → ML Engineer
                   </li>
-                </ul>
+                  </ul>
+                )}
               </div>
             </div>
           </div>
@@ -563,7 +822,7 @@ export default function DataSciencePage() {
       </section>
 
       {/* Facilitators */}
-      <section style={{ padding: '5rem 0', backgroundColor: '#f8f9fa' }}>
+      {/* <section style={{ padding: '5rem 0', backgroundColor: '#f8f9fa' }}>
         <div className="container">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <h2 className="section-title">Facilitators</h2>
@@ -596,7 +855,7 @@ export default function DataSciencePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Apply Section */}
       <section id="apply-section" style={{ 

@@ -16,15 +16,40 @@ export async function POST(request) {
       );
     }
 
+    // Validate and trim Paystack secret key
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
+    if (!paystackSecretKey) {
+      console.error('PAYSTACK_SECRET_KEY is not configured in verify-payment');
+      return NextResponse.json(
+        { error: 'Payment service not configured' },
+        { status: 500 }
+      );
+    }
+
     // Verify transaction with Paystack
     const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${paystackSecretKey}`,
       },
     });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Paystack verification error:', {
+        status: response.status,
+        reference,
+        data: data
+      });
+      return NextResponse.json(
+        { 
+          error: data.message || data.error || 'Failed to verify payment',
+          details: data
+        },
+        { status: response.status }
+      );
+    }
 
     if (!data.status || !data.data || data.data.status !== 'success') {
       return NextResponse.json(

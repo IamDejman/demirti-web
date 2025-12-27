@@ -116,19 +116,22 @@ export default function ApplicationForm({ trackName }) {
         // Use cached value if check fails
       }
 
-      // Calculate the actual price to charge
-      // First apply scholarship discount if available
-      let discountMultiplier = finalScholarshipAvailable ? (1 - discountPercentage / 100) : 1;
+      // Calculate the actual price to charge - discounts stack together
+      // Start with original price
+      let actualPrice = coursePrice;
       
-      // Then apply discount code if valid (discount codes take precedence or can stack)
-      // For now, we'll apply the discount code if it provides a better discount
-      if (appliedDiscount) {
-        const discountCodeMultiplier = 1 - appliedDiscount.percentage / 100;
-        // Use the better discount (lower multiplier = better discount)
-        discountMultiplier = Math.min(discountMultiplier, discountCodeMultiplier);
+      // Step 1: Apply scholarship discount if available (10 spots still open)
+      if (finalScholarshipAvailable) {
+        actualPrice = actualPrice * (1 - discountPercentage / 100);
       }
       
-      const actualPrice = coursePrice * discountMultiplier;
+      // Step 2: Apply discount code discount on top of current price
+      if (appliedDiscount) {
+        const discountPercent = typeof appliedDiscount.percentage === 'string' 
+          ? parseFloat(appliedDiscount.percentage) 
+          : appliedDiscount.percentage;
+        actualPrice = actualPrice * (1 - discountPercent / 100);
+      }
       const amountInKobo = Math.round(actualPrice * 100);
 
       // First, save the application (without payment reference - will be updated after payment)
@@ -387,14 +390,52 @@ export default function ApplicationForm({ trackName }) {
           border: '1px solid #e1e4e8',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-            <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600' }}>
-              Course Fee
-            </p>
-            <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0066cc' }}>
-              ₦{coursePrice.toLocaleString()}
-            </span>
-          </div>
+          {(() => {
+            // Calculate final price - discounts stack together
+            // Start with original price
+            let finalPrice = coursePrice;
+            let hasDiscount = false;
+            
+            // Step 1: Apply scholarship discount if available (10 spots still open)
+            if (scholarshipAvailable) {
+              finalPrice = finalPrice * (1 - discountPercentage / 100);
+              hasDiscount = true;
+            }
+            
+            // Step 2: Apply discount code discount on top of current price (scholarship price or original)
+            if (appliedDiscount) {
+              // Ensure percentage is a number
+              const discountPercent = typeof appliedDiscount.percentage === 'string' 
+                ? parseFloat(appliedDiscount.percentage) 
+                : appliedDiscount.percentage;
+              
+              // Apply discount code discount on the current price
+              finalPrice = finalPrice * (1 - discountPercent / 100);
+              hasDiscount = true;
+            }
+            
+            return (
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600' }}>
+                  Course Fee
+                </p>
+                {hasDiscount ? (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: '500', color: '#999', textDecoration: 'line-through' }}>
+                      ₦{coursePrice.toLocaleString()}
+                    </span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#00c896' }}>
+                      ₦{Math.round(finalPrice).toLocaleString()}
+                    </span>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0066cc' }}>
+                    ₦{coursePrice.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
           {scholarshipAvailable && (
             <div style={{ 
               marginTop: '0.75rem',
@@ -413,24 +454,6 @@ export default function ApplicationForm({ trackName }) {
               </p>
             </div>
           )}
-          {appliedDiscount && (
-            <div style={{ 
-              marginTop: '0.75rem',
-              padding: '0.75rem',
-              backgroundColor: '#e8f5e9',
-              borderRadius: '8px',
-              borderLeft: '4px solid #00c896'
-            }}>
-              <p style={{ 
-                margin: 0, 
-                fontSize: '0.9rem', 
-                color: '#2e7d32', 
-                fontWeight: '600'
-              }}>
-                Discount Code Applied: {appliedDiscount.name} - {appliedDiscount.percentage}% off
-              </p>
-            </div>
-          )}
         </div>
 
         <button
@@ -440,15 +463,23 @@ export default function ApplicationForm({ trackName }) {
           style={{ width: '100%' }}
         >
           {isSubmitting ? 'Processing...' : (() => {
+            // Calculate final price - same logic as display (discounts stack)
             let finalPrice = coursePrice;
+            
+            // Apply scholarship discount first if available
             if (scholarshipAvailable) {
-              finalPrice = coursePrice * (1 - discountPercentage / 100);
+              finalPrice = finalPrice * (1 - discountPercentage / 100);
             }
+            
+            // Apply discount code discount on top
             if (appliedDiscount) {
-              const discountPrice = coursePrice * (1 - appliedDiscount.percentage / 100);
-              finalPrice = Math.min(finalPrice, discountPrice);
+              const discountPercent = typeof appliedDiscount.percentage === 'string' 
+                ? parseFloat(appliedDiscount.percentage) 
+                : appliedDiscount.percentage;
+              finalPrice = finalPrice * (1 - discountPercent / 100);
             }
-            return `Proceed to Payment (₦${finalPrice.toLocaleString()})`;
+            
+            return `Proceed to Payment (₦${Math.round(finalPrice).toLocaleString()})`;
           })()}
         </button>
       </form>

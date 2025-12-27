@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:eslint": "eslint . --ext .js,.jsx"
+    "lint": "eslint . --ext .js,.jsx",
+    "lint:next": "next lint"
   },
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",

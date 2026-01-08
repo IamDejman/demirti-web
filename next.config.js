@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   // Set project root to prevent workspace detection issues
-  experimental: {
-    // Next.js 16 uses Turbopack by default
+  turbopack: {
+    // Explicitly set the root directory to prevent workspace detection issues
+    root: __dirname,
   },
   async headers() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com';

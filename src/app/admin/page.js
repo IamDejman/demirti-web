@@ -256,6 +256,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Email</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Phone</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Track</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Referral Source</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Status</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Amount</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Payment Ref</th>
@@ -272,6 +273,9 @@ export default function AdminDashboard() {
                           <td style={{ padding: '1rem', color: '#1a1a1a' }}>{app.email}</td>
                           <td style={{ padding: '1rem', color: '#1a1a1a' }}>{app.phone}</td>
                           <td style={{ padding: '1rem', color: '#1a1a1a' }}>{app.track_name}</td>
+                          <td style={{ padding: '1rem', color: '#666', fontSize: '0.875rem' }}>
+                            {app.referral_source || 'N/A'}
+                          </td>
                           <td style={{ padding: '1rem' }}>
                             <span style={{
                               padding: '0.25rem 0.75rem',

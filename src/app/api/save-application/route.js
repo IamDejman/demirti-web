@@ -67,6 +67,13 @@ async function sendApplicationEmail(application, isPaid = false) {
                 <div class="value">${application.phone}</div>
               </div>
               
+              ${application.referral_source ? `
+              <div class="field">
+                <div class="label">How did you hear about Cverse:</div>
+                <div class="value">${application.referral_source}</div>
+              </div>
+              ` : ''}
+              
               <div class="field">
                 <div class="label">Payment Method:</div>
                 <div class="value">${application.payment_option}</div>
@@ -110,6 +117,7 @@ Track: ${application.track_name}
 Name: ${application.first_name} ${application.last_name}
 Email: ${application.email}
 Phone: ${application.phone}
+${application.referral_source ? `How did you hear about Cverse: ${application.referral_source}` : ''}
 Payment Method: ${application.payment_option}
 ${application.payment_reference ? `Payment Reference: ${application.payment_reference}` : ''}
 ${application.amount ? `Amount: ₦${(application.amount / 100).toLocaleString()}` : ''}
@@ -131,10 +139,10 @@ Application Date: ${new Date(application.created_at).toLocaleString()}`
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, trackName, paymentOption, paymentReference, amount } = body;
+    const { firstName, lastName, email, phone, trackName, paymentOption, paymentReference, amount, referralSource } = body;
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !trackName) {
+    if (!firstName || !lastName || !email || !phone || !trackName || !referralSource) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -150,6 +158,7 @@ export async function POST(request) {
       paymentOption: paymentOption || 'paystack',
       paymentReference: paymentReference || null,
       amount: amount || null,
+      referralSource: referralSource || null,
     };
 
     // Save application to database

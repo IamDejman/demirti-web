@@ -10,7 +10,9 @@ export default function ApplicationForm({ trackName }) {
     email: '',
     phone: '',
     paymentOption: 'paystack',
-    discountCode: ''
+    discountCode: '',
+    referralSource: '',
+    referralSourceOther: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
@@ -52,7 +54,9 @@ export default function ApplicationForm({ trackName }) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      // Clear referralSourceOther if referralSource is changed away from "Others"
+      ...(name === 'referralSource' && value !== 'Others' ? { referralSourceOther: '' } : {})
     }));
     
     // Clear applied discount if discount code is changed
@@ -102,6 +106,24 @@ export default function ApplicationForm({ trackName }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate referral source
+    if (!formData.referralSource) {
+      showToast({
+        type: 'error',
+        message: 'Please select how you heard about Cverse',
+      });
+      return;
+    }
+    
+    if (formData.referralSource === 'Others' && !formData.referralSourceOther.trim()) {
+      showToast({
+        type: 'error',
+        message: 'Please specify how you heard about Cverse',
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -146,6 +168,9 @@ export default function ApplicationForm({ trackName }) {
             trackName,
             amount: amountInKobo,
             discountCode: appliedDiscount ? appliedDiscount.name : null,
+            referralSource: formData.referralSource === 'Others' 
+              ? `Others: ${formData.referralSourceOther}` 
+              : formData.referralSource,
           }),
         });
       } catch (saveError) {
@@ -167,6 +192,9 @@ export default function ApplicationForm({ trackName }) {
           ...formData,
           trackName,
           amount: amountInKobo, // Convert to kobo (Paystack uses smallest currency unit)
+          referralSource: formData.referralSource === 'Others' 
+            ? `Others: ${formData.referralSourceOther}` 
+            : formData.referralSource,
         }),
       });
 
@@ -295,6 +323,57 @@ export default function ApplicationForm({ trackName }) {
             disabled={isSubmitting}
             placeholder="Enter your phone number"
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="referralSource">How did you hear about Cverse? <span style={{ color: 'red' }}>*</span></label>
+          <select
+            id="referralSource"
+            name="referralSource"
+            value={formData.referralSource}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #e1e4e8',
+              borderRadius: '8px',
+              backgroundColor: isSubmitting ? '#f5f5f5' : 'white',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer'
+            }}
+          >
+            <option value="">Select an option</option>
+            <option value="Company website">Company website</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="TikTok">TikTok</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Facebook">Facebook</option>
+            <option value="Twitter/X">Twitter/X</option>
+            <option value="Friend">Friend</option>
+            <option value="Others">Others</option>
+          </select>
+          {formData.referralSource === 'Others' && (
+            <input
+              type="text"
+              id="referralSourceOther"
+              name="referralSourceOther"
+              value={formData.referralSourceOther}
+              onChange={handleChange}
+              required
+              disabled={isSubmitting}
+              placeholder="Please specify"
+              style={{
+                marginTop: '0.75rem',
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #e1e4e8',
+                borderRadius: '8px'
+              }}
+            />
+          )}
         </div>
 
         <div className="form-group">

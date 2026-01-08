@@ -127,6 +127,7 @@ export async function initializeDatabase() {
         amount INTEGER,
         status VARCHAR(50) DEFAULT 'pending',
         discount_code VARCHAR(255),
+        referral_source VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         paid_at TIMESTAMP
       );
@@ -141,6 +142,19 @@ export async function initializeDatabase() {
           WHERE table_name = 'applications' AND column_name = 'discount_code'
         ) THEN
           ALTER TABLE applications ADD COLUMN discount_code VARCHAR(255);
+        END IF;
+      END $$;
+    `;
+
+    // Add referral_source column to applications if it doesn't exist (for existing databases)
+    await sql`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'applications' AND column_name = 'referral_source'
+        ) THEN
+          ALTER TABLE applications ADD COLUMN referral_source VARCHAR(255);
         END IF;
       END $$;
     `;
@@ -262,6 +276,7 @@ export async function saveApplication(application) {
       amount,
       status,
       discount_code,
+      referral_source,
       created_at
     ) VALUES (
       ${applicationId},
@@ -275,6 +290,7 @@ export async function saveApplication(application) {
       ${application.amount || null},
       ${application.paymentReference ? 'paid' : 'pending'},
       ${application.discountCode || null},
+      ${application.referralSource || null},
       CURRENT_TIMESTAMP
     )
     RETURNING *;

@@ -10,17 +10,23 @@ export default function ProjectManagementPage() {
   const [showForm, setShowForm] = useState(false);
   const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
   const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
+  const [discountPercentage, setDiscountPercentage] = useState(50); // Default fallback
   const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
   const [expandedWeeks, setExpandedWeeks] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load track configuration and scholarship status from database
   useEffect(() => {
     const loadTrackData = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/scholarship-status?track=Project Management');
         const data = await response.json();
         if (data.coursePrice) {
           setCoursePrice(data.coursePrice);
+        }
+        if (data.discountPercentage) {
+          setDiscountPercentage(data.discountPercentage);
         }
         if (data.limit) {
           setScholarshipLimit(data.limit);
@@ -30,6 +36,8 @@ export default function ProjectManagementPage() {
         }
       } catch (error) {
         console.error('Error loading track data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -178,16 +186,16 @@ export default function ProjectManagementPage() {
                   Course Fee
                 </h3>
                 <span style={{ fontSize: '2rem', fontWeight: '700', color: '#00c896' }}>
-                  ₦{coursePrice.toLocaleString()}
+                  {isLoading ? 'Loading...' : `₦${coursePrice.toLocaleString()}`}
                 </span>
               </div>
               <p style={{ color: '#666666', lineHeight: '1.7', marginBottom: '1rem', fontSize: '1rem' }}>
                 Includes certificate and class recordings
               </p>
-              {scholarshipAvailable && (
+              {scholarshipAvailable && !isLoading && (
                 <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f0fdfa', borderRadius: '8px', borderLeft: '4px solid #00c896' }}>
                   <p style={{ color: '#00c896', fontWeight: '600', margin: 0, fontSize: '1rem' }}>
-                    Limited Offer: First {scholarshipLimit} paid learners receive a 50% scholarship discount
+                    Limited Offer: First {scholarshipLimit} paid learners receive a {Math.round(discountPercentage)}% scholarship discount
                   </p>
                 </div>
               )}
@@ -907,7 +915,13 @@ export default function ProjectManagementPage() {
               }}>
                 Please fill out the form below to complete your application.
               </p>
-              <ApplicationForm trackName="Project Management" />
+              <ApplicationForm 
+                trackName="Project Management"
+                coursePrice={coursePrice}
+                discountPercentage={discountPercentage}
+                scholarshipLimit={scholarshipLimit}
+                scholarshipAvailable={scholarshipAvailable}
+              />
             </div>
           )}
         </div>

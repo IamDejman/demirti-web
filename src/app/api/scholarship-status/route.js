@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getScholarshipCount, incrementScholarshipCount, getTrackConfig } from '@/lib/db';
 
+// Cache duration: 30 seconds (revalidate every 30 seconds)
+export const revalidate = 30;
+
 // GET - Check scholarship availability for a specific track
 export async function GET(request) {
   try {
@@ -28,7 +31,7 @@ export async function GET(request) {
     const available = count < scholarshipLimit;
     const remaining = Math.max(0, scholarshipLimit - count);
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       available,
       count,
       limit: scholarshipLimit,
@@ -37,6 +40,11 @@ export async function GET(request) {
       coursePrice: trackConfig.course_price,
       discountPercentage: trackConfig.scholarship_discount_percentage
     });
+
+    // Add cache headers for client-side caching
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    
+    return response;
   } catch (error) {
     console.error('Error checking scholarship status:', error);
     return NextResponse.json(

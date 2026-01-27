@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useToast } from './ToastProvider';
 
-export default function ApplicationForm({ trackName }) {
+export default function ApplicationForm({ 
+  trackName, 
+  coursePrice: initialCoursePrice = 150000,
+  discountPercentage: initialDiscountPercentage = 50,
+  scholarshipLimit: initialScholarshipLimit = 10,
+  scholarshipAvailable: initialScholarshipAvailable = false
+}) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,40 +21,21 @@ export default function ApplicationForm({ trackName }) {
     referralSourceOther: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [scholarshipAvailable, setScholarshipAvailable] = useState(false);
-  const [coursePrice, setCoursePrice] = useState(150000); // Default fallback
-  const [discountPercentage, setDiscountPercentage] = useState(50); // Default fallback
-  const [scholarshipLimit, setScholarshipLimit] = useState(10); // Default fallback
+  const [scholarshipAvailable, setScholarshipAvailable] = useState(initialScholarshipAvailable);
+  const [coursePrice, setCoursePrice] = useState(initialCoursePrice);
+  const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
+  const [scholarshipLimit, setScholarshipLimit] = useState(initialScholarshipLimit);
   const [appliedDiscount, setAppliedDiscount] = useState(null); // Store validated discount
   const [validatingDiscount, setValidatingDiscount] = useState(false);
   const { showToast } = useToast();
 
-  // Load track configuration and scholarship status from database
+  // Update state when props change (in case parent refetches)
   useEffect(() => {
-    const loadTrackData = async () => {
-      try {
-        const response = await fetch(`/api/scholarship-status?track=${encodeURIComponent(trackName)}`);
-        const data = await response.json();
-        
-        if (data.coursePrice) {
-          setCoursePrice(data.coursePrice);
-        }
-        if (data.discountPercentage) {
-          setDiscountPercentage(data.discountPercentage);
-        }
-        if (data.limit) {
-          setScholarshipLimit(data.limit);
-        }
-        if (data.available) {
-          setScholarshipAvailable(true);
-        }
-      } catch (error) {
-        console.error('Error loading track data:', error);
-      }
-    };
-    
-    loadTrackData();
-  }, [trackName]);
+    setCoursePrice(initialCoursePrice);
+    setDiscountPercentage(initialDiscountPercentage);
+    setScholarshipLimit(initialScholarshipLimit);
+    setScholarshipAvailable(initialScholarshipAvailable);
+  }, [initialCoursePrice, initialDiscountPercentage, initialScholarshipLimit, initialScholarshipAvailable]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

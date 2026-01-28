@@ -27,6 +27,7 @@ export default function ApplicationForm({
   const [scholarshipLimit, setScholarshipLimit] = useState(initialScholarshipLimit);
   const [appliedDiscount, setAppliedDiscount] = useState(null); // Store validated discount
   const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [isPaystackLoading, setIsPaystackLoading] = useState(false);
   const { showToast } = useToast();
 
   // Update state when props change (in case parent refetches)
@@ -36,6 +37,39 @@ export default function ApplicationForm({
     setScholarshipLimit(initialScholarshipLimit);
     setScholarshipAvailable(initialScholarshipAvailable);
   }, [initialCoursePrice, initialDiscountPercentage, initialScholarshipLimit, initialScholarshipAvailable]);
+
+  // Load Paystack script on demand (only when needed for payment)
+  const loadPaystackScript = () => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined') {
+        reject(new Error('Window is not available'));
+        return;
+      }
+
+      // If already available, resolve immediately
+      if (typeof window.PaystackPop !== 'undefined') {
+        resolve(true);
+        return;
+      }
+
+      // If script tag already exists but PaystackPop not ready, wait for load
+      const existingScript = document.getElementById('paystack-js');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve(true));
+        existingScript.addEventListener('error', () => reject(new Error('Failed to load Paystack script')));
+        return;
+      }
+
+      // Create script tag
+      const script = document.createElement('script');
+      script.id = 'paystack-js';
+      script.src = 'https://js.paystack.co/v2/inline.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error('Failed to load Paystack script'));
+      document.body.appendChild(script);
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -188,54 +222,64 @@ export default function ApplicationForm({
       const data = await response.json();
 
       if (response.ok && data.access_code) {
-        // Open Paystack payment in modal popup
+        // Ensure Paystack script is loaded before opening the modal
+        try {
+          setIsPaystackLoading(true);
+          await loadPaystackScript();
+        } catch (scriptError) {
+          console.error(scriptError);
+          showToast({
+            type: 'error',
+            message: 'Unable to load payment widget. Please check your connection and try again.',
+          });
+          setIsSubmitting(false);
+          setIsPaystackLoading(false);
+          return;
+        }
+
         setIsSubmitting(false);
-        
-        // Wait a bit to ensure Paystack script is loaded
-        setTimeout(() => {
-          // Check if PaystackPop is available (from the script tag)
-          if (typeof window.PaystackPop !== 'undefined') {
-            const handler = new window.PaystackPop();
-            
-            // Open Paystack payment popup
-            handler.resumeTransaction(data.access_code);
-            
-            // Store reference for polling
-            const paymentReference = data.reference;
-            
-            // Poll for payment status (callback URL will handle the actual verification)
-            // This is a backup in case the callback URL redirect doesn't work
-            const pollInterval = setInterval(async () => {
-              try {
-                const verifyResponse = await fetch(`/api/payment-callback?reference=${paymentReference}&check_only=true`);
-                if (verifyResponse.ok) {
-                  const verifyData = await verifyResponse.json();
-                  if (verifyData.status === 'success') {
-                    clearInterval(pollInterval);
-                    window.location.href = `/payment-success?reference=${paymentReference}`;
-                  }
+        setIsPaystackLoading(false);
+
+        if (typeof window.PaystackPop !== 'undefined') {
+          const handler = new window.PaystackPop();
+
+          // Open Paystack payment popup
+          handler.resumeTransaction(data.access_code);
+
+          // Store reference for polling
+          const paymentReference = data.reference;
+
+          // Poll for payment status (callback URL will handle the actual verification)
+          // This is a backup in case the callback URL redirect doesn't work
+          const pollInterval = setInterval(async () => {
+            try {
+              const verifyResponse = await fetch(`/api/payment-callback?reference=${paymentReference}&check_only=true`);
+              if (verifyResponse.ok) {
+                const verifyData = await verifyResponse.json();
+                if (verifyData.status === 'success') {
+                  clearInterval(pollInterval);
+                  window.location.href = `/payment-success?reference=${paymentReference}`;
                 }
-              } catch {
-                // Silent fail - continue polling
               }
-            }, 2000); // Poll every 2 seconds
-            
-            // Clear polling after 10 minutes
-            setTimeout(() => clearInterval(pollInterval), 600000);
-            
-          } else {
-            // Fallback to redirect if PaystackPop is not loaded
-            console.warn('PaystackPop not found, falling back to redirect');
-            if (data.authorization_url) {
-              window.location.href = data.authorization_url;
-            } else {
-              showToast({
-                type: 'error',
-                message: 'Payment initialization failed. Please try again.',
-              });
+            } catch {
+              // Silent fail - continue polling
             }
+          }, 2000); // Poll every 2 seconds
+
+          // Clear polling after 10 minutes
+          setTimeout(() => clearInterval(pollInterval), 600000);
+        } else {
+          // Fallback to redirect if PaystackPop is not loaded
+          console.warn('PaystackPop not found, falling back to redirect');
+          if (data.authorization_url) {
+            window.location.href = data.authorization_url;
+          } else {
+            showToast({
+              type: 'error',
+              message: 'Payment initialization failed. Please try again.',
+            });
           }
-        }, 100);
+        }
       } else {
         showToast({
           type: 'error',
@@ -525,10 +569,14 @@ export default function ApplicationForm({
         <button
           type="submit"
           className="cta-button"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isPaystackLoading}
           style={{ width: '100%' }}
         >
-          {isSubmitting ? 'Processing...' : (() => {
+          {isSubmitting
+            ? 'Processing...'
+            : isPaystackLoading
+            ? 'Loading payment widget...'
+            : (() => {
             // Calculate final price - same logic as display (discounts stack)
             let finalPrice = coursePrice;
             
@@ -544,7 +592,6 @@ export default function ApplicationForm({
                 : appliedDiscount.percentage;
               finalPrice = finalPrice * (1 - discountPercent / 100);
             }
-            
             return `Proceed to Payment (₦${Math.round(finalPrice).toLocaleString()})`;
           })()}
         </button>

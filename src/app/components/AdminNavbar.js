@@ -153,6 +153,31 @@ export default function AdminNavbar() {
             Discounts
           </Link>
           <Link
+            href="/admin/analytics"
+            style={{
+              textDecoration: 'none',
+              color: isActive('/admin/analytics') ? '#0066cc' : '#1a1a1a',
+              fontWeight: isActive('/admin/analytics') ? '600' : '400',
+              fontSize: '1rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              backgroundColor: isActive('/admin/analytics') ? 'rgba(0, 102, 204, 0.1)' : 'transparent',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive('/admin/analytics')) {
+                e.target.style.color = '#0066cc';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive('/admin/analytics')) {
+                e.target.style.color = '#1a1a1a';
+              }
+            }}
+          >
+            Analytics
+          </Link>
+          <Link
             href="/admin/config"
             style={{
               textDecoration: 'none',
@@ -281,6 +306,20 @@ export default function AdminNavbar() {
             }}
           >
             Discounts
+          </Link>
+          <Link
+            href="/admin/analytics"
+            onClick={() => setIsMenuOpen(false)}
+            style={{
+              textDecoration: 'none',
+              color: isActive('/admin/analytics') ? '#0066cc' : '#1a1a1a',
+              fontWeight: isActive('/admin/analytics') ? '600' : '400',
+              padding: '0.75rem 1rem',
+              borderRadius: '6px',
+              backgroundColor: isActive('/admin/analytics') ? 'rgba(0, 102, 204, 0.1)' : 'transparent'
+            }}
+          >
+            Analytics
           </Link>
           <Link
             href="/admin/config"

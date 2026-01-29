@@ -56,7 +56,7 @@ export default [
         "warn",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|Link|Image|ApplicationForm|ContactForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent)$",
+          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|Link|Image|ApplicationForm|ContactForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|AnalyticsTracker)$",
           ignoreRestSiblings: true,
         },
       ],

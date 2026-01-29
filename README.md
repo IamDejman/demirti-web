@@ -73,6 +73,10 @@ A modern, responsive website for Demirti Technologies' digital training programs
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 🚢 Deployment (Vercel)
+
+After deploying, run database initialization yourself by calling **GET** your production URL + `/api/init-db` (e.g. `https://your-app.vercel.app/api/init-db`) once. This creates or updates all tables, including the `events` table for analytics.
+
 ## 📱 Responsive Design
 
 The website is fully responsive and optimized for:

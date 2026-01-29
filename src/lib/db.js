@@ -112,6 +112,41 @@ export async function initializeDatabase() {
       ON discounts(name);
     `;
 
+    // Create events table for analytics
+    await sql`
+      CREATE TABLE IF NOT EXISTS events (
+        id SERIAL PRIMARY KEY,
+        type VARCHAR(50) NOT NULL, -- e.g. 'pageview' or 'event'
+        name VARCHAR(255),         -- event name when type = 'event'
+        session_id VARCHAR(255),
+        url TEXT,
+        referrer TEXT,
+        properties JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Indexes for faster analytics queries
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_events_created_at
+      ON events(created_at);
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_events_url
+      ON events(url);
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_events_name
+      ON events(name);
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_events_session_id
+      ON events(session_id);
+    `;
+
     // Create applications table
     await sql`
       CREATE TABLE IF NOT EXISTS applications (
@@ -257,6 +292,151 @@ export async function initializeDatabase() {
     console.error('Error initializing database:', error);
     throw error;
   }
+}
+
+// Keys we never store in event properties (PII / privacy)
+const PII_KEYS = new Set(['email', 'name', 'firstName', 'lastName', 'phone', 'password', 'token', 'address']);
+
+// Analytics event functions
+export async function recordEvent(event) {
+  await ensureDatabaseInitialized();
+
+  const {
+    type,
+    name = null,
+    sessionId = null,
+    url = null,
+    referrer = null,
+    properties = null,
+  } = event || {};
+
+  if (!type) {
+    throw new Error('Event type is required');
+  }
+
+  // Basic size limits to avoid oversized payloads
+  const safeUrl = typeof url === 'string' ? url.slice(0, 2048) : null;
+  const safeReferrer = typeof referrer === 'string' ? referrer.slice(0, 2048) : null;
+
+  let safeProperties = null;
+  if (properties && typeof properties === 'object') {
+    try {
+      const stripped = {};
+      for (const [k, v] of Object.entries(properties)) {
+        const key = String(k).toLowerCase();
+        if (!PII_KEYS.has(key) && v !== undefined && v !== null) {
+          stripped[k] = v;
+        }
+      }
+      const jsonString = JSON.stringify(stripped);
+      const limited = jsonString.length > 8192 ? jsonString.slice(0, 8192) : jsonString;
+      safeProperties = limited ? JSON.parse(limited) : null;
+    } catch {
+      safeProperties = null;
+    }
+  }
+
+  await sql`
+    INSERT INTO events (type, name, session_id, url, referrer, properties)
+    VALUES (${type}, ${name}, ${sessionId}, ${safeUrl}, ${safeReferrer}, ${safeProperties})
+  `;
+}
+
+export async function getPageViewsByDay(startDate, endDate) {
+  await ensureDatabaseInitialized();
+
+  const result = await sql`
+    SELECT
+      DATE_TRUNC('day', created_at) AS day,
+      COUNT(*) AS pageviews
+    FROM events
+    WHERE type = 'pageview'
+      AND created_at BETWEEN ${startDate} AND ${endDate}
+    GROUP BY day
+    ORDER BY day ASC;
+  `;
+
+  return result.rows.map((row) => ({
+    day: row.day,
+    pageviews: Number(row.pageviews) || 0,
+  }));
+}
+
+export async function getTopPages(startDate, endDate, limit = 20) {
+  await ensureDatabaseInitialized();
+
+  const result = await sql`
+    SELECT
+      url,
+      COUNT(*) AS views
+    FROM events
+    WHERE type = 'pageview'
+      AND url IS NOT NULL
+      AND created_at BETWEEN ${startDate} AND ${endDate}
+    GROUP BY url
+    ORDER BY views DESC
+    LIMIT ${limit};
+  `;
+
+  return result.rows.map((row) => ({
+    url: row.url,
+    views: Number(row.views) || 0,
+  }));
+}
+
+export async function getEventCounts(startDate, endDate) {
+  await ensureDatabaseInitialized();
+
+  const result = await sql`
+    SELECT
+      COALESCE(name, '') AS name,
+      COUNT(*) AS count
+    FROM events
+    WHERE type = 'event'
+      AND created_at BETWEEN ${startDate} AND ${endDate}
+    GROUP BY COALESCE(name, '')
+    ORDER BY count DESC;
+  `;
+
+  return result.rows.map((row) => ({
+    name: row.name,
+    count: Number(row.count) || 0,
+  }));
+}
+
+export async function getApplicationFunnelStats(startDate, endDate) {
+  await ensureDatabaseInitialized();
+
+  // Funnel based on events: 'application_started' and 'payment_success'
+  const result = await sql`
+    WITH session_events AS (
+      SELECT
+        session_id,
+        BOOL_OR(name = 'application_started') AS started,
+        BOOL_OR(name = 'payment_success') AS completed
+      FROM events
+      WHERE type = 'event'
+        AND name IN ('application_started', 'payment_success')
+        AND created_at BETWEEN ${startDate} AND ${endDate}
+        AND session_id IS NOT NULL
+      GROUP BY session_id
+    )
+    SELECT
+      COUNT(*) FILTER (WHERE started) AS started,
+      COUNT(*) FILTER (WHERE started AND completed) AS completed
+    FROM session_events;
+  `;
+
+  const row = result.rows[0] || { started: 0, completed: 0 };
+  const started = Number(row.started) || 0;
+  const completed = Number(row.completed) || 0;
+  const conversionRate = started > 0 ? completed / started : 0;
+
+  return {
+    started,
+    completed,
+    conversionRate,
+  };
 }
 
 // Application functions

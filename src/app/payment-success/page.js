@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
+import { trackEvent } from '@/lib/tracker';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -23,12 +24,13 @@ function PaymentSuccessContent() {
         body: JSON.stringify({ reference }),
       })
         .then(res => res.json())
-        .then(data => {
-          setVerifying(false);
-          if (data.success) {
-            setVerified(true);
-            console.log('Payment verified and application updated');
-          } else {
+.then(data => {
+            setVerifying(false);
+            if (data.success) {
+              setVerified(true);
+              trackEvent('payment_success', { reference });
+              console.log('Payment verified and application updated');
+            } else {
             console.error('Payment verification failed:', data.error);
           }
         })

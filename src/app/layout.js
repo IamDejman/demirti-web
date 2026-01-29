@@ -1,5 +1,6 @@
 import './globals.css'
 import { ToastProvider } from './components/ToastProvider'
+import AnalyticsTracker from './components/AnalyticsTracker'
 
 export const metadata = {
   title: 'CVERSE by Demirti - Digital Skills Training',
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <ToastProvider>
+          <AnalyticsTracker />
           {children}
         </ToastProvider>
       </body>

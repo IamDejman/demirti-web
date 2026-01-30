@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { ensureDatabaseInitialized } from '@/lib/db';
 import { getAdminByEmail, getValidPasswordReset, deletePasswordReset, updateAdmin } from '@/lib/admin';
 
 export async function POST(request) {
   try {
+    await ensureDatabaseInitialized();
+
     const body = await request.json();
     const { email, otp, newPassword, confirmPassword } = body || {};
     const normalizedEmail = (email || '').trim().toLowerCase();
@@ -60,7 +63,13 @@ export async function POST(request) {
       },
     });
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error('Reset password error:', error?.message || error);
+    if (error?.message?.includes('does not exist') || error?.code === '42P01') {
+      return NextResponse.json(
+        { error: 'Service is updating. Please request a new code and try again.' },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: 'Something went wrong. Try again later.' },
       { status: 500 }

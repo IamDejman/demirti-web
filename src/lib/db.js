@@ -688,8 +688,9 @@ export async function updateTrackConfig(trackName, updates) {
     }
   }).filter(Boolean);
   
-  // Combine all SET parts
-  const setClause = sql.join(setParts, sql`, `);
+  const setClause = setParts.length === 1
+    ? setParts[0]
+    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
   
   const result = await sql`
     UPDATE tracks
@@ -778,7 +779,9 @@ export async function updateDiscount(id, updates) {
     }
   }).filter(Boolean);
   
-  const setClause = sql.join(setParts, sql`, `);
+  const setClause = setParts.length === 1
+    ? setParts[0]
+    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
   
   const result = await sql`
     UPDATE discounts

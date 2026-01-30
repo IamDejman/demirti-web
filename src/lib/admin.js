@@ -113,7 +113,9 @@ export async function updateAdmin(id, updates) {
     }
   }).filter(Boolean);
   
-  const setClause = sql.join(setParts, sql`, `);
+  const setClause = setParts.length === 1
+    ? setParts[0]
+    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
   
   const result = await sql`
     UPDATE admins

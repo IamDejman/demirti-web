@@ -70,60 +70,49 @@ export async function getAllAdmins() {
 }
 
 export async function updateAdmin(id, updates) {
-  let updateFields = [];
-  let updateValues = [];
-  
-  if (updates.email !== undefined) {
-    updateFields.push('email');
-    updateValues.push(updates.email);
-  }
+  const hasUpdates = updates && (
+    updates.email !== undefined ||
+    updates.password !== undefined ||
+    updates.firstName !== undefined ||
+    updates.lastName !== undefined ||
+    updates.isActive !== undefined
+  );
+  if (!hasUpdates) return null;
+
   if (updates.password !== undefined) {
-    updateFields.push('password_hash');
-    updateValues.push(await hashPassword(updates.password));
+    const passwordHash = await hashPassword(updates.password);
+    const result = await sql`
+      UPDATE admins
+      SET password_hash = ${passwordHash}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING id, email, first_name, last_name, is_active, created_at, updated_at, last_login;
+    `;
+    if (Object.keys(updates).length === 1) return result.rows[0] || null;
+  }
+  if (updates.email !== undefined) {
+    await sql`
+      UPDATE admins SET email = ${updates.email}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id};
+    `;
   }
   if (updates.firstName !== undefined) {
-    updateFields.push('first_name');
-    updateValues.push(updates.firstName);
+    await sql`
+      UPDATE admins SET first_name = ${updates.firstName}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id};
+    `;
   }
   if (updates.lastName !== undefined) {
-    updateFields.push('last_name');
-    updateValues.push(updates.lastName);
+    await sql`
+      UPDATE admins SET last_name = ${updates.lastName}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id};
+    `;
   }
   if (updates.isActive !== undefined) {
-    updateFields.push('is_active');
-    updateValues.push(updates.isActive);
+    await sql`
+      UPDATE admins SET is_active = ${updates.isActive}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id};
+    `;
   }
-  
-  if (updateFields.length === 0) {
-    return null;
-  }
-  
-  const setParts = updateFields.map((field, index) => {
-    const value = updateValues[index];
-    if (field === 'email') {
-      return sql`email = ${value}`;
-    } else if (field === 'password_hash') {
-      return sql`password_hash = ${value}`;
-    } else if (field === 'first_name') {
-      return sql`first_name = ${value}`;
-    } else if (field === 'last_name') {
-      return sql`last_name = ${value}`;
-    } else if (field === 'is_active') {
-      return sql`is_active = ${value}`;
-    }
-  }).filter(Boolean);
-  
-  const setClause = setParts.length === 1
-    ? setParts[0]
-    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
-  
   const result = await sql`
-    UPDATE admins
-    SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ${id}
-    RETURNING id, email, first_name, last_name, is_active, created_at, updated_at, last_login;
+    SELECT id, email, first_name, last_name, is_active, created_at, updated_at, last_login
+    FROM admins WHERE id = ${id};
   `;
-  
   return result.rows[0] || null;
 }
 

@@ -67,7 +67,8 @@ export async function POST(request) {
       phone,
       linkedinUrl,
       city,
-      occupation,
+      status,
+      statusOther,
       essay,
       ackLinkedin48h,
       ackCommitment,
@@ -77,6 +78,50 @@ export async function POST(request) {
     if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
       return NextResponse.json(
         { error: 'Missing required fields: first name, last name, email, and phone are required' },
+        { status: 400 }
+      );
+    }
+    if (!city?.trim()) {
+      return NextResponse.json(
+        { error: 'City of Residence is required' },
+        { status: 400 }
+      );
+    }
+    if (!status || (typeof status === 'string' && !status.trim())) {
+      return NextResponse.json(
+        { error: 'Status is required' },
+        { status: 400 }
+      );
+    }
+    const statusValue = typeof status === 'string' ? status.trim() : String(status);
+    if (statusValue === 'Others') {
+      if (!statusOther?.trim()) {
+        return NextResponse.json(
+          { error: 'Please specify your status' },
+          { status: 400 }
+        );
+      }
+    }
+    const occupationValue = statusValue === 'Others' ? `Others: ${statusOther.trim()}` : statusValue;
+    if (!linkedinUrl?.trim()) {
+      return NextResponse.json(
+        { error: 'LinkedIn Profile URL is required' },
+        { status: 400 }
+      );
+    }
+    const linkedinTrimmed = linkedinUrl.trim();
+    try {
+      const u = new URL(linkedinTrimmed);
+      const host = u.hostname.toLowerCase();
+      if ((host !== 'linkedin.com' && host !== 'www.linkedin.com') || !u.pathname.toLowerCase().startsWith('/in/')) {
+        return NextResponse.json(
+          { error: 'Please enter a valid LinkedIn profile URL (e.g. https://linkedin.com/in/yourprofile)' },
+          { status: 400 }
+        );
+      }
+    } catch {
+      return NextResponse.json(
+        { error: 'Please enter a valid LinkedIn profile URL' },
         { status: 400 }
       );
     }
@@ -111,9 +156,9 @@ export async function POST(request) {
       lastName: lastName.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      linkedinUrl: linkedinUrl?.trim() || null,
-      city: city?.trim() || null,
-      occupation: occupation?.trim() || null,
+      linkedinUrl: linkedinTrimmed,
+      city: city.trim(),
+      occupation: occupationValue,
       essay: essay.trim(),
       ackLinkedin48h: !!ackLinkedin48h,
       ackCommitment: !!ackCommitment,

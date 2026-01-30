@@ -4,6 +4,10 @@ import CookiePreferencesLink from './components/CookiePreferencesLink';
 import Link from 'next/link';
 import Image from 'next/image';
 
+export const metadata = {
+  title: 'Home',
+};
+
 export default function Home() {
   return (
     <main className="with-fixed-header">

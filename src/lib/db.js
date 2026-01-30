@@ -65,6 +65,21 @@ export async function initializeDatabase() {
       ON admins(email);
     `;
 
+    // Create admin_password_resets table for forgot-password OTP
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_password_resets (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        otp VARCHAR(10) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_admin_password_resets_email_expires
+      ON admin_password_resets(email, expires_at);
+    `;
+
     // Create tracks table to store track configuration
     await sql`
       CREATE TABLE IF NOT EXISTS tracks (

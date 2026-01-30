@@ -80,6 +80,32 @@ https://your-domain.com/api/init-db
 This will create the necessary tables:
 - `applications` - Stores all application data
 - `scholarship_tracking` - Tracks scholarship count
+- `admins` - Admin users (email, bcrypt password hash)
+- `admin_password_resets` - OTPs for forgot-password flow
+- plus `tracks`, `discounts`, `events` as used by the app
+
+## Admin authentication
+
+**What we use:** Custom auth (no third-party). Admins are stored in the `admins` table; passwords are hashed with **bcrypt**. After login, the client stores a token in **localStorage** and checks it to show the admin dashboard. API routes do not validate the token server-side; they rely on the client redirecting to `/admin/login` when not authenticated.
+
+**Create your first admin** (when there are no admins yet):
+
+1. Ensure the DB is initialized (visit `/api/init-db` once).
+2. Call the create-admin API with email, password, and optional name. For example with curl:
+
+   ```bash
+   curl -X POST https://your-domain.com/api/admin/admins \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@example.com","password":"YourSecurePassword","firstName":"Admin","lastName":"User"}'
+   ```
+
+   For local dev, use `http://localhost:3000/api/admin/admins`.
+
+3. Log in at `/admin/login` with that email and password.
+
+**Create more admins:** Log in → **Admin** → **Config** → **Admins** tab → use the form to add or edit admins.
+
+**Forgot password:** On the login page, use **Forgot password?** → enter your admin email → receive an OTP by email → enter OTP → set new password and confirm → you are logged in and redirected to the dashboard.
 
 ## Step 5: Verify Setup
 

@@ -243,6 +243,15 @@ export default function AdminLogin() {
               </div>
             </div>
 
+            <p style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
+              <a
+                href="/admin/forgot-password"
+                style={{ color: '#0066cc', textDecoration: 'none', fontSize: '0.9rem' }}
+              >
+                Forgot password?
+              </a>
+            </p>
+
             <button
               type="submit"
               disabled={isSubmitting}

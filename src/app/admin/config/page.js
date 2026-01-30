@@ -294,7 +294,7 @@ export default function ConfigPage() {
   };
 
   return (
-    <main>
+    <main className="admin-with-fixed-nav">
       <AdminNavbar />
       <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>

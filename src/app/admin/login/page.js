@@ -272,9 +272,6 @@ export default function AdminLogin() {
             >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
-            <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
-              No admin yet? Create one: <code style={{ background: '#f0f0f0', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>POST /api/admin/admins</code> with body <code style={{ background: '#f0f0f0', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>{'{"email":"you@example.com","password":"yourpassword"}'}</code> — see DATABASE_SETUP.md.
-            </p>
           </form>
         </div>
       </div>

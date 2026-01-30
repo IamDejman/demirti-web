@@ -17,6 +17,10 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Space reserved for fixed header so content/buttons are never covered */
+  --header-offset: 160px;
+  --header-offset-tablet: 100px;
+  --header-offset-mobile: 90px;
 }
 
 * {
@@ -79,16 +83,16 @@ header {
 
 /* Main content offset when site header is fixed (home + track pages) */
 main.with-fixed-header {
-  padding-top: 140px;
+  padding-top: var(--header-offset);
 }
 @media (max-width: 768px) {
   main.with-fixed-header {
-    padding-top: 80px;
+    padding-top: var(--header-offset-tablet);
   }
 }
 @media (max-width: 480px) {
   main.with-fixed-header {
-    padding-top: 70px;
+    padding-top: var(--header-offset-mobile);
   }
 }
 
@@ -311,7 +315,7 @@ nav {
 ============================================ */
 section {
   padding: 5rem 0;
-  scroll-margin-top: 160px;
+  scroll-margin-top: calc(var(--header-offset) + 24px);
 }
 
 .section-title {
@@ -859,6 +863,10 @@ section {
     padding: 0 1.5rem;
   }
 
+  section {
+    scroll-margin-top: calc(var(--header-offset-tablet) + 24px);
+  }
+
   .header-container {
     padding: 1rem 1.5rem;
     min-height: 80px;
@@ -960,6 +968,10 @@ section {
 @media (max-width: 480px) {
   .container {
     padding: 0 1rem;
+  }
+
+  section {
+    scroll-margin-top: calc(var(--header-offset-mobile) + 24px);
   }
 
   .header-container {
@@ -1408,11 +1420,11 @@ textarea:focus {
 
 /* Admin pages with fixed navbar: push content below header */
 main.admin-with-fixed-nav {
-  padding-top: 70px;
+  padding-top: 96px;
 }
 @media (max-width: 768px) {
   main.admin-with-fixed-nav {
-    padding-top: 56px;
+    padding-top: 80px;
   }
 }
 

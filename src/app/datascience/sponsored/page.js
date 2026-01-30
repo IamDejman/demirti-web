@@ -2,7 +2,6 @@
 
 import Navbar from '../../components/Navbar';
 import SponsoredApplicationForm from '../../components/SponsoredApplicationForm';
-import Link from 'next/link';
 
 export default function SponsoredCohortPage() {
   return (
@@ -28,12 +27,6 @@ export default function SponsoredCohortPage() {
             <p style={{ fontSize: '0.95rem', color: '#666666', marginBottom: '1.5rem' }}>
               Limited sponsored spots. Submit your essay and we&apos;ll review. If selected, you&apos;ll have 48 hours to confirm with a LinkedIn post.
             </p>
-            <Link
-              href="/datascience"
-              style={{ color: '#0066cc', fontWeight: '600', fontSize: '0.95rem' }}
-            >
-              Back to Data Science track
-            </Link>
           </div>
           <div style={{
             backgroundColor: '#f8f9fa',

@@ -4,7 +4,10 @@ import AnalyticsTracker from './components/AnalyticsTracker'
 import ConsentBanner from './components/ConsentBanner'
 
 export const metadata = {
-  title: 'CVERSE by Demirti - Digital Skills Training',
+  title: {
+    default: 'CVERSE by Demirti - Digital Skills Training',
+    template: '%s | CVERSE by Demirti',
+  },
   description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
   icons: {
     icon: '/favicon.ico',

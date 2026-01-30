@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Navbar from '../components/Navbar';
 
 export default function ConfirmSpotPage() {
@@ -119,9 +118,6 @@ export default function ConfirmSpotPage() {
           </form>
         )}
 
-        <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
-          <Link href="/datascience" style={{ color: '#0066cc' }}>Back to Data Science track</Link>
-        </p>
       </section>
     </main>
   );

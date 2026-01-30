@@ -62,7 +62,7 @@ export default [
         "warn",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|Link|Image|ApplicationForm|ContactForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|AnalyticsTracker|ConsentBanner|CookiePreferencesLink|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend)$",
+          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|AnalyticsTracker|ConsentBanner|CookiePreferencesLink|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend)$",
           ignoreRestSiblings: true,
         },
       ],

@@ -953,6 +953,12 @@ export default function DataSciencePage() {
               >
                 Apply Now
               </button>
+              <p style={{ marginTop: '1.5rem', fontSize: '0.95rem', color: '#666666' }}>
+                Applying for the <strong>sponsored cohort</strong> (Feb 2–6 2026)?{' '}
+                <Link href="/datascience/sponsored" style={{ color: '#0066cc', fontWeight: '600' }}>
+                  Go to sponsored application
+                </Link>
+              </p>
             </div>
           ) : (
             <div className="application-form-card" style={{

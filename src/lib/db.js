@@ -27,6 +27,31 @@ export async function ensureDatabaseInitialized() {
         console.log('Database tables not found. Initializing...');
         await initializeDatabase();
         console.log('Database initialized successfully');
+      } else {
+        // Ensure admin_password_resets exists (added later for forgot-password)
+        const resetTableCheck = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_name = 'admin_password_resets'
+          );
+        `;
+        if (!resetTableCheck.rows[0].exists) {
+          console.log('Creating admin_password_resets table...');
+          await sql`
+            CREATE TABLE IF NOT EXISTS admin_password_resets (
+              id SERIAL PRIMARY KEY,
+              email VARCHAR(255) NOT NULL,
+              otp VARCHAR(10) NOT NULL,
+              expires_at TIMESTAMP NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+          `;
+          await sql`
+            CREATE INDEX IF NOT EXISTS idx_admin_password_resets_email_expires
+            ON admin_password_resets(email, expires_at);
+          `;
+          console.log('admin_password_resets table created');
+        }
       }
       dbInitialized = true;
     } catch (error) {

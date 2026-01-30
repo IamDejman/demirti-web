@@ -211,3 +211,37 @@ export async function enableAdmin(id) {
   return result.rows[0] || null;
 }
 
+// Password reset (forgot-password OTP flow)
+export async function createPasswordReset(email, otp, expiresAt) {
+  await ensureDatabaseInitialized();
+  const normalizedEmail = email.toLowerCase().trim();
+  await sql`
+    INSERT INTO admin_password_resets (email, otp, expires_at)
+    VALUES (${normalizedEmail}, ${otp}, ${expiresAt});
+  `;
+}
+
+export async function getValidPasswordReset(email, otp) {
+  await ensureDatabaseInitialized();
+  const normalizedEmail = email.toLowerCase().trim();
+  const result = await sql`
+    SELECT id, email, otp, expires_at
+    FROM admin_password_resets
+    WHERE LOWER(email) = ${normalizedEmail}
+      AND otp = ${otp}
+      AND expires_at > CURRENT_TIMESTAMP
+    ORDER BY expires_at DESC
+    LIMIT 1;
+  `;
+  return result.rows[0] || null;
+}
+
+export async function deletePasswordReset(email) {
+  await ensureDatabaseInitialized();
+  const normalizedEmail = email.toLowerCase().trim();
+  await sql`
+    DELETE FROM admin_password_resets
+    WHERE LOWER(email) = ${normalizedEmail};
+  `;
+}
+

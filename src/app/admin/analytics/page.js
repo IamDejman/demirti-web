@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminNavbar from '../../components/AdminNavbar';
 import {
@@ -70,6 +70,7 @@ export default function AdminAnalyticsPage() {
   const [realtimeOpen, setRealtimeOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const lastFetchKeyRef = useRef('');
 
   const { start, end, days: rangeDays } = customRange && customStart && customEnd
     ? (() => {
@@ -92,89 +93,133 @@ export default function AdminAnalyticsPage() {
   }, [router]);
 
   const fetchOverview = useCallback(async () => {
-    const params = new URLSearchParams({ compare: String(compare) });
-    if (customRange && customStart && customEnd) {
-      params.set('start', customStart);
-      params.set('end', customEnd);
-    } else {
-      params.set('days', String(queryDays));
+    try {
+      const params = new URLSearchParams({ compare: String(compare) });
+      if (customRange && customStart && customEnd) {
+        params.set('start', customStart);
+        params.set('end', customEnd);
+      } else {
+        params.set('days', String(queryDays));
+      }
+      const res = await fetch(`/api/admin/analytics/overview?${params}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setOverview(data.data);
+    } catch {
+      // e.g. ERR_BLOCKED_BY_CONTENT_BLOCKER or network error; avoid uncaught rejection
     }
-    const res = await fetch(`/api/admin/analytics/overview?${params}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setOverview(data.data);
   }, [queryDays, compare, customRange, customStart, customEnd, checkAuth]);
 
   const fetchRealtime = useCallback(async () => {
-    const res = await fetch('/api/admin/analytics/realtime', { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setRealtime(data.data);
+    try {
+      const res = await fetch('/api/admin/analytics/realtime', { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setRealtime(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [checkAuth]);
 
   const fetchTraffic = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/traffic?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setTraffic(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/traffic?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setTraffic(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
   const fetchPages = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/pages?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setPages(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/pages?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setPages(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
   const fetchEngagement = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/engagement?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setEngagement(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/engagement?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setEngagement(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
   const fetchAudience = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/audience?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setAudience(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/audience?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setAudience(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
   const fetchFunnels = useCallback(async () => {
-    const res = await fetch('/api/admin/funnels', { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setFunnels(data.funnels || []);
+    try {
+      const res = await fetch('/api/admin/funnels', { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setFunnels(data.funnels || []);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [checkAuth]);
 
   const fetchFunnelPerf = useCallback(async () => {
     if (!selectedFunnelId) { setFunnelPerf(null); return; }
-    const res = await fetch(`/api/admin/analytics/funnels/${selectedFunnelId}?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setFunnelPerf(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/funnels/${selectedFunnelId}?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setFunnelPerf(data.data);
+    } catch {
+      setFunnelPerf(null);
+    }
   }, [selectedFunnelId, queryDays, checkAuth]);
 
   const fetchGoalsPerf = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/goals?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setGoalsPerf(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/goals?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setGoalsPerf(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
+  // Use event-log path; /api/admin/analytics/events is often blocked by content blockers (ERR_BLOCKED_BY_CONTENT_BLOCKER).
   const fetchEvents = useCallback(async () => {
-    const res = await fetch(`/api/admin/analytics/events?days=${queryDays}`, { headers: getAuthHeaders() });
-    if (checkAuth(res)) return;
-    const data = await res.json();
-    if (res.ok && data.success) setEventsData(data.data);
+    try {
+      const res = await fetch(`/api/admin/analytics/event-log?days=${queryDays}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setEventsData(data.data);
+    } catch {
+      // e.g. content blocker or network error
+    }
   }, [queryDays, checkAuth]);
 
-  // Depend only on primitive values so we don't re-run due to callback identity changes (which can cause 5k+ request loops).
+  // Depend only on primitive values; guard so we only run fetches once per unique deps (avoids 5k+ loops from re-runs).
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('admin_authenticated') !== 'true') {
       router.push('/admin/login');
       return;
     }
+    const fetchKey = `${queryDays}-${compare}-${customRange}-${customStart}-${customEnd}`;
+    if (lastFetchKeyRef.current === fetchKey) return;
+    lastFetchKeyRef.current = fetchKey;
     setLoading(true);
     Promise.all([
       fetchOverview(),
@@ -186,7 +231,7 @@ export default function AdminAnalyticsPage() {
       fetchGoalsPerf(),
       fetchEvents(),
     ]).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: refetch only when date/compare change, not when callbacks change identity
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: refetch only when date/compare change
   }, [queryDays, compare, customRange, customStart, customEnd]);
 
   useEffect(() => {

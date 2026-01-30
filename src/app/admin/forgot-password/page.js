@@ -63,7 +63,7 @@ export default function AdminForgotPassword() {
       } else {
         showToast({ type: 'error', message: data.error || 'Something went wrong.' });
       }
-    } catch (err) {
+    } catch {
       showToast({ type: 'error', message: 'Something went wrong. Try again.' });
     } finally {
       setIsSubmitting(false);
@@ -89,7 +89,7 @@ export default function AdminForgotPassword() {
       } else {
         showToast({ type: 'error', message: data.error || 'Invalid or expired code.' });
       }
-    } catch (err) {
+    } catch {
       showToast({ type: 'error', message: 'Something went wrong. Try again.' });
     } finally {
       setIsSubmitting(false);
@@ -127,7 +127,7 @@ export default function AdminForgotPassword() {
       } else {
         showToast({ type: 'error', message: data.error || 'Something went wrong.' });
       }
-    } catch (err) {
+    } catch {
       showToast({ type: 'error', message: 'Something went wrong. Try again.' });
     } finally {
       setIsSubmitting(false);
@@ -135,26 +135,9 @@ export default function AdminForgotPassword() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f8f9fa',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '3rem',
-          borderRadius: '16px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-          maxWidth: '450px',
-          width: '100%',
-        }}
-      >
+    <main>
+      <div className="admin-auth-page">
+        <div className="admin-auth-card">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1a1a1a', marginBottom: '0.5rem' }}>
             Forgot password
@@ -295,6 +278,7 @@ export default function AdminForgotPassword() {
             Back to login
           </Link>
         </p>
+        </div>
       </div>
     </main>
   );

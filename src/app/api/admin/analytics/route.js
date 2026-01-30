@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminFromRequest } from '@/lib/adminAuth';
 import {
   getPageViewsByDay,
   getTopPages,
@@ -7,6 +8,8 @@ import {
 } from '@/lib/db';
 
 export async function GET(request) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { searchParams } = new URL(request.url);
     const days = Math.min(365, Math.max(1, parseInt(searchParams.get('days') || '30', 10) || 30));

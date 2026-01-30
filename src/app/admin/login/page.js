@@ -36,7 +36,7 @@ export default function AdminLogin() {
       let data = {};
       try {
         data = await response.json();
-      } catch (_) {
+      } catch {
         data = { error: 'Invalid response from server' };
       }
 
@@ -78,23 +78,8 @@ export default function AdminLogin() {
 
   return (
     <main>
-      <div style={{
-        marginTop: '0',
-        minHeight: 'calc(100vh - 140px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f8f9fa',
-        padding: '2rem'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '3rem',
-          borderRadius: '16px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-          maxWidth: '450px',
-          width: '100%'
-        }}>
+      <div className="admin-auth-page">
+        <div className="admin-auth-card">
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <h1 style={{
               fontSize: '2rem',

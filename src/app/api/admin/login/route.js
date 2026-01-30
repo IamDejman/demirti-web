@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { verifyAdminCredentials } from '@/lib/admin';
+import { verifyAdminCredentials, createAdminSession } from '@/lib/admin';
 
 // POST - Admin login
 export async function POST(request) {
@@ -25,9 +25,8 @@ export async function POST(request) {
 
       if (admin) {
         console.log('Login successful for admin ID:', admin.id);
-        // Generate a simple token (in production, use JWT or a more secure method)
         const token = crypto.randomBytes(32).toString('hex');
-        
+        await createAdminSession(admin.id, token);
         return NextResponse.json({
           success: true,
           token,

@@ -1,6 +1,7 @@
 import './globals.css'
 import { ToastProvider } from './components/ToastProvider'
 import AnalyticsTracker from './components/AnalyticsTracker'
+import ConsentBanner from './components/ConsentBanner'
 
 export const metadata = {
   title: 'CVERSE by Demirti - Digital Skills Training',
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
         <ToastProvider>
           <AnalyticsTracker />
           {children}
+          <ConsentBanner />
         </ToastProvider>
       </body>
     </html>

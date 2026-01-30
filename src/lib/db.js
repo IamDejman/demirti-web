@@ -52,6 +52,31 @@ export async function ensureDatabaseInitialized() {
           `;
           console.log('admin_password_resets table created');
         }
+        // Admin sessions for token-based auth
+        const adminSessionsCheck = await sql`
+          SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'admin_sessions');
+        `;
+        if (!adminSessionsCheck.rows[0].exists) {
+          await sql`
+            CREATE TABLE IF NOT EXISTS admin_sessions (
+              id SERIAL PRIMARY KEY,
+              admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+              token VARCHAR(255) NOT NULL UNIQUE,
+              expires_at TIMESTAMP NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+          `;
+          await sql`CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token)`;
+          await sql`CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at)`;
+          console.log('admin_sessions table created');
+        }
+        // Analytics schema (sessions, visitors, goals, funnels, daily_stats, extend events)
+        const sessionsCheck = await sql`
+          SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'sessions');
+        `;
+        if (!sessionsCheck.rows[0].exists) {
+          await ensureAnalyticsSchema();
+        }
       }
       dbInitialized = true;
     } catch (error) {
@@ -334,6 +359,142 @@ export async function initializeDatabase() {
   }
 }
 
+// Analytics schema: new tables and extend events (run when sessions table is missing)
+async function ensureAnalyticsSchema() {
+  const addCol = async (fn) => {
+    try {
+      await fn();
+    } catch (e) {
+      if (e.code !== '42701') throw e; // duplicate_column
+    }
+  };
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN visitor_id VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN utm_source VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN utm_medium VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN utm_campaign VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN utm_content VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN utm_term VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN traffic_channel VARCHAR(50)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN device_type VARCHAR(50)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN browser VARCHAR(100)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN os VARCHAR(100)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN screen_resolution VARCHAR(50)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN viewport_size VARCHAR(50)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN language VARCHAR(20)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN country VARCHAR(100)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN city VARCHAR(255)`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN page_duration_seconds INTEGER`);
+  await addCol(() => sql`ALTER TABLE events ADD COLUMN scroll_depth_percent INTEGER`);
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_events_visitor_id ON events(visitor_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_events_traffic_channel ON events(traffic_channel)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_events_country ON events(country)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS visitors (
+      visitor_id VARCHAR(255) PRIMARY KEY,
+      first_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      total_sessions INTEGER DEFAULT 0,
+      total_pageviews INTEGER DEFAULT 0,
+      total_events INTEGER DEFAULT 0
+    );
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_visitors_first_seen_at ON visitors(first_seen_at)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS sessions (
+      session_id VARCHAR(255) PRIMARY KEY,
+      visitor_id VARCHAR(255) NOT NULL,
+      started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ended_at TIMESTAMP,
+      duration_seconds INTEGER,
+      pageview_count INTEGER DEFAULT 0,
+      event_count INTEGER DEFAULT 0,
+      entry_page TEXT,
+      exit_page TEXT,
+      bounced BOOLEAN,
+      device_type VARCHAR(50),
+      browser VARCHAR(100),
+      os VARCHAR(100),
+      country VARCHAR(100),
+      city VARCHAR(255),
+      traffic_channel VARCHAR(50),
+      utm_source VARCHAR(255),
+      utm_medium VARCHAR(255),
+      utm_campaign VARCHAR(255),
+      is_new_visitor BOOLEAN DEFAULT true,
+      last_activity_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sessions_visitor_id ON sessions(visitor_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sessions_started_at ON sessions(started_at)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sessions_traffic_channel ON sessions(traffic_channel)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sessions_country ON sessions(country)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sessions_last_activity_at ON sessions(last_activity_at)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS goals (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      match_value TEXT NOT NULL,
+      match_type VARCHAR(20) DEFAULT 'contains',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS goal_completions (
+      id SERIAL PRIMARY KEY,
+      goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+      session_id VARCHAR(255),
+      visitor_id VARCHAR(255),
+      completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_goal_completions_goal_id ON goal_completions(goal_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_goal_completions_completed_at ON goal_completions(completed_at)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS funnels (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      steps JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS daily_stats (
+      date DATE NOT NULL,
+      traffic_channel VARCHAR(50) NOT NULL DEFAULT 'other',
+      device_type VARCHAR(50) NOT NULL DEFAULT 'desktop',
+      country VARCHAR(100) NOT NULL DEFAULT 'Unknown',
+      pageviews BIGINT DEFAULT 0,
+      unique_visitors BIGINT DEFAULT 0,
+      sessions BIGINT DEFAULT 0,
+      bounces BIGINT DEFAULT 0,
+      total_duration_seconds BIGINT DEFAULT 0,
+      PRIMARY KEY (date, traffic_channel, device_type, country)
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS consent_log (
+      id SERIAL PRIMARY KEY,
+      visitor_id VARCHAR(255),
+      consent_status VARCHAR(20) NOT NULL,
+      ip_hash VARCHAR(64),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  console.log('Analytics schema ensured');
+}
+
 // Keys we never store in event properties (PII / privacy)
 const PII_KEYS = new Set(['email', 'name', 'firstName', 'lastName', 'phone', 'password', 'token', 'address']);
 
@@ -345,9 +506,26 @@ export async function recordEvent(event) {
     type,
     name = null,
     sessionId = null,
+    visitorId = null,
     url = null,
     referrer = null,
     properties = null,
+    utmSource = null,
+    utmMedium = null,
+    utmCampaign = null,
+    utmContent = null,
+    utmTerm = null,
+    trafficChannel = null,
+    deviceType = null,
+    browser = null,
+    os = null,
+    screenResolution = null,
+    viewportSize = null,
+    language = null,
+    country = null,
+    city = null,
+    pageDurationSeconds = null,
+    scrollDepthPercent = null,
   } = event || {};
 
   if (!type) {
@@ -377,9 +555,116 @@ export async function recordEvent(event) {
   }
 
   await sql`
-    INSERT INTO events (type, name, session_id, url, referrer, properties)
-    VALUES (${type}, ${name}, ${sessionId}, ${safeUrl}, ${safeReferrer}, ${safeProperties})
+    INSERT INTO events (
+      type, name, session_id, visitor_id, url, referrer, properties,
+      utm_source, utm_medium, utm_campaign, utm_content, utm_term, traffic_channel,
+      device_type, browser, os, screen_resolution, viewport_size, language,
+      country, city, page_duration_seconds, scroll_depth_percent
+    )
+    VALUES (
+      ${type}, ${name}, ${sessionId}, ${visitorId}, ${safeUrl}, ${safeReferrer}, ${safeProperties},
+      ${utmSource}, ${utmMedium}, ${utmCampaign}, ${utmContent}, ${utmTerm}, ${trafficChannel},
+      ${deviceType}, ${browser}, ${os}, ${screenResolution}, ${viewportSize}, ${language},
+      ${country}, ${city}, ${pageDurationSeconds}, ${scrollDepthPercent}
+    )
   `;
+}
+
+export async function upsertVisitor(visitorId, { isPageview = false, isEvent = false } = {}) {
+  await ensureDatabaseInitialized();
+  if (!visitorId) return;
+
+  const now = new Date();
+  const result = await sql`
+    INSERT INTO visitors (visitor_id, first_seen_at, last_seen_at, total_sessions, total_pageviews, total_events)
+    VALUES (${visitorId}, ${now}, ${now}, 0, ${isPageview ? 1 : 0}, ${isEvent ? 1 : 0})
+    ON CONFLICT (visitor_id) DO UPDATE SET
+      last_seen_at = ${now},
+      total_pageviews = visitors.total_pageviews + ${isPageview ? 1 : 0},
+      total_events = visitors.total_events + ${isEvent ? 1 : 0}
+    RETURNING *;
+  `;
+  return result.rows[0];
+}
+
+export async function upsertSession(sessionId, visitorId, data) {
+  await ensureDatabaseInitialized();
+  if (!sessionId || !visitorId) return;
+
+  const now = new Date();
+  const {
+    entryPage = null,
+    exitPage = null,
+    isPageview = false,
+    isEvent = false,
+    deviceType = null,
+    browser = null,
+    os = null,
+    country = null,
+    city = null,
+    trafficChannel = null,
+    utmSource = null,
+    utmMedium = null,
+    utmCampaign = null,
+    isNewVisitor = false,
+  } = data || {};
+
+  const existing = await sql`
+    SELECT session_id FROM sessions WHERE session_id = ${sessionId} LIMIT 1;
+  `;
+
+  if (existing.rows.length === 0) {
+    await sql`
+      INSERT INTO sessions (
+        session_id, visitor_id, started_at, last_activity_at,
+        pageview_count, event_count, entry_page, exit_page,
+        device_type, browser, os, country, city,
+        traffic_channel, utm_source, utm_medium, utm_campaign, is_new_visitor
+      )
+      VALUES (
+        ${sessionId}, ${visitorId}, ${now}, ${now},
+        ${isPageview ? 1 : 0}, ${isEvent ? 1 : 0},
+        ${entryPage}, ${exitPage},
+        ${deviceType}, ${browser}, ${os}, ${country}, ${city},
+        ${trafficChannel}, ${utmSource}, ${utmMedium}, ${utmCampaign}, ${isNewVisitor}
+      )
+    `;
+  } else {
+    await sql`
+      UPDATE sessions SET
+        last_activity_at = ${now},
+        pageview_count = sessions.pageview_count + ${isPageview ? 1 : 0},
+        event_count = sessions.event_count + ${isEvent ? 1 : 0},
+        exit_page = ${exitPage}
+      WHERE session_id = ${sessionId}
+    `;
+  }
+}
+
+export async function updateSessionBounce(sessionId, bounced) {
+  await ensureDatabaseInitialized();
+  if (!sessionId) return;
+  await sql`
+    UPDATE sessions SET bounced = ${bounced} WHERE session_id = ${sessionId}
+  `;
+}
+
+export async function getVisitorSessionCount(visitorId) {
+  await ensureDatabaseInitialized();
+  if (!visitorId) return 0;
+  const r = await sql`
+    SELECT COUNT(*) AS cnt FROM sessions WHERE visitor_id = ${visitorId}
+  `;
+  return Number(r.rows[0]?.cnt ?? 0);
+}
+
+export async function getSessionBySessionId(sessionId) {
+  await ensureDatabaseInitialized();
+  if (!sessionId) return null;
+  const r = await sql`
+    SELECT * FROM sessions WHERE session_id = ${sessionId} LIMIT 1
+  `;
+  return r.rows[0] || null;
 }
 
 export async function getPageViewsByDay(startDate, endDate) {
@@ -802,5 +1087,163 @@ export async function deleteDiscount(id) {
   `;
   
   return result.rows[0] || null;
+}
+
+// Goals
+export async function getAllGoals() {
+  await ensureDatabaseInitialized();
+  const result = await sql`SELECT * FROM goals ORDER BY name`;
+  return result.rows;
+}
+
+export async function getActiveGoals() {
+  await ensureDatabaseInitialized();
+  const result = await sql`SELECT * FROM goals ORDER BY id`;
+  return result.rows;
+}
+
+export async function getGoalById(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`SELECT * FROM goals WHERE id = ${id} LIMIT 1`;
+  return result.rows[0] || null;
+}
+
+export async function createGoal({ name, type, matchValue, matchType = 'contains' }) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    INSERT INTO goals (name, type, match_value, match_type)
+    VALUES (${name}, ${type}, ${matchValue}, ${matchType || 'contains'})
+    RETURNING *;
+  `;
+  return result.rows[0];
+}
+
+export async function updateGoal(id, { name, type, matchValue, matchType }) {
+  await ensureDatabaseInitialized();
+  const updates = [];
+  if (name !== undefined) updates.push(sql`name = ${name}`);
+  if (type !== undefined) updates.push(sql`type = ${type}`);
+  if (matchValue !== undefined) updates.push(sql`match_value = ${matchValue}`);
+  if (matchType !== undefined) updates.push(sql`match_type = ${matchType}`);
+  if (updates.length === 0) return await getGoalById(id);
+  const setClause = updates.reduce((prev, u) => (prev ? sql`${prev}, ${u}` : u), null);
+  const result = await sql`
+    UPDATE goals SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id} RETURNING *;
+  `;
+  return result.rows[0] || null;
+}
+
+export async function deleteGoal(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`DELETE FROM goals WHERE id = ${id} RETURNING *`;
+  return result.rows[0] || null;
+}
+
+// goal_completions has no unique constraint; dedupe by checking if this goal+session already has a completion
+export async function ensureGoalCompletionOnce(goalId, sessionId, visitorId) {
+  await ensureDatabaseInitialized();
+  const existing = await sql`
+    SELECT 1 FROM goal_completions
+    WHERE goal_id = ${goalId} AND session_id = ${sessionId}
+    LIMIT 1
+  `;
+  if (existing.rows.length > 0) return;
+  await sql`
+    INSERT INTO goal_completions (goal_id, session_id, visitor_id)
+    VALUES (${goalId}, ${sessionId}, ${visitorId})
+  `;
+}
+
+// Funnels
+export async function getAllFunnels() {
+  await ensureDatabaseInitialized();
+  const result = await sql`SELECT * FROM funnels ORDER BY name`;
+  return result.rows;
+}
+
+export async function getFunnelById(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`SELECT * FROM funnels WHERE id = ${id} LIMIT 1`;
+  return result.rows[0] || null;
+}
+
+export async function createFunnel({ name, steps }) {
+  await ensureDatabaseInitialized();
+  const stepsJson = JSON.stringify(steps || []);
+  const result = await sql`
+    INSERT INTO funnels (name, steps) VALUES (${name}, ${stepsJson}::jsonb) RETURNING *;
+  `;
+  return result.rows[0];
+}
+
+export async function updateFunnel(id, { name, steps }) {
+  await ensureDatabaseInitialized();
+  if (name !== undefined && steps !== undefined) {
+    const stepsJson = JSON.stringify(steps);
+    await sql`UPDATE funnels SET name = ${name}, steps = ${stepsJson}::jsonb, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  } else if (name !== undefined) {
+    await sql`UPDATE funnels SET name = ${name}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  } else if (steps !== undefined) {
+    const stepsJson = JSON.stringify(steps);
+    await sql`UPDATE funnels SET steps = ${stepsJson}::jsonb, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  }
+  return await getFunnelById(id);
+}
+
+export async function deleteFunnel(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`DELETE FROM funnels WHERE id = ${id} RETURNING *`;
+  return result.rows[0] || null;
+}
+
+// Daily stats aggregation (for cron): one row per (date, traffic_channel, device_type, country)
+export async function aggregateDailyStatsForDateSimple(date) {
+  await ensureDatabaseInitialized();
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  await sql`
+    INSERT INTO daily_stats (date, traffic_channel, device_type, country, pageviews, unique_visitors, sessions, bounces, total_duration_seconds)
+    SELECT
+      ${startOfDay}::DATE,
+      COALESCE(traffic_channel, 'other'),
+      COALESCE(device_type, 'desktop'),
+      COALESCE(country, 'Unknown'),
+      COUNT(*) FILTER (WHERE type = 'pageview'),
+      COUNT(DISTINCT visitor_id) FILTER (WHERE visitor_id IS NOT NULL),
+      0,
+      0,
+      0
+    FROM events
+    WHERE created_at BETWEEN ${startOfDay} AND ${endOfDay}
+    GROUP BY traffic_channel, device_type, country
+    ON CONFLICT (date, traffic_channel, device_type, country) DO UPDATE SET
+      pageviews = EXCLUDED.pageviews,
+      unique_visitors = EXCLUDED.unique_visitors
+  `;
+
+  const sessionStats = await sql`
+    SELECT COALESCE(traffic_channel, 'other') AS traffic_channel, COALESCE(device_type, 'desktop') AS device_type, COALESCE(country, 'Unknown') AS country,
+      COUNT(*) AS sessions, COUNT(*) FILTER (WHERE bounced = true) AS bounces, COALESCE(SUM(duration_seconds), 0) AS total_duration_seconds
+    FROM sessions
+    WHERE started_at BETWEEN ${startOfDay} AND ${endOfDay}
+    GROUP BY traffic_channel, device_type, country
+  `;
+  for (const row of sessionStats.rows) {
+    await sql`
+      UPDATE daily_stats SET sessions = ${row.sessions}, bounces = ${row.bounces}, total_duration_seconds = ${row.total_duration_seconds}
+      WHERE date = ${startOfDay}::DATE AND traffic_channel = ${row.traffic_channel} AND device_type = ${row.device_type} AND country = ${row.country}
+    `;
+  }
+}
+
+export async function deleteEventsOlderThan(days = 365) {
+  await ensureDatabaseInitialized();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const result = await sql`DELETE FROM events WHERE created_at < ${cutoff}`;
+  return result.rowCount ?? 0;
 }
 

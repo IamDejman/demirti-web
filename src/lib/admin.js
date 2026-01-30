@@ -236,3 +236,34 @@ export async function deletePasswordReset(email) {
   `;
 }
 
+// Admin session (token) for API auth
+const SESSION_TTL_DAYS = 7;
+
+export async function createAdminSession(adminId, token) {
+  await ensureDatabaseInitialized();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + SESSION_TTL_DAYS);
+  await sql`
+    INSERT INTO admin_sessions (admin_id, token, expires_at)
+    VALUES (${adminId}, ${token}, ${expiresAt})
+  `;
+}
+
+export async function getAdminByToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    SELECT a.id, a.email, a.first_name, a.last_name, a.is_active
+    FROM admins a
+    JOIN admin_sessions s ON s.admin_id = a.id
+    WHERE s.token = ${token} AND s.expires_at > CURRENT_TIMESTAMP AND a.is_active = true
+    LIMIT 1
+  `;
+  return result.rows[0] || null;
+}
+
+export async function deleteAdminSession(token) {
+  if (!token) return;
+  await ensureDatabaseInitialized();
+  await sql`DELETE FROM admin_sessions WHERE token = ${token}`;
+}

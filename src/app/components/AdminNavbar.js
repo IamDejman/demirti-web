@@ -45,7 +45,8 @@ export default function AdminNavbar() {
         <div className="admin-nav-inner">
           <Link href="/admin" className="admin-nav-logo" onClick={closeMenu}>
             <Image src="/logo.png" alt="CVERSE Logo" width={120} height={40} className="admin-nav-logo-img" />
-            <span className="admin-nav-title">Admin Dashboard</span>
+            <span className="admin-nav-title admin-nav-title-full">Admin Dashboard</span>
+            <span className="admin-nav-title admin-nav-title-short" aria-hidden="true">Admin</span>
           </Link>
 
           <div className="admin-nav-desktop">
@@ -53,6 +54,8 @@ export default function AdminNavbar() {
             <Link href="/admin/scholarships" style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
             <Link href="/admin/discounts" style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
             <Link href="/admin/analytics" style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
+            <Link href="/admin/goals" style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
+            <Link href="/admin/funnels" style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>
             <Link href="/admin/config" style={navLinkStyle(isActive('/admin/config'))}>Config</Link>
             <button
               type="button"
@@ -85,6 +88,8 @@ export default function AdminNavbar() {
           <Link href="/admin/scholarships" onClick={closeMenu} style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
           <Link href="/admin/discounts" onClick={closeMenu} style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
           <Link href="/admin/analytics" onClick={closeMenu} style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
+          <Link href="/admin/goals" onClick={closeMenu} style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
+          <Link href="/admin/funnels" onClick={closeMenu} style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>
           <Link href="/admin/config" onClick={closeMenu} style={navLinkStyle(isActive('/admin/config'))}>Config</Link>
           <button type="button" onClick={handleLogout} className="admin-nav-mobile-logout" aria-label="Logout">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -121,22 +126,29 @@ export default function AdminNavbar() {
           align-items: center;
           width: 100%;
           justify-content: space-between;
+          min-width: 0;
         }
         .admin-nav-logo {
           text-decoration: none;
           display: flex;
           align-items: center;
-          flex-shrink: 0;
+          flex-shrink: 1;
+          min-width: 0;
         }
         .admin-nav-logo-img {
           width: 120px;
           height: auto;
+          flex-shrink: 0;
         }
         .admin-nav-title {
           margin-left: 0.75rem;
           font-size: 1.25rem;
           font-weight: 700;
           color: #1a1a1a;
+          white-space: nowrap;
+        }
+        .admin-nav-title-short {
+          display: none;
         }
         .admin-nav-desktop {
           display: flex;
@@ -176,7 +188,7 @@ export default function AdminNavbar() {
         .admin-nav-mobile {
           display: none;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: 0;
           padding: 1rem 0 0;
           border-top: 1px solid #e1e4e8;
           margin-top: 0.5rem;
@@ -184,6 +196,14 @@ export default function AdminNavbar() {
           margin-left: auto;
           margin-right: auto;
           width: 100%;
+          box-sizing: border-box;
+        }
+        .admin-nav-mobile a {
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          padding: 0.75rem 0;
+          box-sizing: border-box;
         }
         @media (min-width: 769px) {
           .admin-nav-mobile,
@@ -211,6 +231,9 @@ export default function AdminNavbar() {
         .admin-nav-mobile-logout:hover {
           background: rgba(220, 53, 69, 0.08);
         }
+        .admin-nav-mobile-logout {
+          min-height: 44px;
+        }
 
         @media (max-width: 768px) {
           .admin-nav {
@@ -220,9 +243,12 @@ export default function AdminNavbar() {
           .admin-nav-logo-img {
             width: 90px;
           }
-          .admin-nav-title {
+          .admin-nav-title-full {
             font-size: 1rem;
             margin-left: 0.5rem;
+          }
+          .admin-nav-title-short {
+            display: none;
           }
           .admin-nav-desktop {
             display: none !important;
@@ -236,8 +262,18 @@ export default function AdminNavbar() {
         }
 
         @media (max-width: 480px) {
-          .admin-nav-title {
+          .admin-nav-title-full {
             display: none;
+          }
+          .admin-nav-title-short {
+            display: inline;
+            margin-left: 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+          }
+          .admin-nav-logo-img {
+            width: 72px;
           }
         }
       `}</style>

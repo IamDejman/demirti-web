@@ -58,7 +58,7 @@ export default function ProjectManagementPage() {
   };
 
   return (
-    <main>
+    <main className="with-fixed-header">
       <Navbar />
       
       {/* Hero Section */}
@@ -67,7 +67,6 @@ export default function ProjectManagementPage() {
         background: 'linear-gradient(135deg, #00c896 0%, #00a578 100%)',
         color: 'white',
         textAlign: 'center',
-        marginTop: '140px',
         position: 'relative'
       }}>
         <div className="container">

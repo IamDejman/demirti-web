@@ -77,6 +77,21 @@ header {
   transition: var(--transition);
 }
 
+/* Main content offset when site header is fixed (home + track pages) */
+main.with-fixed-header {
+  padding-top: 140px;
+}
+@media (max-width: 768px) {
+  main.with-fixed-header {
+    padding-top: 80px;
+  }
+}
+@media (max-width: 480px) {
+  main.with-fixed-header {
+    padding-top: 70px;
+  }
+}
+
 .header-container {
   display: flex;
   justify-content: space-between;
@@ -234,7 +249,7 @@ nav {
   background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
   color: white;
   text-align: center;
-  margin-top: 140px;
+  margin-top: 0;
   position: relative;
   overflow: hidden;
 }
@@ -863,7 +878,7 @@ section {
 
   .hero {
     padding: 6rem 0 4rem;
-    margin-top: 80px;
+    margin-top: 0;
   }
 
   .hero h1 {
@@ -958,7 +973,7 @@ section {
 
   .hero {
     padding: 5rem 0 3rem;
-    margin-top: 70px;
+    margin-top: 0;
   }
 
   .hero h1 {
@@ -1113,7 +1128,7 @@ section {
   
   .track-hero {
     padding: 6rem 0 4rem !important;
-    margin-top: 80px !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -1128,6 +1143,7 @@ section {
   
   .track-hero {
     padding: 5rem 0 3rem !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -1375,18 +1391,28 @@ textarea:focus {
   margin-bottom: 1rem;
 }
 
-/* Admin layout: responsive content below fixed header */
+/* Admin layout: content below fixed nav (padding on main via .admin-with-fixed-nav) */
 .admin-content-area {
-  margin-top: 70px;
+  margin-top: 0;
   padding: 2rem;
   background-color: #f8f9fa;
   min-height: calc(100vh - 140px);
 }
 @media (max-width: 768px) {
   .admin-content-area {
-    margin-top: 56px;
+    margin-top: 0;
     padding: 1rem;
     min-height: calc(100vh - 56px);
+  }
+}
+
+/* Admin pages with fixed navbar: push content below header */
+main.admin-with-fixed-nav {
+  padding-top: 70px;
+}
+@media (max-width: 768px) {
+  main.admin-with-fixed-nav {
+    padding-top: 56px;
   }
 }
 

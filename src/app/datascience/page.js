@@ -57,7 +57,7 @@ export default function DataSciencePage() {
     });
   };
   return (
-    <main>
+    <main className="with-fixed-header">
       <Navbar />
       
       {/* Hero Section */}
@@ -66,7 +66,6 @@ export default function DataSciencePage() {
         background: 'linear-gradient(135deg, #0066cc 0%, #004d99 100%)',
         color: 'white',
         textAlign: 'center',
-        marginTop: '140px',
         position: 'relative'
       }}>
         <div className="container">

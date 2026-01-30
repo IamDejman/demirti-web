@@ -231,13 +231,11 @@ export default function AdminAnalyticsPage() {
       fetchGoalsPerf(),
       fetchEvents(),
     ]).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: refetch only when date/compare change
   }, [queryDays, compare, customRange, customStart, customEnd]);
 
   useEffect(() => {
     if (selectedFunnelId) fetchFunnelPerf();
     else setFunnelPerf(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when funnel or date range changes
   }, [selectedFunnelId, queryDays]);
 
   useEffect(() => {
@@ -245,7 +243,6 @@ export default function AdminAnalyticsPage() {
     fetchRealtime();
     const t = setInterval(fetchRealtime, 10000);
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll only when panel is open
   }, [realtimeOpen]);
 
   const handleExport = async (type) => {
@@ -280,7 +277,7 @@ export default function AdminAnalyticsPage() {
 
   if (loading && !overview) {
     return (
-      <main>
+      <main className="admin-with-fixed-nav">
         <AdminNavbar />
         <div className="admin-dashboard admin-content-area">
           <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
@@ -293,7 +290,7 @@ export default function AdminAnalyticsPage() {
 
   if (!loading && !overview) {
     return (
-      <main>
+      <main className="admin-with-fixed-nav">
         <AdminNavbar />
         <div className="admin-dashboard admin-content-area">
           <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
@@ -319,7 +316,7 @@ export default function AdminAnalyticsPage() {
   const hasNoData = overview && overview.totalPageviews === 0 && overview.totalSessions === 0;
 
   return (
-    <main>
+    <main className="admin-with-fixed-nav">
       <AdminNavbar />
       <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>

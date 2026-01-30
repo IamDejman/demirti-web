@@ -68,9 +68,6 @@ export default [
       ],
       "no-console": "off", // Allow console for debugging
       "no-undef": "error",
-      // Disable react-hooks rules as we don't have the plugin
-      "react-hooks/exhaustive-deps": "off",
-      "react-hooks/rules-of-hooks": "off",
     },
   },
 ];

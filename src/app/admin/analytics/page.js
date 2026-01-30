@@ -82,76 +82,96 @@ export default function AdminAnalyticsPage() {
     : getDateRange(days);
 
   const queryDays = rangeDays || 30;
+
+  const checkAuth = useCallback((res) => {
+    if (res.status === 401) {
+      router.push('/admin/login');
+      return true;
+    }
+    return false;
+  }, [router]);
+
   const fetchOverview = useCallback(async () => {
     const params = new URLSearchParams({ compare: String(compare) });
     if (customRange && customStart && customEnd) {
-      params.set('start', start.toISOString().slice(0, 10));
-      params.set('end', end.toISOString().slice(0, 10));
+      params.set('start', customStart);
+      params.set('end', customEnd);
     } else {
       params.set('days', String(queryDays));
     }
     const res = await fetch(`/api/admin/analytics/overview?${params}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setOverview(data.data);
-  }, [queryDays, compare, customRange, customStart, customEnd, start, end]);
+  }, [queryDays, compare, customRange, customStart, customEnd, checkAuth]);
 
   const fetchRealtime = useCallback(async () => {
     const res = await fetch('/api/admin/analytics/realtime', { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setRealtime(data.data);
-  }, []);
+  }, [checkAuth]);
 
   const fetchTraffic = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/traffic?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setTraffic(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
   const fetchPages = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/pages?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setPages(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
   const fetchEngagement = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/engagement?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setEngagement(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
   const fetchAudience = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/audience?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setAudience(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
   const fetchFunnels = useCallback(async () => {
     const res = await fetch('/api/admin/funnels', { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setFunnels(data.funnels || []);
-  }, []);
+  }, [checkAuth]);
 
   const fetchFunnelPerf = useCallback(async () => {
     if (!selectedFunnelId) { setFunnelPerf(null); return; }
     const res = await fetch(`/api/admin/analytics/funnels/${selectedFunnelId}?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setFunnelPerf(data.data);
-  }, [selectedFunnelId, queryDays]);
+  }, [selectedFunnelId, queryDays, checkAuth]);
 
   const fetchGoalsPerf = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/goals?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setGoalsPerf(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch(`/api/admin/analytics/events?days=${queryDays}`, { headers: getAuthHeaders() });
+    if (checkAuth(res)) return;
     const data = await res.json();
     if (res.ok && data.success) setEventsData(data.data);
-  }, [queryDays]);
+  }, [queryDays, checkAuth]);
 
+  // Depend only on primitive values so we don't re-run due to callback identity changes (which can cause 5k+ request loops).
   useEffect(() => {
-    if (localStorage.getItem('admin_authenticated') !== 'true') {
+    if (typeof window !== 'undefined' && localStorage.getItem('admin_authenticated') !== 'true') {
       router.push('/admin/login');
       return;
     }
@@ -166,19 +186,22 @@ export default function AdminAnalyticsPage() {
       fetchGoalsPerf(),
       fetchEvents(),
     ]).finally(() => setLoading(false));
-  }, [router, fetchOverview, fetchTraffic, fetchPages, fetchEngagement, fetchAudience, fetchFunnels, fetchGoalsPerf, fetchEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: refetch only when date/compare change, not when callbacks change identity
+  }, [queryDays, compare, customRange, customStart, customEnd]);
 
   useEffect(() => {
     if (selectedFunnelId) fetchFunnelPerf();
     else setFunnelPerf(null);
-  }, [selectedFunnelId, fetchFunnelPerf]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when funnel or date range changes
+  }, [selectedFunnelId, queryDays]);
 
   useEffect(() => {
     if (!realtimeOpen) return;
     fetchRealtime();
     const t = setInterval(fetchRealtime, 10000);
     return () => clearInterval(t);
-  }, [realtimeOpen, fetchRealtime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll only when panel is open
+  }, [realtimeOpen]);
 
   const handleExport = async (type) => {
     setExporting(true);
@@ -223,11 +246,43 @@ export default function AdminAnalyticsPage() {
     );
   }
 
+  if (!loading && !overview) {
+    return (
+      <main>
+        <AdminNavbar />
+        <div className="admin-dashboard admin-content-area">
+          <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
+            <div style={{ ...cardStyle, maxWidth: 480, margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Analytics couldn’t load</h2>
+              <p style={{ color: 'var(--text-light)', marginBottom: '1rem' }}>
+                Your session may have expired. Log out and log in again, then open Analytics.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/admin/login')}
+                style={{ padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+              >
+                Go to login
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const hasNoData = overview && overview.totalPageviews === 0 && overview.totalSessions === 0;
+
   return (
     <main>
       <AdminNavbar />
       <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
+          {hasNoData && (
+            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, color: '#0369a1', fontSize: '0.9rem' }}>
+              No data for this period yet. Data appears once visitors browse the site with tracking consent enabled (cookie banner).
+            </div>
+          )}
           <div className="admin-page-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
             <h1 className="admin-page-title">Analytics</h1>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>

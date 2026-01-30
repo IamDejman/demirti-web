@@ -1,5 +1,6 @@
 import Navbar from './components/Navbar';
 import ContactForm from './components/ContactForm';
+import CookiePreferencesLink from './components/CookiePreferencesLink';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -104,6 +105,7 @@ export default function Home() {
           </div>
           <div className="footer-bottom">
             <p>&copy; 2025 Demirti Limited. All rights reserved.</p>
+            <CookiePreferencesLink />
           </div>
         </div>
       </footer>

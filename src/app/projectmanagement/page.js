@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import CookiePreferencesLink from '../components/CookiePreferencesLink';
 import Link from 'next/link';
 import Image from 'next/image';
 import ApplicationForm from '../components/ApplicationForm';
@@ -955,6 +956,7 @@ export default function ProjectManagementPage() {
           </div>
           <div className="footer-bottom">
             <p>&copy; 2025 Demirti Limited. All rights reserved.</p>
+            <CookiePreferencesLink />
           </div>
         </div>
       </footer>

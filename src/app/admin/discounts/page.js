@@ -263,22 +263,8 @@ export default function DiscountsPage() {
       <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '2rem',
-            flexWrap: 'wrap',
-            gap: '1rem'
-          }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#1a1a1a',
-              margin: 0
-            }}>
-              Discounts
-            </h1>
+          <div className="admin-page-header" style={{ justifyContent: 'space-between' }}>
+            <h1 className="admin-page-title">Discounts</h1>
             <button
               onClick={() => {
                 setShowForm(!showForm);

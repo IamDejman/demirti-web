@@ -70,22 +70,8 @@ export default function AdminDashboard() {
       <AdminNavbar />
       <div className="admin-dashboard admin-dashboard-content">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div className="admin-page-header" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '2rem',
-            flexWrap: 'wrap',
-            gap: '1rem'
-          }}>
-            <h1 className="admin-page-title" style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#1a1a1a',
-              margin: 0
-            }}>
-              Applications
-            </h1>
+          <div className="admin-page-header">
+            <h1 className="admin-page-title">Applications</h1>
           </div>
 
 
@@ -360,9 +346,6 @@ export default function AdminDashboard() {
             margin-top: 56px;
             padding: 1rem;
             min-height: calc(100vh - 56px);
-          }
-          .admin-page-title {
-            font-size: 1.5rem !important;
           }
         }
       `}</style>

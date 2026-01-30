@@ -296,12 +296,7 @@ export default function ConfigPage() {
   return (
     <main>
       <AdminNavbar />
-      <div className="admin-dashboard" style={{ 
-        marginTop: '70px', 
-        padding: '2rem',
-        backgroundColor: '#f8f9fa',
-        minHeight: 'calc(100vh - 140px)'
-      }}>
+      <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
           <div style={{ 

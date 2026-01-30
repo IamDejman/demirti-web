@@ -216,40 +216,76 @@ export default function AdminForgotPassword() {
           <form onSubmit={handleResetPassword}>
             <div style={{ marginBottom: '1rem' }}>
               <label htmlFor="newPassword" style={labelStyle}>New password</label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                disabled={isSubmitting}
-                style={inputStyle}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  disabled={isSubmitting}
+                  style={{ ...inputStyle, paddingRight: '4.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    color: '#666',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    padding: '0.5rem 0.75rem',
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
               <label htmlFor="confirmPassword" style={labelStyle}>Confirm password</label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                disabled={isSubmitting}
-                style={inputStyle}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  disabled={isSubmitting}
+                  style={{ ...inputStyle, paddingRight: '4.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    color: '#666',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    padding: '0.5rem 0.75rem',
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={showPassword}
-                onChange={(e) => setShowPassword(e.target.checked)}
-              />
-              <span style={{ fontSize: '0.9rem', color: '#666' }}>Show passwords</span>
-            </label>
             <button type="submit" disabled={isSubmitting} style={buttonStyle}>
-              {isSubmitting ? 'Updating...' : 'Set password and log in'}
+              {isSubmitting ? 'Continuing...' : 'Continue'}
             </button>
           </form>
         )}

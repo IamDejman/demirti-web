@@ -68,14 +68,9 @@ export default function AdminDashboard() {
   return (
     <main>
       <AdminNavbar />
-      <div className="admin-dashboard" style={{ 
-        marginTop: '70px', 
-        padding: '2rem',
-        backgroundColor: '#f8f9fa',
-        minHeight: 'calc(100vh - 140px)'
-      }}>
+      <div className="admin-dashboard admin-dashboard-content">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ 
+          <div className="admin-page-header" style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
@@ -83,7 +78,7 @@ export default function AdminDashboard() {
             flexWrap: 'wrap',
             gap: '1rem'
           }}>
-            <h1 style={{ 
+            <h1 className="admin-page-title" style={{ 
               fontSize: '2.5rem', 
               fontWeight: '700', 
               color: '#1a1a1a',
@@ -353,6 +348,24 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+      <style jsx>{`
+        .admin-dashboard-content {
+          margin-top: 70px;
+          padding: 2rem;
+          background-color: #f8f9fa;
+          min-height: calc(100vh - 140px);
+        }
+        @media (max-width: 768px) {
+          .admin-dashboard-content {
+            margin-top: 56px;
+            padding: 1rem;
+            min-height: calc(100vh - 56px);
+          }
+          .admin-page-title {
+            font-size: 1.5rem !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }

@@ -33,9 +33,14 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = { error: 'Invalid response from server' };
+      }
 
-      if (data.success) {
+      if (response.ok && data.success) {
         // Store authentication token
         localStorage.setItem('admin_authenticated', 'true');
         localStorage.setItem('admin_token', data.token || 'authenticated');
@@ -50,10 +55,10 @@ export default function AdminLogin() {
           router.push('/admin');
         }, 500);
       } else {
-        // Show detailed error message
+        // Show server error message (401 = invalid credentials, etc.)
         const errorMessage = data.details 
           ? `${data.error}\n\n${data.details}` 
-          : data.error || 'Invalid credentials';
+          : (data.error || (response.status === 401 ? 'Invalid email or password.' : 'Login failed. Please try again.'));
         
         showToast({
           type: 'error',
@@ -282,6 +287,9 @@ export default function AdminLogin() {
             >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
+            <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+              No admin yet? Create one: <code style={{ background: '#f0f0f0', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>POST /api/admin/admins</code> with body <code style={{ background: '#f0f0f0', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>{'{"email":"you@example.com","password":"yourpassword"}'}</code> — see DATABASE_SETUP.md.
+            </p>
           </form>
         </div>
       </div>

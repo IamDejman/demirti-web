@@ -54,6 +54,7 @@ export default function AdminNavbar() {
             <Link href="/admin/scholarships" style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
             <Link href="/admin/sponsored-applications" style={navLinkStyle(isActive('/admin/sponsored-applications'))}>Sponsored</Link>
             <Link href="/admin/discounts" style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
+            <Link href="/admin/cohorts" style={navLinkStyle(isActive('/admin/cohorts'))}>Cohorts</Link>
             <Link href="/admin/analytics" style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
             <Link href="/admin/goals" style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
             <Link href="/admin/funnels" style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>
@@ -89,6 +90,7 @@ export default function AdminNavbar() {
           <Link href="/admin/scholarships" onClick={closeMenu} style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
           <Link href="/admin/sponsored-applications" onClick={closeMenu} style={navLinkStyle(isActive('/admin/sponsored-applications'))}>Sponsored</Link>
           <Link href="/admin/discounts" onClick={closeMenu} style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
+          <Link href="/admin/cohorts" onClick={closeMenu} style={navLinkStyle(isActive('/admin/cohorts'))}>Cohorts</Link>
           <Link href="/admin/analytics" onClick={closeMenu} style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
           <Link href="/admin/goals" onClick={closeMenu} style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
           <Link href="/admin/funnels" onClick={closeMenu} style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>

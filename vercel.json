@@ -7,11 +7,5 @@
       "path": "/api/cron/analytics",
       "schedule": "0 2 * * *"
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
   ]
 }

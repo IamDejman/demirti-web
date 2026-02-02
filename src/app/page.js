@@ -4,8 +4,21 @@ import CookiePreferencesLink from './components/CookiePreferencesLink';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
+
 export const metadata = {
   title: 'Home',
+  description: 'CVERSE by Demirti offers world-class Data Science and Technical Product Management training. Build skills, boost confidence, and transform your career with our digital programs.',
+  alternates: { canonical: `${baseUrl.replace(/\/$/, '')}/` },
+  openGraph: {
+    title: 'CVERSE by Demirti - Digital Skills Training',
+    description: 'CVERSE by Demirti offers world-class Data Science and Technical Product Management training. Build skills and transform your career.',
+    url: '/',
+  },
+  twitter: {
+    title: 'CVERSE by Demirti - Digital Skills Training',
+    description: 'CVERSE by Demirti offers world-class Data Science and Technical Product Management training.',
+  },
 };
 
 export default function Home() {

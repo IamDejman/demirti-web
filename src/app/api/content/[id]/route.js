@@ -1,0 +1,56 @@
+import { NextResponse } from 'next/server';
+import { getContentItemById, updateContentItem, deleteContentItem, getWeekById, getCohortFacilitators } from '@/lib/db-lms';
+import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { getUserFromRequest } from '@/lib/auth';
+
+export async function PUT(request, { params }) {
+  try {
+    const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const id = params?.id;
+    if (!id) return NextResponse.json({ error: 'Content ID required' }, { status: 400 });
+    const item = await getContentItemById(id);
+    if (!item) return NextResponse.json({ error: 'Content item not found' }, { status: 404 });
+    const week = await getWeekById(item.week_id);
+    const facilitators = await getCohortFacilitators(week.cohort_id);
+    const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
+    if (user.role !== 'admin' && !isFacilitator) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const body = await request.json();
+    const updated = await updateContentItem(id, {
+      title: body.title,
+      description: body.description,
+      fileUrl: body.fileUrl,
+      externalUrl: body.externalUrl,
+      orderIndex: body.orderIndex,
+      isDownloadable: body.isDownloadable,
+    });
+    return NextResponse.json({ contentItem: updated });
+  } catch (e) {
+    console.error('PUT /api/content/[id]:', e);
+    return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const id = params?.id;
+    if (!id) return NextResponse.json({ error: 'Content ID required' }, { status: 400 });
+    const item = await getContentItemById(id);
+    if (!item) return NextResponse.json({ error: 'Content item not found' }, { status: 404 });
+    const week = await getWeekById(item.week_id);
+    const facilitators = await getCohortFacilitators(week.cohort_id);
+    const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
+    if (user.role !== 'admin' && !isFacilitator) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    await deleteContentItem(id);
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('DELETE /api/content/[id]:', e);
+    return NextResponse.json({ error: 'Failed to delete content' }, { status: 500 });
+  }
+}

@@ -247,10 +247,6 @@ export default function DataSciencePage() {
                     </li>
                     <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                       <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                      Data Science project lifecycle (CRISP-DM)
-                    </li>
-                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                       Understanding structured vs unstructured data
                     </li>
                     <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
@@ -463,10 +459,6 @@ export default function DataSciencePage() {
                     </li>
                     <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                       <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                      Statistical significance for business decisions
-                    </li>
-                    <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                      <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
                       Live Project: Statistical analysis of a dataset
                     </li>
                   </ul>
@@ -559,7 +551,7 @@ export default function DataSciencePage() {
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    k-Nearest Neighbors
+                    Introduction to k-Nearest Neighbors
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
@@ -567,7 +559,7 @@ export default function DataSciencePage() {
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Gradient Boosting (XGBoost/LightGBM)
+                    Introduction to Gradient Boosting (XGBoost/LightGBM)
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
@@ -609,7 +601,7 @@ export default function DataSciencePage() {
                   <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Clustering: K-Means, DBSCAN, Hierarchical
+                    Clustering: K-Means, Hierarchical
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
@@ -617,11 +609,7 @@ export default function DataSciencePage() {
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Association rule mining
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Anomaly detection basics
+                    Use Cases of Anomaly detection basics
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
@@ -644,7 +632,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 9 — Deep Learning & Neural Networks (Intro)
+                    WEEK 9 — Model Optimization & Interpretability
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -659,23 +647,15 @@ export default function DataSciencePage() {
                   <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Introduction to neural networks
+                    Hyperparameter Tuning: Practical application of GridSearch and RandomSearch to improve model performance.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Fundamentals of TensorFlow/Keras or PyTorch
+                    Interpretability: Introduction to SHAP or LIME so students can explain why a model made a specific prediction.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Building your first neural model
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Deep learning for classification & regression
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Optional deep learning model iteration
+                    Live Project: Students identify which tuning approach fits their specific problem.
                   </li>
                   </ul>
                 )}
@@ -694,7 +674,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 10 — Model Tuning, Optimization & Deployment
+                    WEEK 10 — From Script to Application
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -709,23 +689,11 @@ export default function DataSciencePage() {
                   <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Hyperparameter tuning (GridSearch, RandomSearch, Optuna)
+                    Streamlit Fundamentals: Using Streamlit to build rapid ML web apps instead of complex Flask/FastAPI setups.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Model interpretability (SHAP, LIME)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Deploying models using Flask/FastAPI
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Streamlit for ML apps
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Build a deployable model prototype
+                    App Development: Hands-on session building a deployable prototype for their live project.
                   </li>
                   </ul>
                 )}
@@ -744,7 +712,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 11 — Real-World Data Science Practices
+                    WEEK 11 — Professional Data Workflows
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -759,23 +727,15 @@ export default function DataSciencePage() {
                   <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Data pipelines & workflow automation
+                    SQL for Data Science: Essential queries, joins, and aggregations used in real-world data pipelines.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Working with cloud tools (AWS/GCP/Azure intro)
+                    Version Control: Finalizing Git/GitHub repositories for reproducibility and portfolio display.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    SQL for data science (queries, joins, aggregations)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Version control & reproducibility
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Live Project: Finalize model + deployment + documentation
+                    Documentation: Writing professional documentation and project summaries.
                   </li>
                   </ul>
                 )}
@@ -794,7 +754,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 12 — Capstone Project Presentation + Career Support
+                    WEEK 12 — Capstone & Career Launch
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -809,27 +769,11 @@ export default function DataSciencePage() {
                   <ul style={{ listStyle: 'none', paddingLeft: '0', paddingBottom: '1rem', animation: 'fadeIn 0.3s ease' }}>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Final project presentation to mentors/peers
+                    Project Presentations: Final demo of EDA, models, and the deployed Streamlit app.
                   </li>
                   <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
                     <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Demo of EDA, models, and deployment
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Portfolio development: GitHub, Kaggle, personal website
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Resume optimization (data-science specific)
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Mock interviews — technical + behavioural
-                  </li>
-                  <li style={{ padding: '0.5rem 0', paddingLeft: '1.5rem', position: 'relative', color: '#666666' }}>
-                    <span style={{ position: 'absolute', left: '0', color: '#00c896', fontWeight: 'bold' }}>•</span>
-                    Career roadmap: Data Analyst → Data Scientist → ML Engineer
+                    Career Support: Resume optimization, technical interview prep, and navigating the path from Analyst to ML Engineer.
                   </li>
                   </ul>
                 )}

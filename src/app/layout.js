@@ -3,14 +3,53 @@ import { ToastProvider } from './components/ToastProvider'
 import AnalyticsTracker from './components/AnalyticsTracker'
 import ConsentBanner from './components/ConsentBanner'
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
+const origin = baseUrl.replace(/\/$/, '')
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'CVERSE by Demirti',
+      url: origin,
+      logo: `${origin}/logo.png`,
+    },
+    {
+      '@type': 'WebSite',
+      name: 'CVERSE by Demirti',
+      url: origin,
+      description: "Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti's premier digital training initiative.",
+      publisher: { '@type': 'Organization', name: 'CVERSE by Demirti', url: origin, logo: `${origin}/logo.png` },
+    },
+  ],
+}
+
 export const metadata = {
+  metadataBase: new URL(baseUrl),
   title: {
     default: 'CVERSE by Demirti - Digital Skills Training',
     template: '%s | CVERSE by Demirti',
   },
   description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
+  keywords: ['CVERSE', 'Demirti', 'Data Science', 'Product Management', 'digital skills', 'training', 'career'],
+  robots: { index: true, follow: true },
   icons: {
     icon: '/favicon.ico',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'CVERSE by Demirti',
+    title: 'CVERSE by Demirti - Digital Skills Training',
+    description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
+    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'CVERSE by Demirti' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CVERSE by Demirti - Digital Skills Training',
+    description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
+    images: ['/logo.png'],
   },
 }
 
@@ -31,6 +70,10 @@ export default function RootLayout({ children }) {
           integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body>

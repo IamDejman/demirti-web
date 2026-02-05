@@ -221,10 +221,10 @@ export async function sendPaymentConfirmationEmail({
       <div class="next-steps">
         <h2>📋 What's Next?</h2>
         <ol class="steps-list">
-          <li><strong>Check your email</strong> - You'll receive course preparation materials within 48 hours</li>
-          <li><strong>Join our community</strong> - Look out for an invitation to join our exclusive Slack channel</li>
+          <li><strong>Check your email</strong> - You'll receive course preparation materials before the course starts</li>
+          <li><strong>Join your Cohort's Telegram Group</strong> - Look out for an invitation to join our exclusive Telegram channel</li>
           <li><strong>Prepare your workspace</strong> - We'll send you a list of required software and tools to install before the course starts</li>
-          <li><strong>Mark your calendar</strong> - Classes begin on Saturday, February 2026 at 9:00 AM</li>
+          <li><strong>Mark your calendar</strong> - Classes begin on Saturday, 28th February 2026</li>
         </ol>
       </div>
       <div class="message">

@@ -87,10 +87,13 @@ export async function getUserByToken(token) {
   if (!token || typeof token !== 'string') return null;
   await ensureLmsSchema();
   const result = await sql`
-    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.is_active
+    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.is_active, u.suspended_until
     FROM users u
     JOIN user_sessions s ON s.user_id = u.id
-    WHERE s.token = ${token} AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = true
+    WHERE s.token = ${token}
+      AND s.expires_at > CURRENT_TIMESTAMP
+      AND u.is_active = true
+      AND (u.suspended_until IS NULL OR u.suspended_until < CURRENT_TIMESTAMP)
     LIMIT 1;
   `;
   return result.rows[0] || null;

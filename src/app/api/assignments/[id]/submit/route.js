@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmission } from '@/lib/db-lms';
+import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmission, recordLmsEvent } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
@@ -35,12 +35,16 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Already submitted and graded' }, { status: 400 });
     }
     const body = await request.json();
-    const { submissionType, fileUrl, linkUrl, textContent } = body;
+    const { submissionType, fileUrl, linkUrl, textContent, fileName, fileSize } = body;
     if (!submissionType && !fileUrl && !linkUrl && !textContent) {
       return NextResponse.json({ error: 'Provide submissionType and at least one of fileUrl, linkUrl, or textContent' }, { status: 400 });
     }
-    if (fileUrl && assignment.allowed_file_types?.length && !isAllowedFileType(fileUrl, assignment.allowed_file_types)) {
+    const typeCheckTarget = fileName || fileUrl;
+    if (fileUrl && assignment.allowed_file_types?.length && !isAllowedFileType(typeCheckTarget, assignment.allowed_file_types)) {
       return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
+    }
+    if (fileUrl && assignment.max_file_size_mb != null && fileSize != null && !isWithinSizeLimit(fileSize, assignment.max_file_size_mb)) {
+      return NextResponse.json({ error: 'File size exceeds limit' }, { status: 400 });
     }
     const submission = await createSubmission({
       assignmentId: id,
@@ -50,6 +54,7 @@ export async function POST(request, { params }) {
       linkUrl: linkUrl || null,
       textContent: textContent || null,
     });
+    await recordLmsEvent(user.id, 'assignment_submitted', { assignmentId: id, submissionId: submission.id });
     return NextResponse.json({ submission });
   } catch (e) {
     console.error('POST /api/assignments/[id]/submit:', e);

@@ -1,6 +1,3 @@
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
-const origin = baseUrl.replace(/\/$/, '')
-
 export default function manifest() {
   return {
     name: 'CVERSE by Demirti',

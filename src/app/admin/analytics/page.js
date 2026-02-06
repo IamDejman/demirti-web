@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../../components/AdminNavbar';
 import {
   LineChart,
   Line,
@@ -67,6 +66,11 @@ export default function AdminAnalyticsPage() {
   const [funnelPerf, setFunnelPerf] = useState(null);
   const [goalsPerf, setGoalsPerf] = useState(null);
   const [eventsData, setEventsData] = useState(null);
+  const [lmsMetrics, setLmsMetrics] = useState(null);
+  const [lmsTimeseries, setLmsTimeseries] = useState(null);
+  const [lmsCohorts, setLmsCohorts] = useState([]);
+  const [lmsFunnel, setLmsFunnel] = useState(null);
+  const [lmsEvents, setLmsEvents] = useState([]);
   const [realtimeOpen, setRealtimeOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -211,6 +215,82 @@ export default function AdminAnalyticsPage() {
     }
   }, [queryDays, checkAuth]);
 
+  const fetchLmsMetrics = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/analytics/lms', { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setLmsMetrics(data.data);
+    } catch {
+      // ignore
+    }
+  }, [checkAuth]);
+
+  const fetchLmsTimeseries = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (customRange && customStart && customEnd) {
+        params.set('start', customStart);
+        params.set('end', customEnd);
+      } else {
+        params.set('days', String(queryDays));
+      }
+      const res = await fetch(`/api/admin/analytics/lms/timeseries?${params.toString()}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setLmsTimeseries(data.data);
+    } catch {
+      // ignore
+    }
+  }, [checkAuth, customRange, customStart, customEnd, queryDays]);
+
+  const fetchLmsCohorts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/analytics/lms/cohorts', { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setLmsCohorts(data.cohorts || []);
+    } catch {
+      // ignore
+    }
+  }, [checkAuth]);
+
+  const fetchLmsFunnel = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (customRange && customStart && customEnd) {
+        params.set('start', customStart);
+        params.set('end', customEnd);
+      } else {
+        params.set('days', String(queryDays));
+      }
+      const res = await fetch(`/api/admin/analytics/lms/funnel?${params.toString()}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setLmsFunnel(data.steps || []);
+    } catch {
+      // ignore
+    }
+  }, [checkAuth, customRange, customStart, customEnd, queryDays]);
+
+  const fetchLmsEvents = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (customRange && customStart && customEnd) {
+        params.set('start', customStart);
+        params.set('end', customEnd);
+      } else {
+        params.set('days', String(queryDays));
+      }
+      const res = await fetch(`/api/admin/analytics/lms/events?${params.toString()}`, { headers: getAuthHeaders() });
+      if (checkAuth(res)) return;
+      const data = await res.json();
+      if (res.ok && data.success) setLmsEvents(data.events || []);
+    } catch {
+      // ignore
+    }
+  }, [checkAuth, customRange, customStart, customEnd, queryDays]);
+
   // Depend only on primitive values; guard so we only run fetches once per unique deps (avoids 5k+ loops from re-runs).
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('admin_authenticated') !== 'true') {
@@ -230,6 +310,11 @@ export default function AdminAnalyticsPage() {
       fetchFunnels(),
       fetchGoalsPerf(),
       fetchEvents(),
+      fetchLmsMetrics(),
+      fetchLmsTimeseries(),
+      fetchLmsCohorts(),
+      fetchLmsFunnel(),
+      fetchLmsEvents(),
     ]).finally(() => setLoading(false));
   }, [queryDays, compare, customRange, customStart, customEnd]);
 
@@ -267,6 +352,28 @@ export default function AdminAnalyticsPage() {
     }
   };
 
+  const handleLmsExport = async () => {
+    setExporting(true);
+    try {
+      const startStr = start.toISOString().slice(0, 10);
+      const endStr = end.toISOString().slice(0, 10);
+      const res = await fetch(`/api/admin/analytics/lms/export?start=${startStr}&end=${endStr}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lms-events-${startStr}-${endStr}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('LMS export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const cardStyle = { backgroundColor: 'white', padding: '1.5rem', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' };
   const sectionStyle = { ...cardStyle, marginBottom: '1.5rem' };
 
@@ -275,24 +382,38 @@ export default function AdminAnalyticsPage() {
     return (((curr - prev) / prev) * 100).toFixed(1);
   };
 
+  const buildLmsSeries = (data) => {
+    if (!data) return [];
+    const map = new Map();
+    const addSeries = (rows, key) => {
+      (rows || []).forEach((row) => {
+        const day = row.day;
+        if (!map.has(day)) map.set(day, { day });
+        map.get(day)[key] = row.count;
+      });
+    };
+    addSeries(data.enrollments, 'enrollments');
+    addSeries(data.submissions, 'submissions');
+    addSeries(data.completions, 'completions');
+    addSeries(data.certificates, 'certificates');
+    return Array.from(map.values()).sort((a, b) => new Date(a.day) - new Date(b.day));
+  };
+
+  const lmsSeries = buildLmsSeries(lmsTimeseries);
+
   if (loading && !overview) {
     return (
-      <main className="admin-with-fixed-nav">
-        <AdminNavbar />
-        <div className="admin-dashboard admin-content-area">
+      <div className="admin-dashboard admin-content-area">
           <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
             <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>Loading analytics...</p>
           </div>
         </div>
-      </main>
     );
   }
 
   if (!loading && !overview) {
     return (
-      <main className="admin-with-fixed-nav">
-        <AdminNavbar />
-        <div className="admin-dashboard admin-content-area">
+      <div className="admin-dashboard admin-content-area">
           <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
             <div style={{ ...cardStyle, maxWidth: 480, margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
               <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Analytics couldn’t load</h2>
@@ -309,16 +430,13 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
         </div>
-      </main>
     );
   }
 
   const hasNoData = overview && overview.totalPageviews === 0 && overview.totalSessions === 0;
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-content-area">
+    <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
           {hasNoData && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, color: '#0369a1', fontSize: '0.9rem' }}>
@@ -351,8 +469,148 @@ export default function AdminAnalyticsPage() {
               <button type="button" onClick={() => handleExport('events')} disabled={exporting} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', cursor: 'pointer' }}>
                 Export CSV
               </button>
+              <button type="button" onClick={handleLmsExport} disabled={exporting} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', cursor: 'pointer' }}>
+                Export LMS events
+              </button>
             </div>
           </div>
+
+          {lmsMetrics && (
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS metrics</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Active cohorts</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.cohorts?.active ?? 0}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#999' }}>Total: {lmsMetrics.cohorts?.total ?? 0}</p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Enrolled students</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.enrolledStudents ?? 0}</p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Completion rate</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.completion?.rate ?? 0}%</p>
+                  <p style={{ fontSize: '0.75rem', color: '#999' }}>
+                    {lmsMetrics.completion?.completed ?? 0} / {lmsMetrics.completion?.total ?? 0}
+                  </p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Average grade</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>
+                    {lmsMetrics.avgScore ? lmsMetrics.avgScore.toFixed(1) : '—'}
+                  </p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Submissions</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.submissions ?? 0}</p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Attendance</p>
+                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.attendance?.present ?? 0}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#999' }}>Total: {lmsMetrics.attendance?.total ?? 0}</p>
+                </div>
+              </div>
+              {Array.isArray(lmsMetrics.roles) && lmsMetrics.roles.length > 0 && (
+                <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#666' }}>
+                  Roles: {lmsMetrics.roles.map((r) => `${r.role}: ${r.count}`).join(' · ')}
+                </div>
+              )}
+            </div>
+          )}
+
+          {lmsSeries.length > 0 && (
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS time-series</h2>
+              <div style={{ width: '100%', height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={lmsSeries}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="enrollments" stroke="#0066cc" strokeWidth={2} />
+                    <Line type="monotone" dataKey="submissions" stroke="#00c896" strokeWidth={2} />
+                    <Line type="monotone" dataKey="completions" stroke="#ffc107" strokeWidth={2} />
+                    <Line type="monotone" dataKey="certificates" stroke="#6f42c1" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {Array.isArray(lmsFunnel) && lmsFunnel.length > 0 && (
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Completion funnel</h2>
+              <div style={{ width: '100%', height: 260 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={lmsFunnel}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#0066cc" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {Array.isArray(lmsCohorts) && lmsCohorts.length > 0 && (
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Cohort comparisons</h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', color: '#666' }}>
+                      <th style={{ paddingBottom: 8 }}>Cohort</th>
+                      <th style={{ paddingBottom: 8 }}>Track</th>
+                      <th style={{ paddingBottom: 8 }}>Enrolled</th>
+                      <th style={{ paddingBottom: 8 }}>Completed</th>
+                      <th style={{ paddingBottom: 8 }}>Completion %</th>
+                      <th style={{ paddingBottom: 8 }}>Avg score</th>
+                      <th style={{ paddingBottom: 8 }}>Attendance %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lmsCohorts.map((c) => {
+                      const enrolled = Number(c.enrolled || 0);
+                      const completed = Number(c.completed || 0);
+                      const completionRate = enrolled ? Math.round((completed / enrolled) * 100) : 0;
+                      const attendanceTotal = Number(c.attendance_total || 0);
+                      const attendancePresent = Number(c.attendance_present || 0);
+                      const attendanceRate = attendanceTotal ? Math.round((attendancePresent / attendanceTotal) * 100) : 0;
+                      return (
+                        <tr key={c.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                          <td style={{ padding: '8px 0' }}>{c.name}</td>
+                          <td style={{ padding: '8px 0' }}>{c.track_name || '—'}</td>
+                          <td style={{ padding: '8px 0' }}>{enrolled}</td>
+                          <td style={{ padding: '8px 0' }}>{completed}</td>
+                          <td style={{ padding: '8px 0' }}>{completionRate}%</td>
+                          <td style={{ padding: '8px 0' }}>{c.avg_score ? Number(c.avg_score).toFixed(1) : '—'}</td>
+                          <td style={{ padding: '8px 0' }}>{attendanceRate}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {Array.isArray(lmsEvents) && lmsEvents.length > 0 && (
+            <div style={sectionStyle}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS event counts</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                {lmsEvents.map((ev) => (
+                  <div key={ev.name} style={{ padding: '0.75rem', borderRadius: 10, border: '1px solid #eee', background: '#fff' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666' }}>{ev.name}</p>
+                    <p style={{ fontSize: '1.25rem', fontWeight: 700 }}>{ev.count}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Real-time */}
           <div style={sectionStyle}>
@@ -609,6 +867,5 @@ export default function AdminAnalyticsPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }

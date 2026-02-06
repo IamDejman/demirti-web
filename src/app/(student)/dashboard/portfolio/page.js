@@ -1,0 +1,444 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+
+function getAuthHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+const emptyPortfolioForm = {
+  slug: '',
+  customDomain: '',
+  headline: '',
+  bio: '',
+  resumeUrl: '',
+  isPublic: false,
+};
+
+const emptyProjectForm = {
+  title: '',
+  description: '',
+  linkUrl: '',
+  imageUrl: '',
+  orderIndex: 0,
+};
+
+const emptyLinkForm = {
+  platform: '',
+  url: '',
+};
+
+export default function PortfolioPage() {
+  const [loading, setLoading] = useState(true);
+  const [portfolio, setPortfolio] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [links, setLinks] = useState([]);
+  const [form, setForm] = useState(emptyPortfolioForm);
+  const [projectForm, setProjectForm] = useState(emptyProjectForm);
+  const [linkForm, setLinkForm] = useState(emptyLinkForm);
+  const [editingProjectId, setEditingProjectId] = useState(null);
+  const [editingLinkId, setEditingLinkId] = useState(null);
+  const [message, setMessage] = useState('');
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const loadData = async () => {
+    setLoading(true);
+    const res = await fetch('/api/portfolio', { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (res.ok) {
+      setPortfolio(data.portfolio);
+      setProjects(data.projects || []);
+      setLinks(data.socialLinks || []);
+      if (data.portfolio) {
+        setForm({
+          slug: data.portfolio.slug || '',
+          customDomain: data.portfolio.custom_domain || '',
+          headline: data.portfolio.headline || '',
+          bio: data.portfolio.bio || '',
+          resumeUrl: data.portfolio.resume_url || '',
+          isPublic: data.portfolio.is_public === true,
+        });
+      }
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const savePortfolio = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setUploadMessage('');
+    const res = await fetch('/api/portfolio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setPortfolio(data.portfolio);
+      setMessage('Portfolio saved.');
+    } else {
+      setMessage(data.error || 'Failed to save portfolio.');
+    }
+  };
+
+  const uploadFile = async ({ file, prefix, allowedTypes, maxSizeMb, onComplete }) => {
+    if (!file) return;
+    setUploading(true);
+    setUploadMessage('');
+    try {
+      const presignRes = await fetch('/api/uploads/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          prefix,
+          allowedTypes,
+          maxSizeMb,
+          fileSize: file.size,
+        }),
+      });
+      const presignData = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presignData.error || 'Failed to prepare upload');
+      await fetch(presignData.uploadUrl, {
+        method: presignData.method || 'PUT',
+        headers: presignData.headers || {},
+        body: file,
+      });
+      onComplete?.(presignData.fileUrl);
+      setUploadMessage('Upload complete.');
+    } catch (e) {
+      setUploadMessage(e.message || 'Upload failed. You can paste a URL instead.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveProject = async (e) => {
+    e.preventDefault();
+    const endpoint = editingProjectId ? `/api/portfolio/projects/${editingProjectId}` : '/api/portfolio/projects';
+    const method = editingProjectId ? 'PUT' : 'POST';
+    await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(projectForm),
+    });
+    setProjectForm(emptyProjectForm);
+    setEditingProjectId(null);
+    await loadData();
+  };
+
+  const deleteProject = async (id) => {
+    await fetch(`/api/portfolio/projects/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    await loadData();
+  };
+
+  const saveLink = async (e) => {
+    e.preventDefault();
+    const endpoint = editingLinkId ? `/api/portfolio/social-links/${editingLinkId}` : '/api/portfolio/social-links';
+    const method = editingLinkId ? 'PUT' : 'POST';
+    await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(linkForm),
+    });
+    setLinkForm(emptyLinkForm);
+    setEditingLinkId(null);
+    await loadData();
+  };
+
+  const deleteLink = async (id) => {
+    await fetch(`/api/portfolio/social-links/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    await loadData();
+  };
+
+  if (loading) {
+    return <p className="text-gray-500">Loading portfolio...</p>;
+  }
+
+  const publicUrl = portfolio?.slug ? `/portfolio/${portfolio.slug}` : null;
+  const domainStatus = portfolio?.domain_verified_at ? 'Verified' : portfolio?.custom_domain ? 'Pending verification' : null;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Portfolio</h1>
+        <p className="text-gray-600 mt-1">Build a public profile for recruiters and showcase your projects.</p>
+        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+        {publicUrl && portfolio?.is_public && (
+          <p className="text-sm text-primary mt-2">
+            Public profile: <Link href={publicUrl}>{publicUrl}</Link>
+          </p>
+        )}
+        {portfolio?.custom_domain && portfolio?.domain_verified_at && (
+          <p className="text-sm text-primary mt-1">
+            Custom domain: <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer">{portfolio.custom_domain}</a>
+          </p>
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Profile details</h2>
+        <form onSubmit={savePortfolio} className="mt-4 space-y-3">
+          <input
+            type="text"
+            placeholder="Portfolio slug (e.g. jane-doe)"
+            value={form.slug}
+            onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Headline"
+            value={form.headline}
+            onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <textarea
+            rows={4}
+            placeholder="Bio"
+            value={form.bio}
+            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Resume URL"
+            value={form.resumeUrl}
+            onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => uploadFile({
+                file: e.target.files?.[0],
+                prefix: 'portfolios/resumes',
+                allowedTypes: ['pdf', 'doc', 'docx'],
+                maxSizeMb: 10,
+                onComplete: (url) => setForm((f) => ({ ...f, resumeUrl: url })),
+              })}
+              className="text-xs"
+            />
+            {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
+            {uploadMessage && <span className="text-xs text-gray-500">{uploadMessage}</span>}
+          </div>
+          <input
+            type="text"
+            placeholder="Custom domain (e.g. portfolio.yourdomain.com)"
+            value={form.customDomain}
+            onChange={(e) => setForm((f) => ({ ...f, customDomain: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          {domainStatus && (
+            <p className="text-xs text-gray-500">
+              Domain status: {domainStatus}
+            </p>
+          )}
+          {portfolio?.domain_verification_token && form.customDomain && (
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>Verify by pointing the domain to this site, then visit:</p>
+              <p className="break-all">https://{form.customDomain}/api/portfolio/verify-domain?token={portfolio.domain_verification_token}</p>
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={form.isPublic}
+              onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
+            />
+            Make portfolio public
+          </label>
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+            Save profile
+          </button>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Projects</h2>
+        <form onSubmit={saveProject} className="mt-4 space-y-3">
+          <input
+            type="text"
+            placeholder="Project title"
+            value={projectForm.title}
+            onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <textarea
+            rows={3}
+            placeholder="Project description"
+            value={projectForm.description}
+            onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Project link"
+              value={projectForm.linkUrl}
+              onChange={(e) => setProjectForm((f) => ({ ...f, linkUrl: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Image URL"
+              value={projectForm.imageUrl}
+              onChange={(e) => setProjectForm((f) => ({ ...f, imageUrl: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => uploadFile({
+                file: e.target.files?.[0],
+                prefix: 'portfolios/projects',
+                allowedTypes: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+                maxSizeMb: 6,
+                onComplete: (url) => setProjectForm((f) => ({ ...f, imageUrl: url })),
+              })}
+              className="text-xs"
+            />
+            {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
+          </div>
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+            {editingProjectId ? 'Update project' : 'Add project'}
+          </button>
+          {editingProjectId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingProjectId(null);
+                setProjectForm(emptyProjectForm);
+              }}
+              className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+        <div className="mt-6 space-y-3">
+          {projects.length === 0 ? (
+            <p className="text-sm text-gray-500">No projects added yet.</p>
+          ) : (
+            projects.map((project) => (
+              <div key={project.id} className="border-b border-gray-100 pb-3 last:border-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">{project.title}</p>
+                    {project.description && <p className="text-sm text-gray-500 mt-1">{project.description}</p>}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingProjectId(project.id);
+                        setProjectForm({
+                          title: project.title || '',
+                          description: project.description || '',
+                          linkUrl: project.link_url || '',
+                          imageUrl: project.image_url || '',
+                          orderIndex: project.order_index || 0,
+                        });
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteProject(project.id)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Social links</h2>
+        <form onSubmit={saveLink} className="mt-4 space-y-3">
+          <div className="grid gap-3 md:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Platform (e.g. LinkedIn)"
+              value={linkForm.platform}
+              onChange={(e) => setLinkForm((f) => ({ ...f, platform: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="URL"
+              value={linkForm.url}
+              onChange={(e) => setLinkForm((f) => ({ ...f, url: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+            {editingLinkId ? 'Update link' : 'Add link'}
+          </button>
+          {editingLinkId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingLinkId(null);
+                setLinkForm(emptyLinkForm);
+              }}
+              className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+        <div className="mt-6 space-y-3">
+          {links.length === 0 ? (
+            <p className="text-sm text-gray-500">No social links added.</p>
+          ) : (
+            links.map((link) => (
+              <div key={link.id} className="border-b border-gray-100 pb-3 last:border-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-gray-900">{link.platform}</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingLinkId(link.id);
+                        setLinkForm({ platform: link.platform || '', url: link.url || '' });
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteLink(link.id)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">{link.url}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

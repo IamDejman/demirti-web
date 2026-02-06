@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import AdminNavbar from '../../components/AdminNavbar';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -82,9 +81,7 @@ export default function AdminCohortsPage() {
   const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : 'N/A');
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
         <div className="admin-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
           <h1 className="admin-page-title" style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>Cohorts</h1>
           <button
@@ -222,6 +219,5 @@ export default function AdminCohortsPage() {
           </div>
         )}
       </div>
-    </main>
   );
 }

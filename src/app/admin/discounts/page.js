@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../../components/AdminNavbar';
 import { useToast } from '../../components/ToastProvider';
 
 export default function DiscountsPage() {
@@ -258,9 +257,7 @@ export default function DiscountsPage() {
   };
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-content-area">
+    <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
           <div className="admin-page-header" style={{ justifyContent: 'space-between' }}>
@@ -528,7 +525,6 @@ export default function DiscountsPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }
 

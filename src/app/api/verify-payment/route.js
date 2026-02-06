@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { incrementScholarshipCount } from '@/lib/db';
 import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
+import { enrollPaidApplicant } from '@/lib/lms-enrollment';
 
 // POST - Manually verify and update payment status
 export async function POST(request) {
@@ -188,6 +189,18 @@ export async function POST(request) {
         console.error('Error sending payment confirmation email from verify-payment:', emailError);
       }
 
+      try {
+        await enrollPaidApplicant({
+          email: updatedApplication.email,
+          firstName: updatedApplication.first_name || '',
+          lastName: updatedApplication.last_name || '',
+          trackName: appTrackName,
+          applicationId: updatedApplication.application_id,
+        });
+      } catch (enrollError) {
+        console.error('Enrollment error from verify-payment:', enrollError);
+      }
+
       // Return success response
       return NextResponse.json({
         success: true,
@@ -251,4 +264,3 @@ export async function POST(request) {
     );
   }
 }
-

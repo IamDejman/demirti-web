@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -16,10 +16,60 @@ const navLinkStyle = (active) => ({
   transition: 'all 0.3s ease',
 });
 
+const NAV_GROUPS = [
+  { id: 'home', label: 'Home', href: '/admin', items: null },
+  { id: 'applications', label: 'Applications', href: null, items: [
+    { href: '/admin/scholarships', label: 'Scholarships' },
+    { href: '/admin/sponsored-applications', label: 'Sponsored' },
+    { href: '/admin/discounts', label: 'Discounts' },
+  ]},
+  { id: 'analytics', label: 'Analytics', href: null, items: [
+    { href: '/admin/analytics', label: 'Overview' },
+    { href: '/admin/goals', label: 'Goals' },
+    { href: '/admin/funnels', label: 'Funnels' },
+    { href: '/admin/audit-logs', label: 'Audit Logs' },
+    { href: '/admin/exports', label: 'Exports' },
+  ]},
+  { id: 'lms', label: 'LMS', href: null, items: [
+    { href: '/admin/cohorts', label: 'Cohorts' },
+    { href: '/admin/announcements', label: 'Announcements' },
+    { href: '/admin/certificates', label: 'Certificates' },
+    { href: '/admin/users', label: 'Users' },
+    { href: '/admin/course-templates', label: 'Course Templates' },
+  ]},
+  { id: 'more', label: 'More', href: null, items: [
+    { href: '/admin/jobs', label: 'Jobs' },
+    { href: '/admin/professionals', label: 'Professionals' },
+    { href: '/admin/sample-projects', label: 'Projects' },
+    { href: '/admin/config', label: 'Config' },
+    { href: '/admin/moderation', label: 'Moderation' },
+    { href: '/admin/impersonation', label: 'Impersonate' },
+    { href: '/admin/notification-templates', label: 'Notif Templates' },
+    { href: '/admin/ai-settings', label: 'AI Settings' },
+    { href: '/admin/ai-usage', label: 'AI Usage' },
+  ]},
+];
+
 export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const navRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) setOpenDropdown(null);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const isActive = (path) => pathname === path || (path !== '/admin' && pathname.startsWith(path));
+  const isGroupActive = (group) => {
+    if (group.href) return isActive(group.href);
+    return group.items?.some((i) => isActive(i.href));
+  };
 
   const handleLogout = async () => {
     try {
@@ -35,8 +85,6 @@ export default function AdminNavbar() {
     }
   };
 
-  const isActive = (path) => pathname === path;
-
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
@@ -44,21 +92,39 @@ export default function AdminNavbar() {
       <nav className="admin-nav">
         <div className="admin-nav-inner">
           <Link href="/admin" className="admin-nav-logo" onClick={closeMenu}>
-            <Image src="/logo.png" alt="CVERSE Logo" width={120} height={40} className="admin-nav-logo-img" />
-            <span className="admin-nav-title admin-nav-title-full">Admin Dashboard</span>
-            <span className="admin-nav-title admin-nav-title-short" aria-hidden="true">Admin</span>
+            <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-nav-logo-img" />
           </Link>
 
-          <div className="admin-nav-desktop">
-            <Link href="/admin" style={navLinkStyle(isActive('/admin'))}>Home</Link>
-            <Link href="/admin/scholarships" style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
-            <Link href="/admin/sponsored-applications" style={navLinkStyle(isActive('/admin/sponsored-applications'))}>Sponsored</Link>
-            <Link href="/admin/discounts" style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
-            <Link href="/admin/cohorts" style={navLinkStyle(isActive('/admin/cohorts'))}>Cohorts</Link>
-            <Link href="/admin/analytics" style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
-            <Link href="/admin/goals" style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
-            <Link href="/admin/funnels" style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>
-            <Link href="/admin/config" style={navLinkStyle(isActive('/admin/config'))}>Config</Link>
+          <div className="admin-nav-desktop" ref={navRef}>
+            {NAV_GROUPS.map((group) => (
+              group.items ? (
+                <div key={group.id} className="admin-nav-dropdown-wrap">
+                  <button
+                    type="button"
+                    className={`admin-nav-more-btn ${openDropdown === group.id || isGroupActive(group) ? 'active' : ''}`}
+                    onClick={() => setOpenDropdown(openDropdown === group.id ? null : group.id)}
+                    aria-expanded={openDropdown === group.id}
+                    aria-haspopup="true"
+                  >
+                    {group.label}
+                    <svg width="12" height="12" viewBox="0 0 12 12" style={{ marginLeft: '4px', transform: openDropdown === group.id ? 'rotate(180deg)' : 'none' }}>
+                      <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  {openDropdown === group.id && (
+                    <div className="admin-nav-dropdown">
+                      {group.items.map(({ href, label }) => (
+                        <Link key={href} href={href} onClick={() => setOpenDropdown(null)} className={isActive(href) ? 'active' : ''}>
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link key={group.id} href={group.href} style={navLinkStyle(isActive(group.href))}>{group.label}</Link>
+              )
+            )}
             <button
               type="button"
               onClick={handleLogout}
@@ -86,15 +152,18 @@ export default function AdminNavbar() {
         </div>
 
         <div className={`admin-nav-mobile ${isMenuOpen ? 'open' : ''}`}>
-          <Link href="/admin" onClick={closeMenu} style={navLinkStyle(isActive('/admin'))}>Home</Link>
-          <Link href="/admin/scholarships" onClick={closeMenu} style={navLinkStyle(isActive('/admin/scholarships'))}>Scholarships</Link>
-          <Link href="/admin/sponsored-applications" onClick={closeMenu} style={navLinkStyle(isActive('/admin/sponsored-applications'))}>Sponsored</Link>
-          <Link href="/admin/discounts" onClick={closeMenu} style={navLinkStyle(isActive('/admin/discounts'))}>Discounts</Link>
-          <Link href="/admin/cohorts" onClick={closeMenu} style={navLinkStyle(isActive('/admin/cohorts'))}>Cohorts</Link>
-          <Link href="/admin/analytics" onClick={closeMenu} style={navLinkStyle(isActive('/admin/analytics'))}>Analytics</Link>
-          <Link href="/admin/goals" onClick={closeMenu} style={navLinkStyle(isActive('/admin/goals'))}>Goals</Link>
-          <Link href="/admin/funnels" onClick={closeMenu} style={navLinkStyle(isActive('/admin/funnels'))}>Funnels</Link>
-          <Link href="/admin/config" onClick={closeMenu} style={navLinkStyle(isActive('/admin/config'))}>Config</Link>
+          {NAV_GROUPS.map((group) => (
+            group.items ? (
+              <div key={group.id} className="admin-nav-mobile-group">
+                <span className="admin-nav-mobile-group-label">{group.label}</span>
+                {group.items.map(({ href, label }) => (
+                  <Link key={href} href={href} onClick={closeMenu} style={navLinkStyle(isActive(href))}>{label}</Link>
+                ))}
+              </div>
+            ) : (
+              <Link key={group.id} href={group.href} onClick={closeMenu} style={navLinkStyle(isActive(group.href))}>{group.label}</Link>
+            )
+          ))}
           <button type="button" onClick={handleLogout} className="admin-nav-mobile-logout" aria-label="Logout">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -156,9 +225,79 @@ export default function AdminNavbar() {
         }
         .admin-nav-desktop {
           display: flex;
-          gap: 2rem;
+          gap: 1.25rem;
           align-items: center;
           margin-left: auto;
+        }
+        .admin-nav-dropdown-wrap,
+        .admin-nav-more {
+          position: relative;
+        }
+        .admin-nav-more-btn {
+          display: flex;
+          align-items: center;
+          padding: 0.5rem 1rem;
+          border: none;
+          background: transparent;
+          color: #1a1a1a;
+          font-size: 1rem;
+          font-weight: 400;
+          cursor: pointer;
+          border-radius: 6px;
+          transition: all 0.2s ease;
+        }
+        .admin-nav-more-btn:hover,
+        .admin-nav-more-btn.active {
+          color: #0066cc;
+          font-weight: 600;
+          background: rgba(0, 102, 204, 0.1);
+        }
+        .admin-nav-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 4px;
+          min-width: 220px;
+          background: #fff;
+          border: 1px solid #e1e4e8;
+          border-radius: 8px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+          padding: 0.5rem 0;
+          z-index: 1001;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+        .admin-nav-dropdown-group {
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        .admin-nav-dropdown-group:last-child {
+          border-bottom: none;
+        }
+        .admin-nav-dropdown-label {
+          display: block;
+          padding: 0.25rem 1rem;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #666;
+        }
+        .admin-nav-dropdown a,
+        .admin-nav-dropdown-group a {
+          display: block;
+          padding: 0.4rem 1rem;
+          font-size: 0.9rem;
+          color: #1a1a1a;
+          text-decoration: none;
+          transition: background 0.15s ease;
+        }
+        .admin-nav-dropdown a:hover,
+        .admin-nav-dropdown a.active,
+        .admin-nav-dropdown-group a:hover,
+        .admin-nav-dropdown-group a.active {
+          background: rgba(0, 102, 204, 0.08);
+          color: #0066cc;
         }
         .admin-nav-logout-btn {
           padding: 0.5rem;
@@ -208,6 +347,19 @@ export default function AdminNavbar() {
           align-items: center;
           padding: 0.75rem 0;
           box-sizing: border-box;
+        }
+        .admin-nav-mobile-group {
+          padding: 0.5rem 0;
+          border-top: 1px solid #f0f0f0;
+        }
+        .admin-nav-mobile-group-label {
+          display: block;
+          padding: 0.5rem 0 0.25rem;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #666;
         }
         @media (min-width: 769px) {
           .admin-nav-mobile,

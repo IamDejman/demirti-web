@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { verifyAdminCredentials, createAdminSession } from '@/lib/admin';
+import { rateLimit } from '@/lib/rateLimit';
 
 // POST - Admin login
 export async function POST(request) {
   try {
+    const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+    const limiter = rateLimit(`admin_login_${ip}`, { windowMs: 60_000, limit: 8 });
+    if (!limiter.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const { email, password } = body;
 
@@ -75,4 +81,3 @@ export async function POST(request) {
     );
   }
 }
-

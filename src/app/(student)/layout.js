@@ -65,6 +65,18 @@ export default function StudentLayout({ children }) {
             <Link href="/dashboard/assignments" className={`text-sm font-medium ${pathname?.startsWith('/dashboard/assignments') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
               Assignments
             </Link>
+            <Link href="/dashboard/office-hours" className={`text-sm font-medium ${pathname?.startsWith('/dashboard/office-hours') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              Office Hours
+            </Link>
+            <Link href="/dashboard/chat" className={`text-sm font-medium ${pathname?.startsWith('/dashboard/chat') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              Chat
+            </Link>
+            <Link href="/dashboard/portfolio" className={`text-sm font-medium ${pathname?.startsWith('/dashboard/portfolio') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              Portfolio
+            </Link>
+            <Link href="/dashboard/ai-assistant" className={`text-sm font-medium ${pathname?.startsWith('/dashboard/ai-assistant') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              AI Assistant
+            </Link>
             <span className="text-sm text-gray-500">{user.firstName || user.email}</span>
             <button
               type="button"

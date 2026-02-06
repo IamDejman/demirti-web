@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (role === 'admin') router.push('/admin');
       else if (role === 'facilitator') router.push('/facilitator');
       else router.push('/dashboard');
-    } catch (e) {
+    } catch {
       setError('Something went wrong');
     } finally {
       setLoading(false);

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../../components/AdminNavbar';
 import Link from 'next/link';
 import { useToast } from '../../components/ToastProvider';
 
@@ -294,9 +293,7 @@ export default function ConfigPage() {
   };
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-content-area">
+    <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
           <div className="admin-page-header">
@@ -965,7 +962,6 @@ export default function ConfigPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }
 

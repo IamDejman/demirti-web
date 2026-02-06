@@ -60,7 +60,20 @@ export async function GET() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('users', 'user_sessions', 'user_social_links', 'cohorts', 'cohort_facilitators', 'cohort_students', 'weeks', 'weekly_checklist_items', 'student_checklist_progress', 'content_items', 'materials', 'assignments', 'assignment_submissions', 'live_classes', 'attendance_records')
+      AND table_name IN (
+        'users', 'user_sessions', 'user_social_links',
+        'cohorts', 'cohort_facilitators', 'cohort_students',
+        'weeks', 'weekly_checklist_items', 'student_checklist_progress',
+        'content_items', 'materials', 'assignments', 'assignment_submissions',
+        'live_classes', 'attendance_records', 'announcements', 'notifications',
+        'notification_preferences', 'chat_rooms', 'chat_room_members', 'chat_messages',
+        'message_reports', 'jobs', 'industry_professionals', 'sample_projects',
+        'portfolios', 'portfolio_projects', 'portfolio_social_links', 'certificates',
+        'ai_conversations', 'ai_messages', 'ai_usage_limits', 'push_subscriptions',
+        'audit_logs', 'admin_impersonations', 'course_templates', 'notification_templates',
+        'lms_events', 'office_hour_slots', 'office_hour_bookings', 'job_applications', 'ai_settings',
+        'moderation_actions'
+      )
       ORDER BY table_name;
     `;
     const lmsTablesPresent = lmsCheck.rows.map((r) => r.table_name);
@@ -90,4 +103,3 @@ export async function GET() {
     );
   }
 }
-

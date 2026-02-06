@@ -3,6 +3,18 @@ import crypto from 'crypto';
 import { sql } from '@vercel/postgres';
 import { updateApplicationPayment, saveApplication, incrementScholarshipCount } from '@/lib/db';
 import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
+import { enrollPaidApplicant } from '@/lib/lms-enrollment';
+
+async function maybeEnroll({ email, firstName, lastName, trackName, applicationId }) {
+  try {
+    const result = await enrollPaidApplicant({ email, firstName, lastName, trackName, applicationId });
+    if (!result.enrolled) {
+      console.log('Enrollment skipped:', result.reason);
+    }
+  } catch (e) {
+    console.error('Enrollment error:', e);
+  }
+}
 
 export async function GET(request) {
   try {
@@ -83,7 +95,7 @@ export async function GET(request) {
         try {
           // Get application details for email
           const appResult = await sql`
-            SELECT first_name, last_name FROM applications
+            SELECT application_id, first_name, last_name FROM applications
             WHERE email = ${email} AND track_name = ${trackName}
             LIMIT 1;
           `;
@@ -114,6 +126,7 @@ export async function GET(request) {
               reference,
               amount
             });
+            await maybeEnroll({ email, firstName, lastName, trackName, applicationId: appData?.application_id });
           } else {
             // If updateApplicationPayment returned null, try to find and update by reference
             console.log('No application found by email/track, trying to update by reference...');
@@ -139,6 +152,14 @@ export async function GET(request) {
               } catch (error) {
                 console.error('Error updating scholarship count:', error);
               }
+              const updatedApp = result.rows[0];
+              await maybeEnroll({
+                email: updatedApp.email,
+                firstName: updatedApp.first_name,
+                lastName: updatedApp.last_name,
+                trackName: updatedApp.track_name || trackName,
+                applicationId: updatedApp.application_id,
+              });
             } else {
               // Last resort: try to update any application with this email and track, regardless of payment_reference
               console.log('Trying to update any application with this email and track...');
@@ -164,6 +185,14 @@ export async function GET(request) {
                 } catch (error) {
                   console.error('Error updating scholarship count:', error);
                 }
+                const updatedApp = fallbackResult.rows[0];
+                await maybeEnroll({
+                  email: updatedApp.email,
+                  firstName: updatedApp.first_name,
+                  lastName: updatedApp.last_name,
+                  trackName: updatedApp.track_name || trackName,
+                  applicationId: updatedApp.application_id,
+                });
               } else {
                 console.log('No pending application found to update');
               }
@@ -224,6 +253,13 @@ export async function GET(request) {
                     console.error('Error updating scholarship count:', error);
                   }
                 }
+                await maybeEnroll({
+                  email: updatedApp.email,
+                  firstName: updatedApp.first_name,
+                  lastName: updatedApp.last_name,
+                  trackName: updatedApp.track_name,
+                  applicationId: updatedApp.application_id,
+                });
               }
             }
           } catch (error) {
@@ -442,4 +478,3 @@ export async function POST(request) {
     );
   }
 }
-

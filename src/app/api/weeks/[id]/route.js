@@ -4,6 +4,7 @@ import {
   getContentItemsByWeek,
   getMaterialsByWeek,
   getChecklistItemsByWeek,
+  getStudentChecklistProgress,
   updateWeek,
   getCohortById,
   getCohortFacilitators,
@@ -43,10 +44,19 @@ export async function GET(request, { params }) {
     const [contentItems, materials, checklistItems] = await Promise.all([
       getContentItemsByWeek(id),
       getMaterialsByWeek(id),
-      getChecklistItemsByWeek(id),
+      (user.role === 'student' || user.role === 'alumni')
+        ? getStudentChecklistProgress(user.id, id)
+        : getChecklistItemsByWeek(id),
     ]);
     return NextResponse.json({
-      week: { ...week, cohort, live_class_datetime: liveClass?.scheduled_at ?? week.live_class_datetime, google_meet_link: liveClass?.google_meet_link ?? week.google_meet_link, live_class_id: liveClass?.id },
+      week: {
+        ...week,
+        cohort,
+        live_class_datetime: liveClass?.scheduled_at ?? week.live_class_datetime,
+        google_meet_link: liveClass?.google_meet_link ?? week.google_meet_link,
+        live_class_id: liveClass?.id,
+        recording_url: liveClass?.recording_url ?? null,
+      },
       contentItems,
       materials,
       checklistItems,

@@ -1,3 +1,5 @@
+import AdminLayoutShell from '../components/AdminLayoutShell';
+
 export const metadata = {
   title: {
     default: 'Applications',
@@ -6,5 +8,5 @@ export const metadata = {
 };
 
 export default function AdminLayout({ children }) {
-  return children;
+  return <AdminLayoutShell>{children}</AdminLayoutShell>;
 }

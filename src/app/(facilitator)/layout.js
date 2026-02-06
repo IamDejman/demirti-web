@@ -67,6 +67,12 @@ export default function FacilitatorLayout({ children }) {
             <Link href="/facilitator/attendance" className={`text-sm font-medium ${pathname?.startsWith('/facilitator/attendance') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
               Attendance
             </Link>
+            <Link href="/facilitator/office-hours" className={`text-sm font-medium ${pathname?.startsWith('/facilitator/office-hours') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              Office Hours
+            </Link>
+            <Link href="/facilitator/chat" className={`text-sm font-medium ${pathname?.startsWith('/facilitator/chat') ? 'text-primary' : 'text-gray-600 hover:text-primary'}`}>
+              Chat
+            </Link>
             <span className="text-sm text-gray-500">{user.firstName || user.email}</span>
             <button
               type="button"

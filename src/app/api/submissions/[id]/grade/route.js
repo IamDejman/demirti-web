@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSubmissionById, gradeSubmission, getAssignmentById, getCohortFacilitators } from '@/lib/db-lms';
+import { sql } from '@vercel/postgres';
+import { getSubmissionById, gradeSubmission, getAssignmentById, getCohortFacilitators, createGradeNotification, getPushSubscriptionsForUsers, recordLmsEvent } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { sendGradeEmail } from '@/lib/notifications';
+import { sendPushNotifications } from '@/lib/push';
 
 export async function POST(request, { params }) {
   try {
@@ -27,6 +30,33 @@ export async function POST(request, { params }) {
       feedback: feedback?.trim() || null,
       gradedBy: user.id,
     });
+    await recordLmsEvent(user.id, 'assignment_graded', { submissionId: id, assignmentId: assignment.id, studentId: submission.student_id });
+    const gradeNotif = await createGradeNotification({
+      assignment,
+      studentId: submission.student_id,
+      score: parseInt(score, 10),
+    });
+    if (gradeNotif?.emailEnabled) {
+      const recipientRes = await sql`SELECT id, email, first_name, last_name FROM users WHERE id = ${submission.student_id} LIMIT 1;`;
+      const recipient = recipientRes.rows[0];
+      if (recipient) {
+        await sendGradeEmail({
+          recipient,
+          assignment,
+          title: gradeNotif.template?.title,
+          body: gradeNotif.template?.body || feedback || `Score: ${score}`,
+        });
+      }
+    }
+    if (gradeNotif?.pushEnabled) {
+      const pushSubs = await getPushSubscriptionsForUsers([submission.student_id]);
+      await sendPushNotifications({
+        subscriptions: pushSubs,
+        title: gradeNotif.template?.title || `Graded: ${assignment.title}`,
+        body: gradeNotif.template?.body || `Score: ${score}`,
+        url: '/dashboard/assignments',
+      });
+    }
     return NextResponse.json({ submission: updated });
   } catch (e) {
     console.error('POST /api/submissions/[id]/grade:', e);

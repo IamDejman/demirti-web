@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createAssignment, getAssignmentById, getWeekById, getCohortFacilitators } from '@/lib/db-lms';
+import { createAssignment, getWeekById, getCohortFacilitators, createAssignmentNotifications, getPushSubscriptionsForUsers, recordLmsEvent } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { sendAssignmentEmails } from '@/lib/notifications';
+import { sendPushNotifications } from '@/lib/push';
 
 export async function POST(request) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const weekId = (await request.json()).weekId;
+    const body = await request.json();
+    const weekId = body?.weekId;
     if (!weekId) return NextResponse.json({ error: 'weekId required' }, { status: 400 });
     const week = await getWeekById(weekId);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
@@ -16,7 +19,6 @@ export async function POST(request) {
     if (user.role !== 'admin' && !isFacilitator) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const body = await request.json();
     const {
       weekId: wId,
       cohortId,
@@ -47,6 +49,28 @@ export async function POST(request) {
       publishAt: publishAt || null,
       createdBy: user.id,
     });
+    await recordLmsEvent(user.id, 'assignment_created', { assignmentId: assignment.id, cohortId: assignment.cohort_id });
+    const publishNow = assignment.is_published && (!assignment.publish_at || new Date(assignment.publish_at) <= new Date());
+    if (publishNow) {
+      const recipientsResult = await createAssignmentNotifications(assignment, 'assignment_posted');
+      if (recipientsResult.pushRecipients?.length > 0) {
+        const pushSubs = await getPushSubscriptionsForUsers(recipientsResult.pushRecipients.map((r) => r.id));
+        await sendPushNotifications({
+          subscriptions: pushSubs,
+          title: recipientsResult.title || assignment.title,
+          body: recipientsResult.body?.slice(0, 140) || assignment.description || 'New assignment posted',
+          url: '/dashboard/assignments',
+        });
+      }
+      if (recipientsResult.emailRecipients.length > 0) {
+        await sendAssignmentEmails({
+          recipients: recipientsResult.emailRecipients,
+          assignment,
+          title: recipientsResult.title,
+          body: recipientsResult.body,
+        });
+      }
+    }
     return NextResponse.json({ assignment });
   } catch (e) {
     console.error('POST /api/assignments:', e);

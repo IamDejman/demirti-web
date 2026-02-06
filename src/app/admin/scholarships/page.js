@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../../components/AdminNavbar';
-
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState([]);
   const [scholarshipRecipients, setScholarshipRecipients] = useState([]);
@@ -60,9 +58,7 @@ export default function ScholarshipsPage() {
   };
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-content-area">
+    <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
           <div className="admin-page-header">
@@ -259,7 +255,6 @@ export default function ScholarshipsPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }
 

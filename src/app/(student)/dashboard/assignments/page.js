@@ -9,7 +9,6 @@ function getAuthHeaders() {
 }
 
 export default function StudentAssignmentsPage() {
-  const [cohorts, setCohorts] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +18,6 @@ export default function StudentAssignmentsPage() {
         const res = await fetch('/api/cohorts', { headers: getAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.cohorts?.length) {
-          setCohorts(data.cohorts);
           const cohortId = data.cohorts[0].id;
           const aRes = await fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getAuthHeaders() });
           const aData = await aRes.json();

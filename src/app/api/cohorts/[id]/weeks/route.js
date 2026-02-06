@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCohortById, getWeeksByCohort, getCohortFacilitators } from '@/lib/db-lms';
+import { getCohortById, getWeeksByCohort, getCohortFacilitators, createWeek } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
@@ -32,5 +32,40 @@ export async function GET(request, { params }) {
   } catch (e) {
     console.error('GET /api/cohorts/[id]/weeks:', e);
     return NextResponse.json({ error: 'Failed to fetch weeks' }, { status: 500 });
+  }
+}
+
+export async function POST(request, { params }) {
+  try {
+    const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const id = params?.id;
+    if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
+    const cohort = await getCohortById(id);
+    if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
+    const facilitators = await getCohortFacilitators(id);
+    const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
+    if (user.role !== 'admin' && !isFacilitator) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const body = await request.json();
+    const { weekNumber, title, description, unlockDate, liveClassDatetime, googleMeetLink, isLocked } = body;
+    if (!weekNumber || !title?.trim()) {
+      return NextResponse.json({ error: 'weekNumber and title are required' }, { status: 400 });
+    }
+    const week = await createWeek({
+      cohortId: id,
+      weekNumber: parseInt(weekNumber, 10),
+      title: title.trim(),
+      description: description?.trim() || null,
+      unlockDate: unlockDate || null,
+      liveClassDatetime: liveClassDatetime || null,
+      googleMeetLink: googleMeetLink?.trim() || null,
+      isLocked: isLocked ?? true,
+    });
+    return NextResponse.json({ week });
+  } catch (e) {
+    console.error('POST /api/cohorts/[id]/weeks:', e);
+    return NextResponse.json({ error: 'Failed to create week' }, { status: 500 });
   }
 }

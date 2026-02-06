@@ -58,6 +58,18 @@ A modern, responsive website for Demirti Technologies' digital training programs
    ```env
    BREVO_API_KEY=your_brevo_api_key_here
    BREVO_TO_EMAIL=admin@demirti.com
+   RESEND_API_KEY=your_resend_api_key
+   RESEND_FROM_EMAIL=admin@demirti.com
+   CLAUDE_API_KEY=your_anthropic_key
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+   VAPID_PRIVATE_KEY=your_vapid_private_key
+   NEXT_PUBLIC_BASE_URL=https://your-domain.com
+   STORAGE_BUCKET=your_bucket
+   STORAGE_REGION=your_region
+   STORAGE_ACCESS_KEY=your_access_key
+   STORAGE_SECRET_KEY=your_secret_key
+   STORAGE_ENDPOINT=optional_custom_endpoint
+   STORAGE_PUBLIC_URL=optional_public_cdn
    ```
    
    To get your Brevo API key:
@@ -72,6 +84,17 @@ A modern, responsive website for Demirti Technologies' digital training programs
    ```
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### PDF Certificates (Optional)
+Certificates are generated using Python + ReportLab.
+Install dependencies:
+```bash
+python3 -m pip install reportlab pdfplumber pypdf
+```
+For visual rendering checks:
+```bash
+brew install poppler
+```
 
 ## 🚢 Deployment (Vercel)
 

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #0066cc;
+  --color-primary-dark: #004d99;
+  --color-primary-light: #3385d6;
+  --color-secondary: #00c896;
+  --color-secondary-dark: #00a578;
+  --color-accent: #ff6b6b;
+}
+
 :root {
   --primary-color: #0066cc;
   --primary-dark: #004d99;
@@ -1416,6 +1425,23 @@ textarea:focus {
   margin-bottom: 1rem;
 }
 
+/* Admin sidebar layout - ensure vertical column */
+.admin-sidebar {
+  flex-direction: column !important;
+}
+.admin-sidebar-nav {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.admin-sidebar-section {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+.admin-sidebar-items {
+  flex-direction: column !important;
+}
+
 /* Admin layout: content below fixed nav (padding on main via .admin-with-fixed-nav) */
 .admin-content-area {
   margin-top: 0;
@@ -1426,6 +1452,19 @@ textarea:focus {
 @media (max-width: 768px) {
   .admin-content-area {
     margin-top: 0;
+    padding: 1rem;
+    min-height: calc(100vh - 56px);
+  }
+}
+
+.admin-dashboard-content {
+  margin-top: 0;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 140px);
+}
+@media (max-width: 768px) {
+  .admin-dashboard-content {
     padding: 1rem;
     min-height: calc(100vh - 56px);
   }

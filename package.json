@@ -17,6 +17,7 @@
     "recharts": "^2.15.0",
     "resend": "^3.2.0",
     "ua-parser-js": "^1.0.41",
+    "web-push": "^3.6.7",
     "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

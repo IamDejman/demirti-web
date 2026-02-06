@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../../components/AdminNavbar';
-
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -99,9 +97,7 @@ export default function AdminGoalsPage() {
   };
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-content-area">
+    <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: 900, margin: '0 auto' }}>
           <div className="admin-page-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
             <h1 className="admin-page-title">Goals</h1>
@@ -204,6 +200,5 @@ export default function AdminGoalsPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }

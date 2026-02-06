@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminNavbar from '../components/AdminNavbar';
-
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [stats, setStats] = useState(null);
@@ -66,9 +64,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <main className="admin-with-fixed-nav">
-      <AdminNavbar />
-      <div className="admin-dashboard admin-dashboard-content">
+    <div className="admin-dashboard admin-dashboard-content">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div className="admin-page-header">
             <h1 className="admin-page-title">Applications</h1>
@@ -333,23 +329,7 @@ export default function AdminDashboard() {
             </>
           )}
         </div>
-      </div>
-      <style jsx>{`
-        .admin-dashboard-content {
-          margin-top: 0;
-          padding: 2rem;
-          background-color: #f8f9fa;
-          min-height: calc(100vh - 140px);
-        }
-        @media (max-width: 768px) {
-          .admin-dashboard-content {
-            margin-top: 0;
-            padding: 1rem;
-            min-height: calc(100vh - 56px);
-          }
-        }
-      `}</style>
-    </main>
+    </div>
   );
 }
 

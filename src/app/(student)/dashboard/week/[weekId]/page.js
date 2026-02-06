@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 function getAuthHeaders() {
@@ -11,7 +11,6 @@ function getAuthHeaders() {
 
 export default function WeekPage() {
   const params = useParams();
-  const router = useRouter();
   const weekId = params?.weekId;
   const [week, setWeek] = useState(null);
   const [contentItems, setContentItems] = useState([]);
@@ -48,6 +47,19 @@ export default function WeekPage() {
       }
     })();
   }, [weekId]);
+
+  const handleCompleteChecklist = async (itemId) => {
+    try {
+      await fetch(`/api/checklist/${itemId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: '{}',
+      });
+      setChecklistItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, completed_at: new Date().toISOString() } : i)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
 
@@ -104,11 +116,23 @@ export default function WeekPage() {
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: '{}',
                   });
-                } catch (_) {}
+                } catch {}
               }}
             >
               Join class
             </a>
+          )}
+          {week.recording_url && (
+            <div className="mt-3">
+              <a
+                href={week.recording_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary text-sm font-medium hover:underline"
+              >
+                Watch recording
+              </a>
+            </div>
           )}
         </div>
       )}
@@ -119,8 +143,17 @@ export default function WeekPage() {
           <ul className="mt-4 space-y-2">
             {checklistItems.map((item) => (
               <li key={item.id} className="flex items-center gap-3">
-                <span className="text-gray-400">☐</span>
-                <span className="text-gray-900">{item.title}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCompleteChecklist(item.id)}
+                  className={`h-5 w-5 rounded border flex items-center justify-center ${
+                    item.completed_at ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'
+                  }`}
+                  aria-label="Toggle checklist item"
+                >
+                  {item.completed_at ? '✓' : ''}
+                </button>
+                <span className={`${item.completed_at ? 'line-through text-gray-500' : 'text-gray-900'}`}>{item.title}</span>
               </li>
             ))}
           </ul>

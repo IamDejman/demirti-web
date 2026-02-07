@@ -28,6 +28,6 @@ export async function GET(request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Analytics overview error:', error);
-    return NextResponse.json({ error: 'Failed to load overview', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load overview', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

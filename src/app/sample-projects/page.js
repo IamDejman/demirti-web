@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Navbar from '../components/Navbar';
 
 export default function SampleProjectsPage() {
@@ -35,7 +36,7 @@ export default function SampleProjectsPage() {
             {projects.map((project) => (
               <div key={project.id} className="bg-white rounded-xl border border-gray-200 p-5">
                 {project.thumbnail_url && (
-                  <img src={project.thumbnail_url} alt={project.title} className="w-full h-40 object-cover rounded-lg" />
+                  <Image src={project.thumbnail_url} alt={project.title} width={400} height={160} className="w-full h-40 object-cover rounded-lg" unoptimized />
                 )}
                 <h2 className="text-lg font-semibold text-gray-900 mt-3">{project.title}</h2>
                 {project.description && <p className="text-sm text-gray-600 mt-2">{project.description}</p>}

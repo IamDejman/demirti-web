@@ -12,10 +12,7 @@ import {
   AdminEmptyState,
 } from '../../components/admin';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 const emptyForm = {
   title: '',

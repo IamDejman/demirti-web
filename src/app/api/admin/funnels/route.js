@@ -10,7 +10,7 @@ export async function GET(request) {
     return NextResponse.json({ success: true, funnels });
   } catch (error) {
     console.error('Funnels GET error:', error);
-    return NextResponse.json({ error: 'Failed to load funnels', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load funnels', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }
 
@@ -27,6 +27,6 @@ export async function POST(request) {
     return NextResponse.json({ success: true, funnel });
   } catch (error) {
     console.error('Funnels POST error:', error);
-    return NextResponse.json({ error: 'Failed to create funnel', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create funnel', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

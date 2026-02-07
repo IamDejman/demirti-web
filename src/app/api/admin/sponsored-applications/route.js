@@ -20,7 +20,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error fetching sponsored applications:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch sponsored applications', details: error.message },
+      { error: 'Failed to fetch sponsored applications', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

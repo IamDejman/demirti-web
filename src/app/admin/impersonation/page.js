@@ -10,10 +10,7 @@ import {
   AdminMessage,
 } from '../../components/admin';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 

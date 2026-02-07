@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LmsCard } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function ChatPanel() {
   const [rooms, setRooms] = useState([]);
@@ -21,7 +18,7 @@ export default function ChatPanel() {
   const [loading, setLoading] = useState(true);
 
   const loadRooms = async () => {
-    const res = await fetch('/api/chat/rooms', { headers: getAuthHeaders() });
+    const res = await fetch('/api/chat/rooms', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.rooms) {
       setRooms(data.rooms);
@@ -33,7 +30,7 @@ export default function ChatPanel() {
 
   const loadMessages = async (roomId) => {
     if (!roomId) return;
-    const res = await fetch(`/api/chat/rooms/${roomId}/messages?limit=50`, { headers: getAuthHeaders() });
+    const res = await fetch(`/api/chat/rooms/${roomId}/messages?limit=50`, { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.messages) setMessages(data.messages);
   };
@@ -50,7 +47,7 @@ export default function ChatPanel() {
         setUserResults([]);
         return;
       }
-      const res = await fetch(`/api/chat/users?q=${encodeURIComponent(userSearch.trim())}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/chat/users?q=${encodeURIComponent(userSearch.trim())}`, { headers: getLmsAuthHeaders() });
       const data = await res.json();
       if (res.ok && data.users) setUserResults(data.users);
     }, 300);
@@ -69,7 +66,7 @@ export default function ChatPanel() {
     if (!messageText.trim() || !selectedRoom) return;
     await fetch(`/api/chat/rooms/${selectedRoom.id}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify({ message: messageText.trim() }),
     });
     setMessageText('');
@@ -80,7 +77,7 @@ export default function ChatPanel() {
     if (!selectedRoom || messages.length === 0) return;
     setLoadingOlder(true);
     const oldest = messages[0]?.created_at;
-    const res = await fetch(`/api/chat/rooms/${selectedRoom.id}/messages?limit=50&before=${encodeURIComponent(oldest)}`, { headers: getAuthHeaders() });
+    const res = await fetch(`/api/chat/rooms/${selectedRoom.id}/messages?limit=50&before=${encodeURIComponent(oldest)}`, { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.messages && data.messages.length > 0) {
       setMessages((prev) => [...data.messages, ...prev]);
@@ -93,7 +90,7 @@ export default function ChatPanel() {
     if (!dmEmail.trim()) return;
     const res = await fetch('/api/chat/rooms', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify({ type: 'dm', email: dmEmail.trim() }),
     });
     const data = await res.json();
@@ -106,7 +103,7 @@ export default function ChatPanel() {
   const handleCreateDmWithUser = async (userId) => {
     const res = await fetch('/api/chat/rooms', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify({ type: 'dm', otherUserId: userId }),
     });
     const data = await res.json();
@@ -221,7 +218,7 @@ export default function ChatPanel() {
                   const nextMuted = !selectedRoom.is_muted;
                   await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                     body: JSON.stringify({ isMuted: nextMuted, emailMuted: selectedRoom.email_muted }),
                   });
                   await loadRooms();
@@ -237,7 +234,7 @@ export default function ChatPanel() {
                   const nextEmailMuted = !selectedRoom.email_muted;
                   await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                     body: JSON.stringify({ isMuted: selectedRoom.is_muted, emailMuted: nextEmailMuted }),
                   });
                   await loadRooms();
@@ -274,7 +271,7 @@ export default function ChatPanel() {
                     type="button"
                     onClick={() => fetch(`/api/chat/messages/${m.id}/report`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                       body: JSON.stringify({ reason: 'report' }),
                     })}
                     className="text-xs text-gray-400 hover:text-red-500"

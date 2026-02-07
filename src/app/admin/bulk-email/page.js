@@ -4,11 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
 import { AdminPageHeader } from '@/app/components/admin';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 export default function BulkEmailPage() {
   const router = useRouter();

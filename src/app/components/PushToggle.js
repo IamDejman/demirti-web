@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -41,7 +37,7 @@ export default function PushToggle() {
     if (existing) {
       await fetch('/api/push/unsubscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({ endpoint: existing.endpoint }),
       });
       await existing.unsubscribe();
@@ -60,7 +56,7 @@ export default function PushToggle() {
     });
     await fetch('/api/push/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(subscription),
     });
     setEnabled(true);

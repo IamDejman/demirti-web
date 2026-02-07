@@ -9,7 +9,7 @@ export async function POST(request, { params }) {
     if (user.role !== 'student' && user.role !== 'alumni') {
       return NextResponse.json({ error: 'Only students can book' }, { status: 403 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Slot ID required' }, { status: 400 });
     const booking = await bookOfficeHourSlot(id, user.id);
     await recordLmsEvent(user.id, 'office_hour_booked', { slotId: id });

@@ -3,10 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LmsCard } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function FacilitatorAttendancePage() {
   const [cohorts, setCohorts] = useState([]);
@@ -18,7 +15,7 @@ export default function FacilitatorAttendancePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/cohorts', { headers: getAuthHeaders() })
+    fetch('/api/cohorts', { headers: getLmsAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.cohorts) setCohorts(data.cohorts);
@@ -32,7 +29,7 @@ export default function FacilitatorAttendancePage() {
       setSelectedClass(null);
       return;
     }
-    fetch(`/api/cohorts/${selectedCohort}/live-classes`, { headers: getAuthHeaders() })
+    fetch(`/api/cohorts/${selectedCohort}/live-classes`, { headers: getLmsAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.liveClasses) {
@@ -46,7 +43,7 @@ export default function FacilitatorAttendancePage() {
       setAttendance([]);
       return;
     }
-    fetch(`/api/live-classes/${selectedClass}/attendance`, { headers: getAuthHeaders() })
+    fetch(`/api/live-classes/${selectedClass}/attendance`, { headers: getLmsAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.attendance) setAttendance(data.attendance);
@@ -64,7 +61,7 @@ export default function FacilitatorAttendancePage() {
       const updates = attendance.map((r) => ({ studentId: r.student_id, status: r.status }));
       await fetch(`/api/live-classes/${selectedClass}/attendance`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({ updates }),
       });
     } catch {

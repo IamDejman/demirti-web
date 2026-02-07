@@ -10,7 +10,7 @@ export async function POST(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Submission ID required' }, { status: 400 });
     const submission = await getSubmissionById(id);
     if (!submission) return NextResponse.json({ error: 'Submission not found' }, { status: 404 });

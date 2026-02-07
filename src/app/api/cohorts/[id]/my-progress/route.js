@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
     if (user.role !== 'student' && user.role !== 'alumni') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
     const cohort = await getCohortById(id);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });

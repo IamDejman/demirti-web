@@ -5,7 +5,7 @@ import { generateCertificatePdf } from '@/lib/certificates';
 
 export async function GET(request, { params }) {
   try {
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Certificate ID required' }, { status: 400 });
     await ensureLmsSchema();
     const result = await sql`

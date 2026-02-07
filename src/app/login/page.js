@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <img src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" />
+          <Image src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" />
           <h1 className="auth-title">Sign in</h1>
           <p className="auth-subtitle">CVERSE Academy</p>
         </div>

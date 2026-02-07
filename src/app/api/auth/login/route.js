@@ -7,7 +7,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 export async function POST(request) {
   try {
     const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
-    const limiter = rateLimit(`auth_login_${ip}`, { windowMs: 60_000, limit: 10 });
+    const limiter = await rateLimit(`auth_login_${ip}`, { windowMs: 60_000, limit: 10 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
     }

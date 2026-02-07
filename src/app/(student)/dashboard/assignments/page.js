@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function StudentAssignmentsPage() {
   const [assignments, setAssignments] = useState([]);
@@ -16,11 +13,11 @@ export default function StudentAssignmentsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/cohorts', { headers: getAuthHeaders() });
+        const res = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.cohorts?.length) {
           const cohortId = data.cohorts[0].id;
-          const aRes = await fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getAuthHeaders() });
+          const aRes = await fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getLmsAuthHeaders() });
           const aData = await aRes.json();
           if (aRes.ok && aData.assignments) setAssignments(aData.assignments);
         }

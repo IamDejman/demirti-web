@@ -90,10 +90,7 @@ const FACILITATOR_NAV = [
   { href: '/facilitator/chat', label: 'Chat', icon: 'chat' },
 ];
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function LmsSidebar({ variant = 'student', collapsed = false, onToggleCollapse, user, pendingCount = 0 }) {
   const pathname = usePathname();
@@ -108,7 +105,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
   };
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
+    await fetch('/api/auth/logout', { method: 'POST', headers: getLmsAuthHeaders() });
     if (typeof window !== 'undefined') localStorage.removeItem('lms_token');
     router.push('/login');
   };

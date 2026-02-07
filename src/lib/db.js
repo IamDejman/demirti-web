@@ -1,11 +1,12 @@
 import { sql } from '@vercel/postgres';
-import { DEFAULT_SPONSORED_COHORT } from './config';
+import { DEFAULT_SPONSORED_COHORT, validateEnv } from './config';
 
 // Check if database is initialized
 let dbInitialized = false;
 let initializationPromise = null;
 
 export async function ensureDatabaseInitialized() {
+  validateEnv();
   if (dbInitialized) {
     return;
   }

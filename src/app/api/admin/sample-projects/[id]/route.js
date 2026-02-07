@@ -8,7 +8,7 @@ export async function PUT(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
     const body = await request.json();
     const { title, description, trackId, tags, thumbnailUrl, externalUrl, isActive } = body;
@@ -52,7 +52,7 @@ export async function DELETE(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
     await ensureLmsSchema();
     await sql`DELETE FROM sample_projects WHERE id = ${id}`;

@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
     if (!(await isMember(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -39,7 +39,7 @@ export async function POST(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
     if (!(await isMember(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -48,7 +48,7 @@ export async function POST(request, { params }) {
     const message = (body.message || '').trim();
     if (!message) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (message.length > 2000) return NextResponse.json({ error: 'Message too long' }, { status: 400 });
-    const limiter = rateLimit(`chat_message_${user.id}`, { windowMs: 60_000, limit: 40 });
+    const limiter = await rateLimit(`chat_message_${user.id}`, { windowMs: 60_000, limit: 40 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many messages. Slow down.' }, { status: 429 });
     }

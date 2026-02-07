@@ -6,7 +6,7 @@ export async function POST(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Notification ID required' }, { status: 400 });
     await markNotificationRead(id, user.id);
     return NextResponse.json({ success: true });

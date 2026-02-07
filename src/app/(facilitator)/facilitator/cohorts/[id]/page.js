@@ -5,10 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function FacilitatorCohortPage() {
   const params = useParams();
@@ -25,11 +22,11 @@ export default function FacilitatorCohortPage() {
     (async () => {
       try {
         const [cohortRes, weeksRes, studentsRes, liveRes, assignRes] = await Promise.all([
-          fetch(`/api/cohorts/${id}`, { headers: getAuthHeaders() }),
-          fetch(`/api/cohorts/${id}/weeks`, { headers: getAuthHeaders() }),
-          fetch(`/api/cohorts/${id}/students`, { headers: getAuthHeaders() }),
-          fetch(`/api/cohorts/${id}/live-classes`, { headers: getAuthHeaders() }),
-          fetch(`/api/cohorts/${id}/assignments`, { headers: getAuthHeaders() }),
+          fetch(`/api/cohorts/${id}`, { headers: getLmsAuthHeaders() }),
+          fetch(`/api/cohorts/${id}/weeks`, { headers: getLmsAuthHeaders() }),
+          fetch(`/api/cohorts/${id}/students`, { headers: getLmsAuthHeaders() }),
+          fetch(`/api/cohorts/${id}/live-classes`, { headers: getLmsAuthHeaders() }),
+          fetch(`/api/cohorts/${id}/assignments`, { headers: getLmsAuthHeaders() }),
         ]);
         const cohortData = await cohortRes.json();
         const weeksData = await weeksRes.json();

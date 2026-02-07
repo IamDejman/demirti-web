@@ -67,7 +67,7 @@ export async function POST(request) {
     if (error) {
       console.error('Resend contact form email failed', error);
       return NextResponse.json(
-        { error: 'Failed to send email', details: error.message },
+        { error: 'Failed to send email', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
         { status: 500 }
       );
     }
@@ -79,7 +79,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error sending email:', error);
     return NextResponse.json(
-      { error: 'Failed to send email', details: error.message },
+      { error: 'Failed to send email', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

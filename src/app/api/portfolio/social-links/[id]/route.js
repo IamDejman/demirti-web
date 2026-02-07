@@ -18,7 +18,7 @@ export async function PUT(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
     const body = await request.json();
     const { platform, url } = body;
@@ -47,7 +47,7 @@ export async function DELETE(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
     await ensureLmsSchema();
     if (!(await ensureOwnership(id, user.id))) {

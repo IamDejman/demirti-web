@@ -12,7 +12,7 @@ export async function PATCH(request, { params }) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const id = params?.id;
+  const { id } = await params;
   if (!id) return NextResponse.json({ error: 'Application id required' }, { status: 400 });
 
   try {
@@ -76,7 +76,7 @@ export async function PATCH(request, { params }) {
   } catch (error) {
     console.error('Error updating sponsored application:', error);
     return NextResponse.json(
-      { error: 'Failed to update application', details: error.message },
+      { error: 'Failed to update application', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Template ID required' }, { status: 400 });
     const body = await request.json();
     const { cohortId } = body || {};

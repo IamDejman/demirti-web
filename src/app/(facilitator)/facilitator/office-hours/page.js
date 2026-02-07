@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 const emptyForm = {
   title: '',
@@ -26,13 +22,13 @@ export default function FacilitatorOfficeHoursPage() {
   const [bookingsBySlot, setBookingsBySlot] = useState({});
 
   const loadSlots = async () => {
-    const res = await fetch('/api/office-hours/slots', { headers: getAuthHeaders() });
+    const res = await fetch('/api/office-hours/slots', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.slots) setSlots(data.slots);
   };
 
   const loadCohorts = async () => {
-    const res = await fetch('/api/cohorts', { headers: getAuthHeaders() });
+    const res = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.cohorts) setCohorts(data.cohorts);
   };
@@ -48,7 +44,7 @@ export default function FacilitatorOfficeHoursPage() {
     if (!form.startTime || !form.endTime) return;
     const res = await fetch('/api/office-hours/slots', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(form),
     });
     const data = await res.json();
@@ -62,12 +58,12 @@ export default function FacilitatorOfficeHoursPage() {
   };
 
   const handleCancel = async (slotId) => {
-    await fetch(`/api/office-hours/slots/${slotId}/cancel`, { method: 'POST', headers: getAuthHeaders() });
+    await fetch(`/api/office-hours/slots/${slotId}/cancel`, { method: 'POST', headers: getLmsAuthHeaders() });
     await loadSlots();
   };
 
   const loadBookings = async (slotId) => {
-    const res = await fetch(`/api/office-hours/slots/${slotId}/bookings`, { headers: getAuthHeaders() });
+    const res = await fetch(`/api/office-hours/slots/${slotId}/bookings`, { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.bookings) {
       setBookingsBySlot((prev) => ({ ...prev, [slotId]: data.bookings }));

@@ -17,6 +17,6 @@ export async function GET(request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Analytics engagement error:', error);
-    return NextResponse.json({ error: 'Failed to load engagement', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load engagement', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

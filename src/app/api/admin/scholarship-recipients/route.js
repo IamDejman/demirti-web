@@ -64,7 +64,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error getting scholarship recipients:', error);
     return NextResponse.json(
-      { error: 'Failed to get scholarship recipients', details: error.message },
+      { error: 'Failed to get scholarship recipients', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

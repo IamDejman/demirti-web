@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Navbar from '../components/Navbar';
 
 export default function ProfessionalsPage() {
@@ -37,7 +38,7 @@ export default function ProfessionalsPage() {
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                     {person.photo_url ? (
-                      <img src={person.photo_url} alt={person.name} className="w-full h-full object-cover" />
+                      <Image src={person.photo_url} alt={person.name} width={56} height={56} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
                         {person.name?.slice(0, 1)}

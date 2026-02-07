@@ -3,10 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function FacilitatorGradingPage() {
   const [submissions, setSubmissions] = useState([]);
@@ -17,7 +14,7 @@ export default function FacilitatorGradingPage() {
   const [saving, setSaving] = useState(false);
 
   const loadQueue = async () => {
-    const res = await fetch('/api/facilitator/grading-queue', { headers: getAuthHeaders() });
+    const res = await fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.submissions) setSubmissions(data.submissions);
   };
@@ -33,7 +30,7 @@ export default function FacilitatorGradingPage() {
     try {
       const res = await fetch(`/api/submissions/${grading.id}/grade`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({ score: parseInt(score, 10), feedback: feedback.trim() || null }),
       });
       if (res.ok) {

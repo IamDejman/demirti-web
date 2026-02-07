@@ -4,7 +4,7 @@ import { requireAdminOrUser } from '@/lib/adminAuth';
 
 export async function GET(request, { params }) {
   try {
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
     const cohort = await getCohortById(id);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
@@ -28,7 +28,7 @@ export async function PUT(request, { params }) {
   try {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
     const cohort = await getCohortById(id);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });

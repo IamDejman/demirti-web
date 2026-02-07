@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
   try {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
@@ -63,7 +63,7 @@ export async function PUT(request, { params }) {
   try {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });

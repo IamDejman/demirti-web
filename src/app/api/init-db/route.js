@@ -16,7 +16,7 @@ export async function GET(request) {
       return NextResponse.json(
         { 
           error: 'Database connection failed',
-          details: connError.message,
+          details: process.env.NODE_ENV === 'development' ? connError?.message : undefined,
           hint: 'Please check your POSTGRES_URL environment variable'
         },
         { status: 500 }
@@ -96,7 +96,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         error: 'Failed to initialize database',
-        details: error.message,
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }

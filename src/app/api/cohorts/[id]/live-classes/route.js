@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
     const cohort = await getCohortById(id);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
@@ -28,7 +28,7 @@ export async function POST(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
     const cohort = await getCohortById(id);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });

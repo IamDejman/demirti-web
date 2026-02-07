@@ -7,7 +7,7 @@ export async function PUT(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Material ID required' }, { status: 400 });
     const material = await getMaterialById(id);
     if (!material) return NextResponse.json({ error: 'Material not found' }, { status: 404 });
@@ -36,7 +36,7 @@ export async function DELETE(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Material ID required' }, { status: 400 });
     const material = await getMaterialById(id);
     if (!material) return NextResponse.json({ error: 'Material not found' }, { status: 404 });

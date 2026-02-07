@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
     await ensureLmsSchema();
     const convRes = await sql`

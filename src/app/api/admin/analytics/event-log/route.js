@@ -18,6 +18,6 @@ export async function GET(request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Analytics event-log error:', error);
-    return NextResponse.json({ error: 'Failed to load event log', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load event log', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

@@ -96,6 +96,6 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Analytics export error:', error);
-    return NextResponse.json({ error: 'Export failed', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Export failed', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

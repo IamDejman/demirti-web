@@ -3,11 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LmsLayoutShell } from '@/app/components/lms';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function FacilitatorLayout({ children }) {
   const router = useRouter();
@@ -21,7 +17,7 @@ export default function FacilitatorLayout({ children }) {
       router.push('/login');
       return;
     }
-    fetch('/api/auth/me', { headers: getAuthHeaders() })
+    fetch('/api/auth/me', { headers: getLmsAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -43,7 +39,7 @@ export default function FacilitatorLayout({ children }) {
   useEffect(() => {
     if (!user) return;
     const load = () => {
-      fetch('/api/facilitator/grading-queue', { headers: getAuthHeaders() })
+      fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() })
         .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
         .then(({ ok, data }) => {
           if (ok && data.submissions) setPendingCount(data.submissions.length);

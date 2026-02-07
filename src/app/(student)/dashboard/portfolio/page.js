@@ -3,11 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LmsCard } from '@/app/components/lms';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 const emptyPortfolioForm = {
   slug: '',
@@ -47,7 +43,7 @@ export default function PortfolioPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const res = await fetch('/api/portfolio', { headers: getAuthHeaders() });
+    const res = await fetch('/api/portfolio', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok) {
       setPortfolio(data.portfolio);
@@ -77,7 +73,7 @@ export default function PortfolioPage() {
     setUploadMessage('');
     const res = await fetch('/api/portfolio', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(form),
     });
     const data = await res.json();
@@ -96,7 +92,7 @@ export default function PortfolioPage() {
     try {
       const presignRes = await fetch('/api/uploads/presign', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
@@ -128,7 +124,7 @@ export default function PortfolioPage() {
     const method = editingProjectId ? 'PUT' : 'POST';
     await fetch(endpoint, {
       method,
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(projectForm),
     });
     setProjectForm(emptyProjectForm);
@@ -137,7 +133,7 @@ export default function PortfolioPage() {
   };
 
   const deleteProject = async (id) => {
-    await fetch(`/api/portfolio/projects/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    await fetch(`/api/portfolio/projects/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
     await loadData();
   };
 
@@ -147,7 +143,7 @@ export default function PortfolioPage() {
     const method = editingLinkId ? 'PUT' : 'POST';
     await fetch(endpoint, {
       method,
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(linkForm),
     });
     setLinkForm(emptyLinkForm);
@@ -156,7 +152,7 @@ export default function PortfolioPage() {
   };
 
   const deleteLink = async (id) => {
-    await fetch(`/api/portfolio/social-links/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    await fetch(`/api/portfolio/social-links/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
     await loadData();
   };
 

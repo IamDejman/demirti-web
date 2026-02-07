@@ -25,7 +25,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error getting admins:', error);
     return NextResponse.json(
-      { error: 'Failed to get admins', details: error.message },
+      { error: 'Failed to get admins', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -60,7 +60,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error creating admin:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create admin', details: error.message },
+      { error: error.message || 'Failed to create admin', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 400 }
     );
   }
@@ -102,7 +102,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error updating admin:', error);
     return NextResponse.json(
-      { error: 'Failed to update admin', details: error.message },
+      { error: 'Failed to update admin', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -151,7 +151,7 @@ export async function PATCH(request) {
   } catch (error) {
     console.error('Error updating admin status:', error);
     return NextResponse.json(
-      { error: 'Failed to update admin status', details: error.message },
+      { error: 'Failed to update admin status', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

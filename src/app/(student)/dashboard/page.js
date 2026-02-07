@@ -5,10 +5,7 @@ import Link from 'next/link';
 import PushToggle from '../../components/PushToggle';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function StudentDashboardPage() {
   const [cohorts, setCohorts] = useState([]);
@@ -44,15 +41,15 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/cohorts', { headers: getAuthHeaders() });
+        const res = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.cohorts?.length) {
           setCohorts(data.cohorts);
           const cohortId = data.cohorts[0].id;
           const [assignRes, weeksRes, progressRes] = await Promise.all([
-            fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getAuthHeaders() }),
-            fetch(`/api/cohorts/${cohortId}/weeks`, { headers: getAuthHeaders() }),
-            fetch(`/api/cohorts/${cohortId}/my-progress`, { headers: getAuthHeaders() }),
+            fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getLmsAuthHeaders() }),
+            fetch(`/api/cohorts/${cohortId}/weeks`, { headers: getLmsAuthHeaders() }),
+            fetch(`/api/cohorts/${cohortId}/my-progress`, { headers: getLmsAuthHeaders() }),
           ]);
           const assignData = await assignRes.json();
           const weeksData = await weeksRes.json();
@@ -62,11 +59,11 @@ export default function StudentDashboardPage() {
           if (progressRes.ok && progressData.progress) setProgress(progressData.progress);
         }
         const [annRes, notifRes, calRes, prefRes, certRes] = await Promise.all([
-          fetch('/api/announcements?limit=5', { headers: getAuthHeaders() }),
-          fetch('/api/notifications?limit=5', { headers: getAuthHeaders() }),
-          fetch('/api/calendar', { headers: getAuthHeaders() }),
-          fetch('/api/notifications/preferences', { headers: getAuthHeaders() }),
-          fetch('/api/certificates', { headers: getAuthHeaders() }),
+          fetch('/api/announcements?limit=5', { headers: getLmsAuthHeaders() }),
+          fetch('/api/notifications?limit=5', { headers: getLmsAuthHeaders() }),
+          fetch('/api/calendar', { headers: getLmsAuthHeaders() }),
+          fetch('/api/notifications/preferences', { headers: getLmsAuthHeaders() }),
+          fetch('/api/certificates', { headers: getLmsAuthHeaders() }),
         ]);
         const annData = await annRes.json();
         const notifData = await notifRes.json();
@@ -266,7 +263,7 @@ export default function StudentDashboardPage() {
                 type="button"
                 className="text-sm font-medium text-primary hover:underline"
                 onClick={async () => {
-                  await fetch('/api/notifications/read-all', { method: 'POST', headers: getAuthHeaders() });
+                  await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
                   setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
                 }}
               >
@@ -286,7 +283,7 @@ export default function StudentDashboardPage() {
                         type="button"
                         className="text-xs text-primary hover:underline"
                         onClick={async () => {
-                          await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getAuthHeaders() });
+                          await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
                           setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
                         }}
                       >
@@ -352,7 +349,7 @@ export default function StudentDashboardPage() {
                   setSavingPrefs(true);
                   await fetch('/api/notifications/preferences', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                     body: JSON.stringify({
                       inAppEnabled: prefs.in_app_enabled !== false,
                       emailEnabled: prefs.email_enabled !== false,

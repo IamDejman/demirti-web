@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AdminPageHeader, AdminButton } from '../../components/admin';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 export default function AdminCohortsPage() {
   const [cohorts, setCohorts] = useState([]);

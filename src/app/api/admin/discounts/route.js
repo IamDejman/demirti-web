@@ -13,7 +13,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error getting discounts:', error);
     return NextResponse.json(
-      { error: 'Failed to get discounts', details: error.message },
+      { error: 'Failed to get discounts', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -51,7 +51,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error creating discount:', error);
     return NextResponse.json(
-      { error: 'Failed to create discount', details: error.message },
+      { error: 'Failed to create discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -102,7 +102,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error updating discount:', error);
     return NextResponse.json(
-      { error: 'Failed to update discount', details: error.message },
+      { error: 'Failed to update discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -137,7 +137,7 @@ export async function DELETE(request) {
   } catch (error) {
     console.error('Error deleting discount:', error);
     return NextResponse.json(
-      { error: 'Failed to delete discount', details: error.message },
+      { error: 'Failed to delete discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

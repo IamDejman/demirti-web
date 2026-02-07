@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -72,7 +69,7 @@ export default function JobsPage() {
     setApplyMessage('');
     const res = await fetch(`/api/jobs/${jobId}/apply`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify(applyForm),
     });
     const data = await res.json();

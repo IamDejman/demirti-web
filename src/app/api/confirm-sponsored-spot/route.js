@@ -58,7 +58,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error confirming sponsored spot:', error);
     return NextResponse.json(
-      { error: 'Something went wrong. Please try again.', details: error.message },
+      { error: 'Something went wrong. Please try again.', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

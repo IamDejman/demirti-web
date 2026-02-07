@@ -182,7 +182,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error saving sponsored application:', error);
     return NextResponse.json(
-      { error: 'Failed to save application', details: error.message },
+      { error: 'Failed to save application', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

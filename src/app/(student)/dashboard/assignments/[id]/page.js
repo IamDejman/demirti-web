@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function AssignmentDetailPage() {
   const params = useParams();
@@ -30,8 +28,8 @@ export default function AssignmentDetailPage() {
     (async () => {
       try {
         const [assignRes, subRes] = await Promise.all([
-          fetch(`/api/assignments/${id}`, { headers: getAuthHeaders() }),
-          fetch(`/api/assignments/${id}/my-submission`, { headers: getAuthHeaders() }),
+          fetch(`/api/assignments/${id}`, { headers: getLmsAuthHeaders() }),
+          fetch(`/api/assignments/${id}/my-submission`, { headers: getLmsAuthHeaders() }),
         ]);
         const assignData = await assignRes.json();
         const subData = await subRes.json();
@@ -55,7 +53,7 @@ export default function AssignmentDetailPage() {
       setUploading(true);
       const presignRes = await fetch('/api/uploads/presign', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({
           filename: selected.name,
           contentType: selected.type || 'application/octet-stream',
@@ -108,7 +106,7 @@ export default function AssignmentDetailPage() {
       }
       const res = await fetch(`/api/assignments/${id}/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({
           submissionType: assignment.submission_type || 'text',
           fileUrl: uploadedFileUrl || undefined,
@@ -170,7 +168,7 @@ export default function AssignmentDetailPage() {
       <Link href="/dashboard/assignments" className="text-sm text-gray-500 hover:text-primary font-medium">← Assignments</Link>
       <LmsCard title={assignment.title} hoverable={false}>
         {assignment.description && (
-          <div className="text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: assignment.description }} />
+          <div className="text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(assignment.description, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'code', 'pre'] }) }} />
         )}
         <p className="mt-4 text-sm text-gray-500">Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
       </LmsCard>

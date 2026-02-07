@@ -11,7 +11,7 @@ const OTP_LENGTH = 6;
 export async function POST(request) {
   try {
     const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
-    const limiter = rateLimit(`auth_forgot_${ip}`, { windowMs: 60_000, limit: 5 });
+    const limiter = await rateLimit(`auth_forgot_${ip}`, { windowMs: 60_000, limit: 5 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
     }

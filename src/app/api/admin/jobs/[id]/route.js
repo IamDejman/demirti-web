@@ -8,7 +8,7 @@ export async function PUT(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Job ID required' }, { status: 400 });
     const body = await request.json();
     const { title, company, location, employmentType, salaryRange, description, externalUrl, trackId, isActive } = body;
@@ -54,7 +54,7 @@ export async function DELETE(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Job ID required' }, { status: 400 });
     await ensureLmsSchema();
     await sql`DELETE FROM jobs WHERE id = ${id}`;

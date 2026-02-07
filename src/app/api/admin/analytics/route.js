@@ -42,7 +42,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Analytics API error:', error);
     return NextResponse.json(
-      { error: 'Failed to load analytics', details: error.message },
+      { error: 'Failed to load analytics', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

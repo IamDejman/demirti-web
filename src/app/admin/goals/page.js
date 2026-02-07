@@ -33,8 +33,7 @@ export default function AdminGoalsPage() {
       const data = await res.json();
       if (res.ok && data.success) setGoals(data.goals || []);
       else if (res.status === 401) router.push('/admin/login');
-    } catch (err) {
-      console.error(err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -63,8 +62,7 @@ export default function AdminGoalsPage() {
       } else {
         alert(data.error || 'Failed to save');
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Failed to save goal');
     }
   };
@@ -76,8 +74,7 @@ export default function AdminGoalsPage() {
       const data = await res.json();
       if (res.ok && data.success) loadGoals();
       else alert(data.error || 'Failed to delete');
-    } catch (err) {
-      console.error(err);
+    } catch {
     }
   };
 

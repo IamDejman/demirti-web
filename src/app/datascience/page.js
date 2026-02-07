@@ -35,8 +35,7 @@ export default function DataSciencePage() {
         if (data.available) {
           setScholarshipAvailable(true);
         }
-      } catch (error) {
-        console.error('Error loading track data:', error);
+      } catch {
       } finally {
         setIsLoading(false);
       }

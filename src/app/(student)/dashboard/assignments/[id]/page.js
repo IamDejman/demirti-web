@@ -37,8 +37,7 @@ export default function AssignmentDetailPage() {
         const subData = await subRes.json();
         if (assignRes.ok && assignData.assignment) setAssignment(assignData.assignment);
         if (subRes.ok && subData.submission) setSubmission(subData.submission);
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }

@@ -9,7 +9,6 @@ export default function robots() {
       disallow: [
         '/admin/',
         '/api/',
-        '/bulk-email/',
         '/confirm-spot/',
         '/payment-success/',
         '/payment-failed/',

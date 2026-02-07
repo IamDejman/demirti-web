@@ -42,8 +42,7 @@ export default function FacilitatorGradingPage() {
         setFeedback('');
         await loadQueue();
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally {
       setSaving(false);
     }

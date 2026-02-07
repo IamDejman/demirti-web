@@ -56,8 +56,7 @@ export default function ConfigPage() {
         }));
         setTracks(tracksWithFormData);
       }
-    } catch (error) {
-      console.error('Error loading tracks:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to load track configurations'
@@ -74,8 +73,7 @@ export default function ConfigPage() {
       if (data.success) {
         setAdmins(data.admins);
       }
-    } catch (error) {
-      console.error('Error loading admins:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to load admins'
@@ -142,8 +140,7 @@ export default function ConfigPage() {
           message: data.error || 'Failed to save configuration'
         });
       }
-    } catch (error) {
-      console.error('Error saving track config:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to save configuration'
@@ -208,8 +205,7 @@ export default function ConfigPage() {
           message: data.error || 'Failed to create admin'
         });
       }
-    } catch (error) {
-      console.error('Error creating admin:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to create admin'
@@ -249,8 +245,7 @@ export default function ConfigPage() {
           message: data.error || 'Failed to update admin'
         });
       }
-    } catch (error) {
-      console.error('Error updating admin:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to update admin'
@@ -284,8 +279,7 @@ export default function ConfigPage() {
           message: data.error || 'Failed to update admin status'
         });
       }
-    } catch (error) {
-      console.error('Error updating admin status:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to update admin status'

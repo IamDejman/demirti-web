@@ -39,8 +39,7 @@ export default function DiscountsPage() {
       if (data.success) {
         setDiscounts(data.discounts);
       }
-    } catch (error) {
-      console.error('Error loading discounts:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to load discounts'
@@ -101,8 +100,7 @@ export default function DiscountsPage() {
           message: data.error || 'Failed to create discount'
         });
       }
-    } catch (error) {
-      console.error('Error creating discount:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to create discount'
@@ -163,8 +161,7 @@ export default function DiscountsPage() {
           message: data.error || 'Failed to update discount'
         });
       }
-    } catch (error) {
-      console.error('Error updating discount:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to update discount'
@@ -207,8 +204,7 @@ export default function DiscountsPage() {
           message: data.error || 'Failed to delete discount'
         });
       }
-    } catch (error) {
-      console.error('Error deleting discount:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to delete discount'
@@ -243,8 +239,7 @@ export default function DiscountsPage() {
           message: data.error || 'Failed to update discount status'
         });
       }
-    } catch (error) {
-      console.error('Error updating discount status:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'Failed to update discount status'

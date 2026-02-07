@@ -77,8 +77,7 @@ export default function AdminNavbar() {
       localStorage.removeItem('admin_authenticated');
       localStorage.removeItem('admin_token');
       router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
       localStorage.removeItem('admin_authenticated');
       localStorage.removeItem('admin_token');
       router.push('/admin/login');
@@ -92,7 +91,7 @@ export default function AdminNavbar() {
       <nav className="admin-nav">
         <div className="admin-nav-inner">
           <Link href="/admin" className="admin-nav-logo" onClick={closeMenu}>
-            <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-nav-logo-img" />
+            <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-nav-logo-img" style={{ width: 'auto', height: 'auto' }} />
           </Link>
 
           <div className="admin-nav-desktop" ref={navRef}>

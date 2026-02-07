@@ -42,8 +42,7 @@ export default function FacilitatorDashboardPage() {
         if (notifRes.ok && notifData.notifications) setNotifications(notifData.notifications);
         if (calRes.ok && calData.events) setEvents(calData.events);
         if (prefRes.ok && prefData.preferences) setPrefs(prefData.preferences);
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }

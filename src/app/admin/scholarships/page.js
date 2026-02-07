@@ -41,8 +41,7 @@ export default function ScholarshipsPage() {
       if (recipientsData.success) {
         setScholarshipRecipients(recipientsData.recipientsByTrack);
       }
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

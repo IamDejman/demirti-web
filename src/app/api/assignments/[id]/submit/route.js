@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmission, recordLmsEvent } from '@/lib/db-lms';
-import { sql } from '@vercel/postgres';
-import { ensureLmsSchema } from '@/lib/db-lms';
+import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmission, recordLmsEvent, isStudentInCohort } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { isAllowedFileType, isWithinSizeLimit } from '@/lib/storage';
-
-async function isStudentInCohort(cohortId, studentId) {
-  await ensureLmsSchema();
-  const r = await sql`SELECT 1 FROM cohort_students WHERE cohort_id = ${cohortId} AND student_id = ${studentId} LIMIT 1`;
-  return r.rows.length > 0;
-}
 
 export async function POST(request, { params }) {
   try {

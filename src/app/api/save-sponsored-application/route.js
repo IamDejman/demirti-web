@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { saveSponsoredApplication } from '@/lib/db';
 import { Resend } from 'resend';
+import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -38,7 +39,7 @@ async function sendNewSponsoredApplicationEmail(application) {
             ${application.city ? `<div class="field"><div class="label">City:</div><div class="value">${application.city}</div></div>` : ''}
             ${application.occupation ? `<div class="field"><div class="label">Occupation:</div><div class="value">${application.occupation}</div></div>` : ''}
             <div class="field"><div class="label">Essay (snippet):</div><div class="value">${essaySnippet.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div></div>
-            <div class="field"><div class="label">Cohort:</div><div class="value">${application.cohort_name || 'Data Science Feb 2026'}</div></div>
+            <div class="field"><div class="label">Cohort:</div><div class="value">${application.cohort_name || DEFAULT_SPONSORED_COHORT}</div></div>
           </div>
           <div class="footer"><p>Sponsored cohort application system.</p></div>
         </div>
@@ -162,7 +163,7 @@ export async function POST(request) {
       essay: essay.trim(),
       ackLinkedin48h: !!ackLinkedin48h,
       ackCommitment: !!ackCommitment,
-      cohortName: cohortName?.trim() || 'Data Science Feb 2026'
+      cohortName: cohortName?.trim() || DEFAULT_SPONSORED_COHORT
     };
 
     const saved = await saveSponsoredApplication(applicationData);

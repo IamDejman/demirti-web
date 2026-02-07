@@ -70,6 +70,7 @@ const NAV_ITEMS = [
     { href: '/admin/sponsored-applications', label: 'Sponsored' },
     { href: '/admin/discounts', label: 'Discounts' },
     { href: '/admin/send-bootcamp-welcome', label: 'Send Email' },
+    { href: '/admin/bulk-email', label: 'Bulk Email' },
   ]},
   { id: 'lms', label: 'LMS', icon: 'lms', items: [
     { href: '/admin/cohorts', label: 'Cohorts' },
@@ -157,8 +158,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
       localStorage.removeItem('admin_authenticated');
       localStorage.removeItem('admin_token');
       router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
       localStorage.removeItem('admin_authenticated');
       localStorage.removeItem('admin_token');
       router.push('/admin/login');
@@ -187,7 +187,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
               {collapsed ? (
                 <Image src="/favicon.ico" alt="CVERSE" width={32} height={32} className="admin-sidebar-logo-img" />
               ) : (
-                <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-sidebar-logo-img" />
+                <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-sidebar-logo-img" style={{ width: 'auto', height: 'auto' }} />
               )}
             </Link>
             {onToggleCollapse && (

@@ -15,6 +15,11 @@ export default [
     ],
   },
   {
+    files: ["scripts/**/*.js"],
+    languageOptions: { ecmaVersion: "latest", sourceType: "module" },
+    rules: { "no-console": "off" },
+  },
+  {
     files: ["**/*.js", "**/*.jsx", "**/*.mjs"],
     languageOptions: {
       ecmaVersion: "latest",
@@ -47,6 +52,8 @@ export default [
         clearTimeout: "readonly",
         setInterval: "readonly",
         clearInterval: "readonly",
+        requestIdleCallback: "readonly",
+        cancelIdleCallback: "readonly",
         alert: "readonly",
         confirm: "readonly",
         URLSearchParams: "readonly",
@@ -62,11 +69,11 @@ export default [
         "warn",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|AnalyticsTracker|ConsentBanner|CookiePreferencesLink|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|AdminStatsGrid)$",
+          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|AnalyticsTracker|ConsentBanner|CookiePreferencesLink|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|AdminStatsGrid|AdminNavigationLoader|ImpersonateContent)$",
           ignoreRestSiblings: true,
         },
       ],
-      "no-console": "off", // Allow console for debugging
+      "no-console": "off", // Prefer logger from @/lib/logger for server-side code; allow console for debug/CLI
       "no-undef": "error",
     },
   },

@@ -98,8 +98,7 @@ export default function SponsoredApplicationsPage() {
       }
       const data = await res.json();
       if (data.success) setApplications(data.applications);
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -143,8 +142,7 @@ export default function SponsoredApplicationsPage() {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
       } else alert(data.error || 'Update failed');
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert('Request failed');
     } finally {
       setUpdatingId(null);
@@ -166,8 +164,7 @@ export default function SponsoredApplicationsPage() {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
       } else alert(data.error || 'Failed');
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert('Request failed');
     } finally {
       setUpdatingId(null);
@@ -189,8 +186,7 @@ export default function SponsoredApplicationsPage() {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
       } else alert(data.error || 'Failed');
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert('Request failed');
     } finally {
       setUpdatingId(null);
@@ -215,8 +211,7 @@ export default function SponsoredApplicationsPage() {
         await loadApplications();
         setViewApp(null);
       } else alert(data.error || 'Failed');
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert('Request failed');
     } finally {
       setUpdatingId(null);

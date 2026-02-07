@@ -3,9 +3,10 @@ import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getAllApplications, getAllSponsoredApplications } from '@/lib/db';
 import { sendBootcampWelcomeEmail } from '@/lib/bootcampWelcomeEmails';
 import { recordAuditLog } from '@/lib/audit';
+import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 
 const TRACK_NAME = 'Data Science';
-const SPONSORED_COHORT = 'Data Science Feb 2026';
+const SPONSORED_COHORT = DEFAULT_SPONSORED_COHORT;
 
 export async function POST(request) {
   try {

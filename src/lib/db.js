@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { DEFAULT_SPONSORED_COHORT } from './config';
 
 // Check if database is initialized
 let dbInitialized = false;
@@ -75,8 +76,8 @@ export async function ensureDatabaseInitialized() {
           SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'sponsored_applications');
         `;
         if (!sponsoredAppsCheck.rows[0].exists) {
-          await sql`
-            CREATE TABLE sponsored_applications (
+          const cohortDefault = (DEFAULT_SPONSORED_COHORT || 'Data Science Feb 2026').replace(/'/g, "''");
+          const createSql = `CREATE TABLE sponsored_applications (
               id SERIAL PRIMARY KEY,
               application_id VARCHAR(255) UNIQUE NOT NULL,
               first_name VARCHAR(255) NOT NULL,
@@ -94,10 +95,11 @@ export async function ensureDatabaseInitialized() {
               linkedin_post_url VARCHAR(500),
               confirmed_at TIMESTAMP,
               forfeited_at TIMESTAMP,
-              cohort_name VARCHAR(255) DEFAULT 'Data Science Feb 2026',
+              cohort_name VARCHAR(255) DEFAULT '${cohortDefault}',
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-          `;
+            )`;
+          const template = Object.assign([createSql], { raw: [createSql] });
+          await sql(template);
           await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_review_status ON sponsored_applications(review_status)`;
           await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_email ON sponsored_applications(email)`;
           console.log('sponsored_applications table created');
@@ -384,9 +386,9 @@ export async function initializeDatabase() {
       `;
     }
 
-    // Sponsored cohort applications table
-    await sql`
-      CREATE TABLE IF NOT EXISTS sponsored_applications (
+    // Sponsored cohort applications table (DEFAULT must be literal, not parameter)
+    const cohortDefault = (DEFAULT_SPONSORED_COHORT || 'Data Science Feb 2026').replace(/'/g, "''");
+    const createSql = `CREATE TABLE IF NOT EXISTS sponsored_applications (
         id SERIAL PRIMARY KEY,
         application_id VARCHAR(255) UNIQUE NOT NULL,
         first_name VARCHAR(255) NOT NULL,
@@ -404,10 +406,11 @@ export async function initializeDatabase() {
         linkedin_post_url VARCHAR(500),
         confirmed_at TIMESTAMP,
         forfeited_at TIMESTAMP,
-        cohort_name VARCHAR(255) DEFAULT 'Data Science Feb 2026',
+        cohort_name VARCHAR(255) DEFAULT '${cohortDefault}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
+      )`;
+    const template = Object.assign([createSql], { raw: [createSql] });
+    await sql(template);
     await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_review_status ON sponsored_applications(review_status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_email ON sponsored_applications(email)`;
 
@@ -908,142 +911,18 @@ export async function getApplicationByEmailAndTrack(email, trackName) {
   return result.rows[0] || null;
 }
 
-// Sponsored application functions (essay-based cohort, no payment)
-export async function saveSponsoredApplication(application) {
-  await ensureDatabaseInitialized();
-  const applicationId = `SP_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const result = await sql`
-    INSERT INTO sponsored_applications (
-      application_id, first_name, last_name, email, phone,
-      linkedin_url, city, occupation, essay, ack_linkedin_48h, ack_commitment,
-      cohort_name
-    ) VALUES (
-      ${applicationId},
-      ${application.firstName},
-      ${application.lastName},
-      ${application.email},
-      ${application.phone},
-      ${application.linkedinUrl || null},
-      ${application.city || null},
-      ${application.occupation || null},
-      ${application.essay},
-      ${application.ackLinkedin48h ?? false},
-      ${application.ackCommitment ?? false},
-      ${application.cohortName || 'Data Science Feb 2026'}
-    )
-    RETURNING *;
-  `;
-  return result.rows[0];
-}
-
-export async function getAllSponsoredApplications(filters = {}) {
-  await ensureDatabaseInitialized();
-  let query = sql`
-    SELECT * FROM sponsored_applications
-    ORDER BY created_at DESC
-  `;
-  const result = await query;
-  let rows = result.rows;
-  if (filters.reviewStatus) {
-    rows = rows.filter((r) => r.review_status === filters.reviewStatus);
-  }
-  if (filters.cohortName) {
-    rows = rows.filter((r) => r.cohort_name === filters.cohortName);
-  }
-  return rows;
-}
-
-export async function getSponsoredApplicationById(id) {
-  await ensureDatabaseInitialized();
-  const numId = parseInt(id, 10);
-  if (Number.isNaN(numId)) return null;
-  const result = await sql`
-    SELECT * FROM sponsored_applications WHERE id = ${numId} LIMIT 1;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function getSponsoredApplicationByEmail(email) {
-  await ensureDatabaseInitialized();
-  const result = await sql`
-    SELECT * FROM sponsored_applications
-    WHERE email = ${email} AND review_status = 'accepted' AND confirmed_at IS NULL
-    ORDER BY accepted_at DESC
-    LIMIT 1;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function updateSponsoredApplicationReviewStatus(id, reviewStatus) {
-  await ensureDatabaseInitialized();
-  const numId = parseInt(id, 10);
-  if (Number.isNaN(numId)) return null;
-  if (reviewStatus === 'accepted') {
-    const result = await sql`
-      UPDATE sponsored_applications
-      SET review_status = 'accepted', accepted_at = CURRENT_TIMESTAMP
-      WHERE id = ${numId}
-      RETURNING *;
-    `;
-    return result.rows[0] || null;
-  }
-  const result = await sql`
-    UPDATE sponsored_applications
-    SET review_status = ${reviewStatus}, accepted_at = NULL
-    WHERE id = ${numId}
-    RETURNING *;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function updateSponsoredApplicationConfirmation(id, linkedinPostUrl) {
-  await ensureDatabaseInitialized();
-  const numId = parseInt(id, 10);
-  if (Number.isNaN(numId)) return null;
-  const result = await sql`
-    UPDATE sponsored_applications
-    SET linkedin_post_url = ${linkedinPostUrl}, confirmed_at = CURRENT_TIMESTAMP
-    WHERE id = ${numId}
-    RETURNING *;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function updateSponsoredApplicationConfirmationByEmail(email, linkedinPostUrl) {
-  await ensureDatabaseInitialized();
-  const result = await sql`
-    UPDATE sponsored_applications
-    SET linkedin_post_url = ${linkedinPostUrl}, confirmed_at = CURRENT_TIMESTAMP
-    WHERE email = ${email} AND review_status = 'accepted' AND confirmed_at IS NULL
-      AND accepted_at > (CURRENT_TIMESTAMP - INTERVAL '48 hours')
-    RETURNING *;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function markSponsoredApplicationForfeited(id) {
-  await ensureDatabaseInitialized();
-  const numId = parseInt(id, 10);
-  if (Number.isNaN(numId)) return null;
-  const result = await sql`
-    UPDATE sponsored_applications
-    SET forfeited_at = CURRENT_TIMESTAMP
-    WHERE id = ${numId}
-    RETURNING *;
-  `;
-  return result.rows[0] || null;
-}
-
-export async function getNextWaitlistApplicant(cohortName = 'Data Science Feb 2026') {
-  await ensureDatabaseInitialized();
-  const result = await sql`
-    SELECT * FROM sponsored_applications
-    WHERE review_status = 'waitlist' AND cohort_name = ${cohortName}
-    ORDER BY created_at ASC
-    LIMIT 1;
-  `;
-  return result.rows[0] || null;
-}
+// Sponsored application functions - re-exported from db-sponsored.js
+export {
+  saveSponsoredApplication,
+  getAllSponsoredApplications,
+  getSponsoredApplicationById,
+  getSponsoredApplicationByEmail,
+  updateSponsoredApplicationReviewStatus,
+  updateSponsoredApplicationConfirmation,
+  updateSponsoredApplicationConfirmationByEmail,
+  markSponsoredApplicationForfeited,
+  getNextWaitlistApplicant,
+} from './db-sponsored';
 
 // Scholarship functions (per track)
 export async function getScholarshipCount(trackName) {

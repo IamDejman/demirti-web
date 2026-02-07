@@ -41,8 +41,7 @@ export default function FacilitatorCohortPage() {
         if (studentsRes.ok && studentsData.students) setStudents(studentsData.students);
         if (liveRes.ok && liveData.liveClasses) setLiveClasses(liveData.liveClasses);
         if (assignRes.ok && assignData.assignments) setAssignments(assignData.assignments);
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }

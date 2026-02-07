@@ -345,8 +345,7 @@ export default function AdminAnalyticsPage() {
       a.download = `analytics-${type}-${startStr}-${endStr}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Export failed');
     } finally {
       setExporting(false);
@@ -367,8 +366,7 @@ export default function AdminAnalyticsPage() {
       a.download = `lms-events-${startStr}-${endStr}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('LMS export failed');
     } finally {
       setExporting(false);
@@ -405,7 +403,7 @@ export default function AdminAnalyticsPage() {
   if (loading && !overview) {
     return (
       <div className="admin-dashboard admin-content-area">
-          <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
+          <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
             <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>Loading analytics...</p>
           </div>
         </div>
@@ -415,7 +413,7 @@ export default function AdminAnalyticsPage() {
   if (!loading && !overview) {
     return (
       <div className="admin-dashboard admin-content-area">
-          <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
+          <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
             <div style={{ ...cardStyle, maxWidth: 480, margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
               <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Analytics couldn’t load</h2>
               <p style={{ color: 'var(--text-light)', marginBottom: '1rem' }}>
@@ -438,7 +436,7 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="admin-dashboard admin-content-area">
-        <div className="container" style={{ maxWidth: 1400, margin: '0 auto', paddingTop: 100 }}>
+        <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
           {hasNoData && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, color: '#0369a1', fontSize: '0.9rem' }}>
               No data for this period yet. Data appears once visitors browse the site with tracking consent enabled (cookie banner).

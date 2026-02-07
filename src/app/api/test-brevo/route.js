@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import * as brevo from '@getbrevo/brevo';
+import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
-export async function GET(_request) {
+export async function GET(request) {
+  const admin = await getAdminOrUserFromRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // Validate API key
     if (!process.env.BREVO_API_KEY) {

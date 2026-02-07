@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { AdminPageHeader } from '../../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -68,8 +71,12 @@ export default function AdminUserDetailPage({ params }) {
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+        <AdminPageHeader
+          breadcrumb={<Link href="/admin/users">← Users</Link>}
+          title={user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User' : 'User Details'}
+          description={user?.email}
+        />
+        {message && <p className="text-sm text-gray-600 mb-4">{message}</p>}
 
         {loading ? (
           <p className="text-gray-500 mt-4">Loading user...</p>

@@ -2,7 +2,17 @@
 
 export default function AdminPageHeader({ title, description, breadcrumb, actions }) {
   return (
-    <header className="admin-page-header">
+    <div
+      className="admin-page-header"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        padding: '1.5rem',
+        marginBottom: '1.5rem',
+        borderBottom: 'none',
+      }}
+    >
       <div className="admin-page-header-main">
         <div className="admin-page-header-text">
           {breadcrumb && (
@@ -21,6 +31,6 @@ export default function AdminPageHeader({ title, description, breadcrumb, action
           </div>
         )}
       </div>
-    </header>
+    </div>
   );
 }

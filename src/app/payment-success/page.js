@@ -24,19 +24,15 @@ function PaymentSuccessContent() {
         body: JSON.stringify({ reference }),
       })
         .then(res => res.json())
-.then(data => {
-            setVerifying(false);
-            if (data.success) {
-              setVerified(true);
-              trackEvent('payment_success', { reference });
-              console.log('Payment verified and application updated');
-            } else {
-            console.error('Payment verification failed:', data.error);
+        .then(data => {
+          setVerifying(false);
+          if (data.success) {
+            setVerified(true);
+            trackEvent('payment_success', { reference });
           }
         })
-        .catch(error => {
+        .catch(() => {
           setVerifying(false);
-          console.error('Error verifying payment:', error);
         });
     }
   }, [reference, verified]);

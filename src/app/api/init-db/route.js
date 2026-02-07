@@ -4,23 +4,8 @@ import { ensureLmsSchema } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
 import { logger } from '@/lib/logger';
 
-// Initialize database tables (run once). Requires CRON_SECRET Bearer token.
+// Initialize database tables (run once). No auth required; visit the URL to run.
 export async function GET(request) {
-  const authHeader = request.headers.get('authorization') || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-  const cronSecret = process.env.CRON_SECRET;
-  const allowed = !!cronSecret && !!token && token === cronSecret;
-  if (!allowed) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn('init-db auth failed', {
-        hasCronSecret: !!cronSecret,
-        hasToken: !!token,
-        tokenLength: token?.length ?? 0,
-      });
-    }
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
     // First, check database connection
     try {

@@ -136,12 +136,9 @@ export async function sendBootcampWelcomeEmail({ email, firstName = '', lastName
 
       <div class="section">
         <h2>Platform Access</h2>
-        <p class="message">You'll receive separate emails with instructions to access:</p>
-        <ul class="steps-list">
-          <li><strong>Learning Platform (LMS):</strong> Course materials, class link recordings, and assignments</li>
-          <li><strong>Community Space:</strong> Telegram for discussions, announcements, and peer support – <a href="${TELEGRAM_LINK}" style="color: #0066cc;">Join here</a></li>
-        </ul>
-        <p class="message" style="margin-bottom: 0;">Please complete your account setup as soon as you receive these emails.</p>
+        <p class="message"><strong>Community:</strong> Join our Telegram group for discussions, announcements, and peer support – <a href="${TELEGRAM_LINK}" style="color: #0066cc;">Join here</a></p>
+        <p class="message"><strong>Learning Platform (LMS):</strong> You'll receive a separate email with login details for the LMS, where you'll access course materials, class recordings, and assignments.</p>
+        <p class="message" style="margin-bottom: 0;">Please complete your LMS account setup as soon as you receive it.</p>
       </div>
 
       <div class="section">
@@ -220,7 +217,7 @@ export async function sendBootcampWelcomeEmail({ email, firstName = '', lastName
     const { error } = await resend.emails.send({
       from: `CVERSE <${fromEmail}>`,
       to: email,
-      subject: 'Welcome to the Online Data Science Bootcamp – Next Steps',
+      subject: 'Welcome to CVerse Data Science Bootcamp – Next Steps',
       html,
     });
 

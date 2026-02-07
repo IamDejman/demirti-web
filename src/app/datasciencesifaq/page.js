@@ -230,6 +230,47 @@ const FAQ_ITEMS = [
       },
     ],
   },
+  {
+    section: 'Getting Help',
+    items: [
+      {
+        q: "I'm still having installation issues. Where can I get help?",
+        a: <>
+          <ul className="faq-list">
+            <li>Check our installation video tutorials in the course materials</li>
+            <li>Join our Telegram Community for quick support from instructors and fellow students</li>
+            <li>Email our technical support team at <a href="mailto:admin@demirti.com" className="faq-link">admin@demirti.com</a> with:
+              <ul style={{ marginTop: '0.5rem' }}>
+                <li>Your operating system and version</li>
+                <li>Error messages (screenshots are helpful)</li>
+                <li>What you&apos;ve already tried</li>
+              </ul>
+            </li>
+          </ul>
+        </>,
+      },
+      {
+        q: "What's the best way to get quick help?",
+        a: "Our Telegram Community is the fastest way to get support. Many students and instructors are active there and can help troubleshoot issues in real-time.",
+      },
+      {
+        q: 'How do I join the Telegram Community?',
+        a: "You'll receive the Telegram Community invite link in your welcome email. If you haven't received it, please email admin@demirti.com to request access.",
+      },
+      {
+        q: "Are there alternative cloud-based options if I can't install locally?",
+        a: <>
+          Yes! Consider using:
+          <ul className="faq-list">
+            <li><strong>Google Colab</strong> — Free Jupyter notebooks in the cloud</li>
+            <li><strong>Kaggle Notebooks</strong> — Free cloud-based data science environment</li>
+            <li><strong>Anaconda Cloud</strong> — Cloud-based Anaconda environment</li>
+          </ul>
+          <p style={{ marginTop: '0.75rem', marginBottom: 0 }}>These can be good temporary solutions while you resolve local installation issues. For guidance on using these platforms, reach out to us on Telegram or via email.</p>
+        </>,
+      },
+    ],
+  },
 ];
 
 function FaqItem({ item, isOpen, onToggle }) {

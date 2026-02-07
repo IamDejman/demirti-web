@@ -57,8 +57,8 @@ POSTGRES_DATABASE=your_database
 POSTGRES_PASSWORD=your_password
 
 # Other existing variables
-BREVO_API_KEY=your_brevo_key
-BREVO_FROM_EMAIL=noreply@demirti.com
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=no-reply@demirti.com
 PAYSTACK_SECRET_KEY=your_paystack_secret_key
 NEXT_PUBLIC_BASE_URL=https://your-domain.com
 ```

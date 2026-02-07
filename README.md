@@ -28,7 +28,7 @@ A modern, responsive website for Demirti Technologies' digital training programs
 
 - Next.js 14
 - React 18
-- Brevo (Email Service)
+- Resend (Email Service)
 - HTML5
 - CSS3
 - Font Awesome Icons
@@ -56,10 +56,8 @@ A modern, responsive website for Demirti Technologies' digital training programs
 4. Set up environment variables:
    Create a `.env.local` file in the root directory with the following:
    ```env
-   BREVO_API_KEY=your_brevo_api_key_here
-   BREVO_TO_EMAIL=admin@demirti.com
    RESEND_API_KEY=your_resend_api_key
-   RESEND_FROM_EMAIL=admin@demirti.com
+   RESEND_FROM_EMAIL=no-reply@demirti.com
    CLAUDE_API_KEY=your_anthropic_key
    NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
    VAPID_PRIVATE_KEY=your_vapid_private_key
@@ -72,11 +70,12 @@ A modern, responsive website for Demirti Technologies' digital training programs
    STORAGE_PUBLIC_URL=optional_public_cdn
    ```
    
-   To get your Brevo API key:
-   - Sign up or log in at [Brevo](https://www.brevo.com/)
-   - Go to Settings > API Keys
-   - Create a new API key or use an existing one
+   To get your Resend API key:
+   - Sign up or log in at [Resend](https://resend.com/)
+   - Go to API Keys
+   - Create a new API key
    - Copy the API key and paste it in your `.env.local` file
+   - Verify your domain for sending emails
 
 5. Run the development server:
    ```bash

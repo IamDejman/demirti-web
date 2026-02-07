@@ -161,6 +161,7 @@ export default function SendBootcampWelcomePage() {
         ) : (
           <>
             <div
+              className="bootcamp-welcome-list"
               style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',
@@ -169,16 +170,11 @@ export default function SendBootcampWelcomePage() {
                 overflow: 'hidden',
               }}
             >
-              <div
+              <div className="bootcamp-welcome-header"
                 style={{
                   padding: '0.75rem 1rem',
                   backgroundColor: '#f8f9fa',
                   borderBottom: '1px solid #e1e4e8',
-                  display: 'grid',
-                  gridTemplateColumns: '36px 1fr 1fr 120px',
-                  gap: '1rem',
-                  alignItems: 'center',
-                  fontSize: '0.85rem',
                   fontWeight: '600',
                   color: '#666',
                 }}
@@ -207,13 +203,10 @@ export default function SendBootcampWelcomePage() {
                   return (
                   <div
                     key={p.email}
+                    className="bootcamp-welcome-row"
                     style={{
                       padding: '0.75rem 1rem',
                       borderBottom: '1px solid #e1e4e8',
-                      display: 'grid',
-                      gridTemplateColumns: '36px 1fr 1fr 120px',
-                      gap: '1rem',
-                      alignItems: 'center',
                       fontSize: '0.9rem',
                     }}
                   >

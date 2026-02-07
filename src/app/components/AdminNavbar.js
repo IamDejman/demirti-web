@@ -124,7 +124,7 @@ export default function AdminNavbar() {
               ) : (
                 <Link key={group.id} href={group.href} style={navLinkStyle(isActive(group.href))}>{group.label}</Link>
               )
-            )}
+            ))}
             <button
               type="button"
               onClick={handleLogout}

@@ -2,15 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminFormField,
+  AdminButton,
+  AdminMessage,
+} from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+
 export default function AdminAiSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
   const [form, setForm] = useState({
     systemPrompt: '',
     dailyLimit: 50,
@@ -61,6 +72,7 @@ export default function AdminAiSettingsPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setMessageType('success');
       setMessage('AI settings updated.');
       if (data.settings) {
         setForm((prev) => ({
@@ -72,63 +84,68 @@ export default function AdminAiSettingsPage() {
         }));
       }
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to save settings.');
     }
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">AI Settings</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <AdminPageHeader
+        title="AI Settings"
+        description="Configure the AI assistant: system prompt, limits, and blocked phrases."
+      />
 
-        {loading ? (
-          <p className="text-gray-500 mt-4">Loading settings...</p>
-        ) : (
-          <form onSubmit={handleSave} className="mt-6 bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">System prompt</label>
+      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      {loading ? (
+        <p className="admin-loading">Loading settings...</p>
+      ) : (
+        <AdminCard>
+          <form onSubmit={handleSave} className="admin-form-section">
+            <AdminFormField label="System prompt">
               <textarea
                 rows={5}
                 value={form.systemPrompt}
                 onChange={(e) => setForm((prev) => ({ ...prev, systemPrompt: e.target.value }))}
-                className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className={inputClass}
               />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Daily limit</label>
+            </AdminFormField>
+            <div className="admin-form-grid">
+              <AdminFormField label="Daily limit">
                 <input
                   type="number"
                   value={form.dailyLimit}
                   onChange={(e) => setForm((prev) => ({ ...prev, dailyLimit: e.target.value }))}
-                  className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClass}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Max tokens</label>
+              </AdminFormField>
+              <AdminFormField label="Max tokens">
                 <input
                   type="number"
                   value={form.maxTokens}
                   onChange={(e) => setForm((prev) => ({ ...prev, maxTokens: e.target.value }))}
-                  className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClass}
                 />
-              </div>
+              </AdminFormField>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Blocked phrases (one per line)</label>
+            <AdminFormField
+              label="Blocked phrases (one per line)"
+              hint="Messages containing these phrases will be blocked."
+            >
               <textarea
                 rows={4}
                 value={form.blockedPhrases}
                 onChange={(e) => setForm((prev) => ({ ...prev, blockedPhrases: e.target.value }))}
-                className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className={inputClass}
               />
-              <p className="text-xs text-gray-500 mt-1">Messages containing these phrases will be blocked.</p>
-            </div>
-            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+            </AdminFormField>
+            <AdminButton type="submit" variant="primary">
               Save settings
-            </button>
+            </AdminButton>
           </form>
-        )}
+        </AdminCard>
+      )}
     </div>
   );
 }

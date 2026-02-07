@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function ImpersonatePage() {
+function ImpersonateContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -22,5 +22,17 @@ export default function ImpersonatePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <p className="text-gray-600">Opening impersonated session...</p>
     </div>
+  );
+}
+
+export default function ImpersonatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <ImpersonateContent />
+    </Suspense>
   );
 }

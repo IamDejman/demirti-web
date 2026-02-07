@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -48,56 +49,60 @@ export default function StudentOfficeHoursPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Office Hours</h1>
         <p className="text-gray-600 mt-1">Book time with facilitators for extra support.</p>
         {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
       </div>
       {loading ? (
-        <p className="text-gray-500">Loading slots...</p>
-      ) : slots.length === 0 ? (
-        <p className="text-gray-500">No office hour slots available.</p>
+        <div className="h-64 lms-skeleton rounded-xl" />
       ) : (
-        <div className="grid gap-4">
-          {slots.map((slot) => (
-            <div key={slot.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{slot.title || 'Office hour slot'}</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(slot.start_time).toLocaleString()} - {new Date(slot.end_time).toLocaleTimeString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Facilitator: {slot.first_name || ''} {slot.last_name || ''}
-                  </p>
+        <LmsCard title="Available slots" subtitle={slots.length === 0 ? undefined : `${slots.length} slot${slots.length !== 1 ? 's' : ''} available`}>
+          {slots.length === 0 ? (
+            <LmsEmptyState title="No office hour slots available" description="Check back later or contact your facilitator." />
+          ) : (
+            <div className="grid gap-4">
+              {slots.map((slot) => (
+                <div key={slot.id} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-colors">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{slot.title || 'Office hour slot'}</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {new Date(slot.start_time).toLocaleString()} – {new Date(slot.end_time).toLocaleTimeString()}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Facilitator: {slot.first_name || ''} {slot.last_name || ''}
+                      </p>
+                      {slot.description && <p className="text-sm text-gray-600 mt-2">{slot.description}</p>}
+                      {slot.meeting_link && (
+                        <a href={slot.meeting_link} className="text-sm text-primary mt-2 inline-block hover:underline">
+                          Join link
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleBook(slot.id)}
+                        className="px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
+                      >
+                        Book
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancel(slot.id)}
+                        className="px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleBook(slot.id)}
-                    className="px-3 py-2 bg-primary text-white text-sm rounded-lg"
-                  >
-                    Book
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCancel(slot.id)}
-                    className="px-3 py-2 border border-gray-300 text-sm rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-              {slot.description && <p className="text-sm text-gray-600 mt-2">{slot.description}</p>}
-              {slot.meeting_link && (
-                <a href={slot.meeting_link} className="text-sm text-primary mt-2 inline-block">
-                  Join link
-                </a>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </LmsCard>
       )}
     </div>
   );

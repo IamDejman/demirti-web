@@ -126,6 +126,44 @@ export function generateSessionToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+// Password reset (forgot-password OTP flow)
+export async function createUserPasswordReset(email, otp, expiresAt) {
+  await ensureLmsSchema();
+  const normalizedEmail = email.toLowerCase().trim();
+  await sql`DELETE FROM user_password_resets WHERE LOWER(email) = ${normalizedEmail}`;
+  await sql`
+    INSERT INTO user_password_resets (email, otp, expires_at)
+    VALUES (${normalizedEmail}, ${otp}, ${expiresAt});
+  `;
+}
+
+export async function getValidUserPasswordReset(email, otp) {
+  await ensureLmsSchema();
+  const normalizedEmail = email.toLowerCase().trim();
+  const result = await sql`
+    SELECT id, email, otp, expires_at
+    FROM user_password_resets
+    WHERE LOWER(email) = ${normalizedEmail}
+      AND otp = ${String(otp).trim()}
+      AND expires_at > CURRENT_TIMESTAMP
+    ORDER BY expires_at DESC
+    LIMIT 1;
+  `;
+  return result.rows[0] || null;
+}
+
+export async function deleteUserPasswordReset(email) {
+  await ensureLmsSchema();
+  const normalizedEmail = email.toLowerCase().trim();
+  await sql`DELETE FROM user_password_resets WHERE LOWER(email) = ${normalizedEmail}`;
+}
+
+export async function updateUserPassword(userId, newPassword) {
+  await ensureLmsSchema();
+  const passwordHash = await hashPassword(newPassword);
+  await sql`UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}`;
+}
+
 /** Get current user from request: Authorization Bearer or cookie lms_token */
 export async function getUserFromRequest(request) {
   let token = null;

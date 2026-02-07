@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminPageHeader, AdminButton } from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -99,24 +101,11 @@ export default function AdminGoalsPage() {
   return (
     <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div className="admin-page-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            <h1 className="admin-page-title">Goals</h1>
-            <button
-              type="button"
-              onClick={openNew}
-              style={{
-                padding: '0.5rem 1rem',
-                background: 'var(--primary-color)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Add goal
-            </button>
-          </div>
+          <AdminPageHeader
+            title="Goals"
+            description="Tracking goals for analytics conversion measurement."
+            actions={<AdminButton variant="primary" onClick={openNew}>Add goal</AdminButton>}
+          />
 
           {loading ? (
             <p style={{ color: 'var(--text-light)' }}>Loading goals...</p>

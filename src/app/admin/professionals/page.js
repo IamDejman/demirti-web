@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminFormField,
+  AdminButton,
+  AdminMessage,
+  AdminEmptyState,
+} from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -18,6 +27,8 @@ const emptyForm = {
   isActive: true,
 };
 
+const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+
 export default function AdminProfessionalsPage() {
   const router = useRouter();
   const [professionals, setProfessionals] = useState([]);
@@ -25,6 +36,7 @@ export default function AdminProfessionalsPage() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
 
   const loadData = async () => {
     const [profRes, trackRes] = await Promise.all([
@@ -59,11 +71,13 @@ export default function AdminProfessionalsPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setMessageType('success');
       setMessage(editingId ? 'Professional updated.' : 'Professional created.');
       setForm(emptyForm);
       setEditingId(null);
       await loadData();
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to save professional');
     }
   };
@@ -87,120 +101,142 @@ export default function AdminProfessionalsPage() {
     await loadData();
   };
 
-  return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">Industry Professionals</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+  const resetForm = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+  };
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{editingId ? 'Edit profile' : 'Add professional'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-3">
+  return (
+    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <AdminPageHeader
+        title="Industry Professionals"
+        description="Manage mentor and advisor profiles shown on the platform."
+      />
+
+      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      <AdminCard title={editingId ? 'Edit profile' : 'Add professional'}>
+        <form onSubmit={handleSubmit} className="admin-form-section">
+          <AdminFormField label="Name">
             <input
               type="text"
-              placeholder="Name"
+              placeholder="Full name"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
-            <div className="grid gap-3 md:grid-cols-2">
+          </AdminFormField>
+          <div className="admin-form-grid">
+            <AdminFormField label="Title">
               <input
                 type="text"
-                placeholder="Title"
+                placeholder="Job title"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
+            </AdminFormField>
+            <AdminFormField label="Company">
               <input
                 type="text"
-                placeholder="Company"
+                placeholder="Company name"
                 value={form.company}
                 onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
-            </div>
+            </AdminFormField>
+          </div>
+          <AdminFormField label="Bio">
             <textarea
               rows={4}
-              placeholder="Bio"
+              placeholder="Short bio"
               value={form.bio}
               onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
-            <div className="grid gap-3 md:grid-cols-2">
+          </AdminFormField>
+          <div className="admin-form-grid">
+            <AdminFormField label="Photo URL">
               <input
                 type="text"
-                placeholder="Photo URL"
+                placeholder="https://..."
                 value={form.photoUrl}
                 onChange={(e) => setForm((f) => ({ ...f, photoUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
+            </AdminFormField>
+            <AdminFormField label="LinkedIn URL">
               <input
                 type="text"
-                placeholder="LinkedIn URL"
+                placeholder="https://linkedin.com/..."
                 value={form.linkedinUrl}
                 onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
-            </div>
+            </AdminFormField>
+          </div>
+          <AdminFormField label="Track">
             <select
               value={form.trackId}
               onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             >
               <option value="">All tracks</option>
               {tracks.map((t) => (
                 <option key={t.id} value={t.id}>{t.track_name}</option>
               ))}
             </select>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-              />
-              Active
-            </label>
-            <button type="submit" className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark">
+          </AdminFormField>
+          <label className="admin-form-checkbox">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+            />
+            <span>Active</span>
+          </label>
+          <div className="admin-action-group" style={{ marginTop: '1rem' }}>
+            <AdminButton type="submit" variant="primary">
               {editingId ? 'Update' : 'Publish'}
-            </button>
+            </AdminButton>
             {editingId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(emptyForm);
-                }}
-                className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
-              >
+              <AdminButton type="button" variant="secondary" onClick={resetForm}>
                 Cancel
-              </button>
+              </AdminButton>
             )}
-          </form>
-        </div>
+          </div>
+        </form>
+      </AdminCard>
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Profiles</h2>
-          {professionals.length === 0 ? (
-            <p className="text-sm text-gray-500">No professionals yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {professionals.map((person) => (
-                <li key={person.id} className="border-b border-gray-100 pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900">{person.name}</p>
-                    <div className="flex gap-3">
-                      <button type="button" onClick={() => handleEdit(person)} className="text-xs text-primary hover:underline">Edit</button>
-                      <button type="button" onClick={() => handleDelete(person.id)} className="text-xs text-red-600 hover:underline">Delete</button>
-                    </div>
+      <AdminCard title="Profiles">
+        {professionals.length === 0 ? (
+          <AdminEmptyState message="No professionals yet." description="Add a professional above." />
+        ) : (
+          <ul className="admin-list">
+            {professionals.map((person) => (
+              <li key={person.id} className="admin-list-item">
+                <div className="admin-list-item-header">
+                  <p className="admin-list-item-title">{person.name}</p>
+                  <div className="admin-action-group">
+                    <button type="button" onClick={() => handleEdit(person)} className="admin-link admin-link-primary">
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => handleDelete(person.id)} className="admin-link admin-link-danger">
+                      Delete
+                    </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {person.title || 'Role'} · {person.company || 'Company'} {person.track_name ? `· ${person.track_name}` : ''} {person.is_active ? '' : '· Inactive'}
-                  </p>
-                  {person.bio && <p className="text-sm text-gray-500 mt-1">{person.bio}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+                </div>
+                <p className="admin-list-item-meta">
+                  {person.title || 'Role'} · {person.company || 'Company'}
+                  {person.track_name ? ` · ${person.track_name}` : ''}
+                  {!person.is_active ? ' · Inactive' : ''}
+                </p>
+                {person.bio && <p className="admin-list-item-body">{person.bio}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
+    </div>
   );
 }

@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminFormField,
+  AdminButton,
+  AdminMessage,
+  AdminEmptyState,
+} from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 const emptyForm = { name: '', trackId: '', cohortId: '' };
+const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 
 export default function AdminCourseTemplatesPage() {
   const router = useRouter();
@@ -16,6 +26,7 @@ export default function AdminCourseTemplatesPage() {
   const [cohorts, setCohorts] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
   const [applyTarget, setApplyTarget] = useState({});
 
   const loadData = async () => {
@@ -52,10 +63,12 @@ export default function AdminCourseTemplatesPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setMessageType('success');
       setMessage('Template created.');
       setForm(emptyForm);
       await loadData();
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to create template');
     }
   };
@@ -68,84 +81,95 @@ export default function AdminCourseTemplatesPage() {
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ cohortId }),
     });
+    setMessageType('success');
     setMessage('Template applied.');
+    await loadData();
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">Course Templates</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <AdminPageHeader
+        title="Course Templates"
+        description="Create templates and apply them to cohorts to structure course content."
+      />
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Create template</h2>
-          <form onSubmit={handleCreate} className="space-y-3">
+      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      <AdminCard title="Create template">
+        <form onSubmit={handleCreate} className="admin-form-section">
+          <AdminFormField label="Template name">
             <input
               type="text"
               placeholder="Template name"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
-            <div className="grid gap-3 md:grid-cols-2">
+          </AdminFormField>
+          <div className="admin-form-grid">
+            <AdminFormField label="Optional track">
               <select
                 value={form.trackId}
                 onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               >
-                <option value="">Optional track</option>
+                <option value="">Select track</option>
                 {tracks.map((t) => (
                   <option key={t.id} value={t.id}>{t.track_name}</option>
                 ))}
               </select>
+            </AdminFormField>
+            <AdminFormField label="Copy from cohort (optional)">
               <select
                 value={form.cohortId}
                 onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               >
-                <option value="">Copy from cohort (optional)</option>
+                <option value="">Select cohort</option>
                 {cohorts.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-            </div>
-            <button type="submit" className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark">
-              Create template
-            </button>
-          </form>
-        </div>
+            </AdminFormField>
+          </div>
+          <AdminButton type="submit" variant="primary">
+            Create template
+          </AdminButton>
+        </form>
+      </AdminCard>
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Templates</h2>
-          {templates.length === 0 ? (
-            <p className="text-sm text-gray-500">No templates yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {templates.map((t) => (
-                <li key={t.id} className="border-b border-gray-100 pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900">{t.name}</p>
-                    <span className="text-xs text-gray-500">{t.track_id ? 'Track template' : 'General'}</span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <select
-                      value={applyTarget[t.id] || ''}
-                      onChange={(e) => setApplyTarget((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    >
-                      <option value="">Apply to cohort</option>
-                      {cohorts.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                    <button type="button" onClick={() => handleApply(t.id)} className="px-3 py-2 bg-primary text-white text-sm rounded-lg">
-                      Apply
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      <AdminCard title="Templates">
+        {templates.length === 0 ? (
+          <AdminEmptyState message="No templates yet." description="Create a template above." />
+        ) : (
+          <ul className="admin-list">
+            {templates.map((t) => (
+              <li key={t.id} className="admin-list-item">
+                <div className="admin-list-item-header">
+                  <p className="admin-list-item-title">{t.name}</p>
+                  <span className="admin-badge">{t.track_id ? 'Track template' : 'General'}</span>
+                </div>
+                <div className="admin-action-group" style={{ marginTop: '0.75rem' }}>
+                  <select
+                    value={applyTarget[t.id] || ''}
+                    onChange={(e) => setApplyTarget((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                    className={inputClass}
+                    style={{ width: 'auto', minWidth: '180px', flex: '1 1 auto' }}
+                  >
+                    <option value="">Apply to cohort</option>
+                    {cohorts.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <AdminButton variant="primary" onClick={() => handleApply(t.id)}>
+                    Apply
+                  </AdminButton>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
+    </div>
   );
 }

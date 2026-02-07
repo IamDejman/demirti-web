@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -74,15 +75,14 @@ export default function FacilitatorOfficeHoursPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Office Hours</h1>
         <p className="text-gray-600 mt-1">Create slots and manage bookings.</p>
         {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Create slot</h2>
+      <LmsCard title="Create slot">
         <form onSubmit={handleCreate} className="mt-4 space-y-3">
           <input
             type="text"
@@ -138,16 +138,15 @@ export default function FacilitatorOfficeHoursPage() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
             Create slot
           </button>
         </form>
-      </div>
+      </LmsCard>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Your slots</h2>
+      <LmsCard title="Your slots">
         {slots.length === 0 ? (
-          <p className="text-sm text-gray-500">No slots yet.</p>
+          <LmsEmptyState title="No slots yet" description="Create a slot above to allow students to book office hours." />
         ) : (
           <ul className="space-y-3">
             {slots.map((slot) => (
@@ -188,7 +187,7 @@ export default function FacilitatorOfficeHoursPage() {
             ))}
           </ul>
         )}
-      </div>
+      </LmsCard>
     </div>
   );
 }

@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminPageHeader } from '../components/admin';
+
+function getAuthHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [stats, setStats] = useState(null);
@@ -31,7 +38,9 @@ export default function AdminDashboard() {
       // Load applications
       const trackParam = selectedTrack !== 'all' ? `&track=${encodeURIComponent(selectedTrack)}` : '';
       const statusParam = selectedStatus !== 'all' ? `&status=${selectedStatus}` : '';
-      const appsResponse = await fetch(`/api/admin/applications?${trackParam}${statusParam}`);
+      const appsResponse = await fetch(`/api/admin/applications?${trackParam}${statusParam}`, {
+        headers: getAuthHeaders(),
+      });
       const appsData = await appsResponse.json();
       
       if (appsData.success) {
@@ -66,9 +75,10 @@ export default function AdminDashboard() {
   return (
     <div className="admin-dashboard admin-dashboard-content">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div className="admin-page-header">
-            <h1 className="admin-page-title">Applications</h1>
-          </div>
+          <AdminPageHeader
+            title="Applications"
+            description="View and manage bootcamp applications, payments, and revenue."
+          />
 
 
           {loading ? (

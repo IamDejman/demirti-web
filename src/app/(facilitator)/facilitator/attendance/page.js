@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LmsCard } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -77,46 +78,49 @@ export default function FacilitatorAttendancePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <p className="text-gray-500">Loading...</p>
+      <div className="space-y-6">
+        <div className="h-8 w-48 lms-skeleton rounded-lg" />
+        <div className="h-64 lms-skeleton rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+        <p className="text-gray-600 mt-1">Mark attendance for live classes.</p>
+      </div>
+      <LmsCard title="Select cohort">
         <label className="block text-sm font-medium text-gray-700">Cohort</label>
         <select
           value={selectedCohort || ''}
           onChange={(e) => { setSelectedCohort(e.target.value || null); setSelectedClass(null); }}
-          className="mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
+          className="lms-form-select mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
         >
           <option value="">Select cohort</option>
           {cohorts.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
-      </div>
+      </LmsCard>
       {liveClasses.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <LmsCard title="Select live class">
           <label className="block text-sm font-medium text-gray-700">Live class</label>
           <select
             value={selectedClass || ''}
             onChange={(e) => setSelectedClass(e.target.value || null)}
-            className="mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
+            className="lms-form-select mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
           >
             <option value="">Select class</option>
             {liveClasses.map((lc) => (
               <option key={lc.id} value={lc.id}>{lc.weekTitle} – {formatDate(lc.scheduledAt)}</option>
             ))}
           </select>
-        </div>
+        </LmsCard>
       )}
       {selectedClass && attendance.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Mark attendance</h2>
+        <LmsCard title="Mark attendance">
           <ul className="space-y-2">
             {attendance.map((r) => (
               <li key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -125,7 +129,7 @@ export default function FacilitatorAttendancePage() {
                 <select
                   value={r.status || 'absent'}
                   onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="lms-form-select px-2 py-1 border border-gray-300 rounded text-sm"
                 >
                   <option value="present">Present</option>
                   <option value="absent">Absent</option>
@@ -138,11 +142,11 @@ export default function FacilitatorAttendancePage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="mt-6 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="mt-6 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving...' : 'Save attendance'}
           </button>
-        </div>
+        </LmsCard>
       )}
       {selectedClass && attendance.length === 0 && (
         <p className="text-gray-500">No attendance records for this class yet. Students will appear after they click &quot;Join class&quot; or you can add them from the cohort roster.</p>

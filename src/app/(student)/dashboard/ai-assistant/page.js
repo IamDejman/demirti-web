@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LmsCard } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -70,30 +71,31 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">AI Study Assistant</h1>
         <p className="text-gray-600 mt-1">Get guidance, hints, and structured explanations.</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <LmsCard title="Chat" subtitle="Ask questions about your course content">
         <div className="flex items-center gap-3 text-sm text-gray-600">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={useContext}
               onChange={(e) => setUseContext(e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             Use current week context
           </label>
         </div>
-        <div className="mt-4 h-[420px] overflow-auto border border-gray-100 rounded-lg p-4 space-y-4">
+        <div className="mt-4 h-[420px] overflow-auto border border-gray-100 rounded-lg p-4 space-y-4 bg-gray-50/50">
           {messages.length === 0 ? (
             <p className="text-sm text-gray-500">Ask a question to get started.</p>
           ) : (
             messages.map((m, idx) => (
-              <div key={idx} className={m.role === 'assistant' ? 'bg-gray-50 p-3 rounded-lg' : ''}>
-                <p className="text-xs text-gray-400">{m.role === 'assistant' ? 'Assistant' : 'You'}</p>
+              <div key={idx} className={m.role === 'assistant' ? 'bg-white p-3 rounded-lg border border-gray-100' : 'ml-8'}>
+                <p className="text-xs text-gray-400 font-medium">{m.role === 'assistant' ? 'Assistant' : 'You'}</p>
                 <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{m.content}</p>
               </div>
             ))
@@ -105,13 +107,13 @@ export default function AiAssistantPage() {
             placeholder="Ask a question..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
-          <button type="submit" disabled={loading} className="px-4 py-2 bg-primary text-white rounded-lg text-sm">
+          <button type="submit" disabled={loading} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors">
             {loading ? 'Thinking...' : 'Send'}
           </button>
         </form>
-      </div>
+      </LmsCard>
     </div>
   );
 }

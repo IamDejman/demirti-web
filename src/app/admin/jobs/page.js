@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminFormField,
+  AdminButton,
+  AdminMessage,
+  AdminTable,
+  AdminEmptyState,
+} from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -19,6 +29,8 @@ const emptyForm = {
   isActive: true,
 };
 
+const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+
 export default function AdminJobsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState([]);
@@ -28,6 +40,7 @@ export default function AdminJobsPage() {
   const [applications, setApplications] = useState([]);
   const [jobFilter, setJobFilter] = useState('');
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
 
   const loadData = async (withApps = true) => {
     const [jobRes, trackRes] = await Promise.all([
@@ -38,9 +51,7 @@ export default function AdminJobsPage() {
     const trackData = await trackRes.json();
     if (jobRes.ok && jobData.jobs) setJobs(jobData.jobs);
     if (trackRes.ok && trackData.tracks) setTracks(trackData.tracks);
-    if (withApps) {
-      await loadApplications(jobFilter);
-    }
+    if (withApps) await loadApplications(jobFilter);
   };
 
   const loadApplications = async (jobId) => {
@@ -73,11 +84,13 @@ export default function AdminJobsPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setMessageType('success');
       setMessage(editingId ? 'Job updated.' : 'Job created.');
       setForm(emptyForm);
       setEditingId(null);
       await loadData();
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to save job');
     }
   };
@@ -102,202 +115,210 @@ export default function AdminJobsPage() {
     await loadData();
   };
 
-  return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+  const resetForm = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+  };
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{editingId ? 'Edit job' : 'Create job'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-3">
+  const applicationColumns = [
+    { key: 'job_title', label: 'Job', render: (app) => app.job_title },
+    { key: 'applicant', label: 'Applicant', render: (app) => app.name || app.user_email || 'Applicant' },
+    { key: 'email', label: 'Email', render: (app) => app.email || app.user_email || '-' },
+    {
+      key: 'resume',
+      label: 'Resume',
+      render: (app) =>
+        app.resume_url ? (
+          <a href={app.resume_url} target="_blank" rel="noreferrer" className="admin-link admin-link-primary">
+            Resume
+          </a>
+        ) : (
+          <span className="admin-meta">—</span>
+        ),
+    },
+    {
+      key: 'cover_letter',
+      label: 'Cover letter',
+      render: (app) =>
+        app.cover_letter ? (
+          <span>{app.cover_letter.slice(0, 80)}{app.cover_letter.length > 80 ? '…' : ''}</span>
+        ) : (
+          <span className="admin-meta">—</span>
+        ),
+    },
+    { key: 'submitted', label: 'Submitted', render: (app) => new Date(app.created_at).toLocaleDateString() },
+  ];
+
+  return (
+    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <AdminPageHeader
+        title="Job Board"
+        description="Create and manage job listings. View applications from the job board."
+      />
+
+      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      <AdminCard title={editingId ? 'Edit job' : 'Create job'}>
+        <form onSubmit={handleSubmit} className="admin-form-section">
+          <AdminFormField label="Title">
             <input
               type="text"
-              placeholder="Title"
+              placeholder="Job title"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
-            <div className="grid gap-3 md:grid-cols-2">
+          </AdminFormField>
+          <div className="admin-form-grid">
+            <AdminFormField label="Company">
               <input
                 type="text"
-                placeholder="Company"
+                placeholder="Company name"
                 value={form.company}
                 onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
+            </AdminFormField>
+            <AdminFormField label="Location">
               <input
                 type="text"
                 placeholder="Location"
                 value={form.location}
                 onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            </AdminFormField>
+          </div>
+          <div className="admin-form-grid">
+            <AdminFormField label="Employment type">
               <input
                 type="text"
-                placeholder="Employment type"
+                placeholder="e.g. Full-time, Remote"
                 value={form.employmentType}
                 onChange={(e) => setForm((f) => ({ ...f, employmentType: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
+            </AdminFormField>
+            <AdminFormField label="Salary range">
               <input
                 type="text"
-                placeholder="Salary range"
+                placeholder="e.g. $50k–80k"
                 value={form.salaryRange}
                 onChange={(e) => setForm((f) => ({ ...f, salaryRange: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
-            </div>
+            </AdminFormField>
+          </div>
+          <AdminFormField label="Description">
             <textarea
               rows={4}
-              placeholder="Description"
+              placeholder="Job description"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
-            <div className="grid gap-3 md:grid-cols-2">
+          </AdminFormField>
+          <div className="admin-form-grid">
+            <AdminFormField label="External URL">
               <input
                 type="text"
-                placeholder="External URL"
+                placeholder="https://..."
                 value={form.externalUrl}
                 onChange={(e) => setForm((f) => ({ ...f, externalUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               />
+            </AdminFormField>
+            <AdminFormField label="Track">
               <select
                 value={form.trackId}
                 onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className={inputClass}
               >
                 <option value="">All tracks</option>
                 {tracks.map((t) => (
                   <option key={t.id} value={t.id}>{t.track_name}</option>
                 ))}
               </select>
-            </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-              />
-              Active
-            </label>
-            <button type="submit" className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark">
-              {editingId ? 'Update' : 'Publish'}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(emptyForm);
-                }}
-                className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                Cancel
-              </button>
-            )}
-          </form>
-        </div>
-
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Jobs</h2>
-          {jobs.length === 0 ? (
-            <p className="text-sm text-gray-500">No jobs yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {jobs.map((job) => (
-                <li key={job.id} className="border-b border-gray-100 pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900">{job.title}</p>
-                    <div className="flex gap-3">
-                      <button type="button" onClick={() => handleEdit(job)} className="text-xs text-primary hover:underline">Edit</button>
-                      <button type="button" onClick={() => handleDelete(job.id)} className="text-xs text-red-600 hover:underline">Delete</button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {job.company || 'Company'} · {job.location || 'Remote'} {job.track_name ? `· ${job.track_name}` : ''} {job.is_active ? '' : '· Inactive'}
-                  </p>
-                  {job.description && <p className="text-sm text-gray-500 mt-1">{job.description}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Job applications</h2>
-            <div className="flex flex-wrap gap-2">
-              <select
-                value={jobFilter}
-                onChange={async (e) => {
-                  const value = e.target.value;
-                  setJobFilter(value);
-                  await loadApplications(value);
-                }}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="">All jobs</option>
-                {jobs.map((job) => (
-                  <option key={job.id} value={job.id}>{job.title}</option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => loadApplications(jobFilter)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                Refresh
-              </button>
-            </div>
+            </AdminFormField>
           </div>
-          {applications.length === 0 ? (
-            <p className="text-sm text-gray-500">No applications yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-left text-gray-500">
-                  <tr>
-                    <th className="py-2">Job</th>
-                    <th className="py-2">Applicant</th>
-                    <th className="py-2">Email</th>
-                    <th className="py-2">Resume</th>
-                    <th className="py-2">Cover letter</th>
-                    <th className="py-2">Submitted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.map((app) => (
-                    <tr key={app.id} className="border-t border-gray-100">
-                      <td className="py-2">{app.job_title}</td>
-                      <td className="py-2">{app.name || app.user_email || 'Applicant'}</td>
-                      <td className="py-2">{app.email || app.user_email || '-'}</td>
-                      <td className="py-2">
-                        {app.resume_url ? (
-                          <a href={app.resume_url} target="_blank" rel="noreferrer" className="text-primary text-xs">
-                            Resume
-                          </a>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-2">
-                        {app.cover_letter ? (
-                          <span className="text-xs text-gray-600">{app.cover_letter.slice(0, 80)}{app.cover_letter.length > 80 ? '…' : ''}</span>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-2">{new Date(app.created_at).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <label className="admin-form-checkbox">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+            />
+            <span>Active</span>
+          </label>
+          <div className="admin-action-group" style={{ marginTop: '1rem' }}>
+            <AdminButton type="submit" variant="primary">
+              {editingId ? 'Update' : 'Publish'}
+            </AdminButton>
+            {editingId && (
+              <AdminButton type="button" variant="secondary" onClick={resetForm}>
+                Cancel
+              </AdminButton>
+            )}
+          </div>
+        </form>
+      </AdminCard>
+
+      <AdminCard title="Jobs">
+        {jobs.length === 0 ? (
+          <AdminEmptyState message="No jobs yet." description="Create a job above." />
+        ) : (
+          <ul className="admin-list">
+            {jobs.map((job) => (
+              <li key={job.id} className="admin-list-item">
+                <div className="admin-list-item-header">
+                  <p className="admin-list-item-title">{job.title}</p>
+                  <div className="admin-action-group">
+                    <button type="button" onClick={() => handleEdit(job)} className="admin-link admin-link-primary">
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => handleDelete(job.id)} className="admin-link admin-link-danger">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <p className="admin-list-item-meta">
+                  {job.company || 'Company'} · {job.location || 'Remote'}
+                  {job.track_name ? ` · ${job.track_name}` : ''}
+                  {!job.is_active ? ' · Inactive' : ''}
+                </p>
+                {job.description && <p className="admin-list-item-body">{job.description}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
+
+      <AdminCard title="Job applications">
+        <div className="admin-card-toolbar">
+          <select
+            value={jobFilter}
+            onChange={async (e) => {
+              const value = e.target.value;
+              setJobFilter(value);
+              await loadApplications(value);
+            }}
+            className={inputClass}
+            style={{ width: 'auto', minWidth: '200px' }}
+          >
+            <option value="">All jobs</option>
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>{job.title}</option>
+            ))}
+          </select>
+          <AdminButton variant="secondary" onClick={() => loadApplications(jobFilter)}>
+            Refresh
+          </AdminButton>
         </div>
-      </div>
+        {applications.length === 0 ? (
+          <AdminEmptyState message="No applications yet." description="Applications will appear here when users apply." />
+        ) : (
+          <AdminTable columns={applicationColumns} data={applications} rowKey="id" />
+        )}
+      </AdminCard>
+    </div>
   );
 }

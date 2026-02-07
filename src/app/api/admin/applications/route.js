@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
+import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getAllApplications } from '@/lib/db';
 
 // GET - Get all applications with filtering
 export async function GET(request) {
   try {
+    const admin = await getAdminOrUserFromRequest(request);
+    if (!admin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const trackName = searchParams.get('track');
     const status = searchParams.get('status'); // 'pending', 'paid', or null for all

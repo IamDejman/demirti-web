@@ -22,6 +22,11 @@ const jsonLd = {
       url: origin,
       description: "Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti's premier digital training initiative.",
       publisher: { '@type': 'Organization', name: 'CVERSE by Demirti', url: origin, logo: `${origin}/logo.png` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${origin}/jobs?q={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
     },
   ],
 }

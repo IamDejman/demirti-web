@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AdminPageHeader, AdminButton } from '../../components/admin';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -82,24 +83,15 @@ export default function AdminCohortsPage() {
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="admin-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
-          <h1 className="admin-page-title" style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>Cohorts</h1>
-          <button
-            type="button"
-            onClick={() => setShowCreate(!showCreate)}
-            style={{
-              padding: '0.5rem 1.25rem',
-              backgroundColor: '#0066cc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            {showCreate ? 'Cancel' : 'Create cohort'}
-          </button>
-        </div>
+        <AdminPageHeader
+          title="Cohorts"
+          description="Manage learning cohorts and their schedules."
+          actions={
+            <AdminButton variant={showCreate ? 'secondary' : 'primary'} onClick={() => setShowCreate(!showCreate)}>
+              {showCreate ? 'Cancel' : 'Create cohort'}
+            </AdminButton>
+          }
+        />
 
         {showCreate && (
           <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>

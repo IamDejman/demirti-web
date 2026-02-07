@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LmsCard } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -118,32 +119,36 @@ export default function ChatPanel() {
   };
 
   if (loading) {
-    return <p className="text-gray-500">Loading chat...</p>;
+    return (
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="h-96 lms-skeleton rounded-xl md:col-span-1" />
+        <div className="h-96 lms-skeleton rounded-xl md:col-span-2" />
+      </div>
+    );
   }
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      <div className="bg-white rounded-xl border border-gray-200 p-4 md:col-span-1">
-        <h2 className="text-lg font-semibold text-gray-900">Rooms</h2>
-        <form onSubmit={handleCreateDm} className="mt-4 space-y-2">
+      <LmsCard title="Rooms" className="md:col-span-1">
+        <form onSubmit={handleCreateDm} className="space-y-2">
           <input
             type="email"
             placeholder="Start DM with email"
             value={dmEmail}
             onChange={(e) => setDmEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
-          <button type="submit" className="w-full px-3 py-2 bg-primary text-white text-sm rounded-lg">
+          <button type="submit" className="w-full px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
             Start DM
           </button>
         </form>
-        <div className="mt-3">
+        <div className="mt-4">
           <input
             type="text"
             placeholder="Search rooms"
             value={roomFilter}
             onChange={(e) => setRoomFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
         </div>
         <div className="mt-3">
@@ -152,7 +157,7 @@ export default function ChatPanel() {
             placeholder="Find user by name/email"
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           {userResults.length > 0 && (
             <ul className="mt-2 space-y-1 text-sm">
@@ -203,11 +208,11 @@ export default function ChatPanel() {
             ))
           )}
         </ul>
-      </div>
+      </LmsCard>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 md:col-span-2 flex flex-col">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">{selectedRoom?.displayTitle || 'Messages'}</h2>
+      <LmsCard title={selectedRoom?.displayTitle || 'Messages'} className="md:col-span-2 flex flex-col min-h-[400px]" hoverable={false}>
+        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex items-center justify-between mb-2">
           {selectedRoom && (
             <div className="flex items-center gap-3 text-xs text-gray-500">
               <button
@@ -255,14 +260,14 @@ export default function ChatPanel() {
             {loadingOlder ? 'Loading...' : 'Load older'}
           </button>
         )}
-        <div className="mt-4 flex-1 overflow-auto border border-gray-100 rounded-lg p-3 space-y-3">
+        <div className="mt-4 flex-1 overflow-auto border border-gray-100 rounded-lg p-4 space-y-4 bg-gray-50/30 min-h-[200px]">
           {messages.length === 0 ? (
-            <p className="text-sm text-gray-500">No messages yet.</p>
+            <p className="text-sm text-gray-500">No messages yet. Start the conversation!</p>
           ) : (
             messages.map((m) => (
-              <div key={m.id} className="border-b border-gray-100 pb-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900">
+              <div key={m.id} className="flex flex-col">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-gray-500">
                     {m.first_name || m.email}
                   </p>
                   <button
@@ -277,7 +282,7 @@ export default function ChatPanel() {
                     Report
                   </button>
                 </div>
-                <p className="text-sm text-gray-700 mt-1">{m.body}</p>
+                <p className="text-sm text-gray-800 mt-1 p-2 bg-white rounded-lg border border-gray-100 shadow-sm">{m.body}</p>
               </div>
             ))
           )}
@@ -288,13 +293,14 @@ export default function ChatPanel() {
             placeholder="Type a message"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
-          <button type="submit" className="px-4 py-2 bg-primary text-white text-sm rounded-lg">
+          <button type="submit" className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
             Send
           </button>
         </form>
-      </div>
+        </div>
+      </LmsCard>
     </div>
   );
 }

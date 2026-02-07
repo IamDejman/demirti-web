@@ -2,10 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminFormField,
+  AdminButton,
+  AdminMessage,
+  AdminEmptyState,
+} from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
+
+const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 
 export default function AdminCertificatesPage() {
   const router = useRouter();
@@ -14,6 +25,7 @@ export default function AdminCertificatesPage() {
   const [cohortId, setCohortId] = useState('');
   const [cohorts, setCohorts] = useState([]);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
 
   const loadData = async () => {
     const [certRes, cohortRes] = await Promise.all([
@@ -46,11 +58,13 @@ export default function AdminCertificatesPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setMessageType('success');
       setMessage('Certificate issued.');
       setEmail('');
       setCohortId('');
       await loadData();
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to issue certificate');
     }
   };
@@ -61,59 +75,78 @@ export default function AdminCertificatesPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">Certificates</h1>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <AdminPageHeader
+        title="Certificates"
+        description="Issue completion certificates to students by email."
+      />
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Issue certificate</h2>
-          <form onSubmit={handleIssue} className="space-y-3">
+      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      <AdminCard title="Issue certificate">
+        <form onSubmit={handleIssue} className="admin-form-section">
+          <AdminFormField label="Student email">
             <input
               type="email"
-              placeholder="Student email"
+              placeholder="student@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             />
+          </AdminFormField>
+          <AdminFormField label="Cohort (optional)">
             <select
               value={cohortId}
               onChange={(e) => setCohortId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className={inputClass}
             >
-              <option value="">Select cohort (optional)</option>
+              <option value="">Select cohort</option>
               {cohorts.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
-              Issue certificate
-            </button>
-          </form>
-        </div>
+          </AdminFormField>
+          <AdminButton type="submit" variant="primary">
+            Issue certificate
+          </AdminButton>
+        </form>
+      </AdminCard>
 
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Issued certificates</h2>
-          {certificates.length === 0 ? (
-            <p className="text-sm text-gray-500">No certificates issued yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {certificates.map((cert) => (
-                <li key={cert.id} className="border-b border-gray-100 pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900">{cert.email}</p>
-                    <div className="flex gap-3">
-                      <a href={`/api/certificates/${cert.id}/pdf`} className="text-xs text-primary hover:underline">PDF</a>
-                      <button type="button" onClick={() => handleDelete(cert.id)} className="text-xs text-red-600 hover:underline">Delete</button>
-                    </div>
+      <AdminCard title="Issued certificates">
+        {certificates.length === 0 ? (
+          <AdminEmptyState message="No certificates issued yet." description="Issue a certificate above." />
+        ) : (
+          <ul className="admin-list">
+            {certificates.map((cert) => (
+              <li key={cert.id} className="admin-list-item">
+                <div className="admin-list-item-header">
+                  <p className="admin-list-item-title">{cert.email}</p>
+                  <div className="admin-action-group">
+                    <a
+                      href={`/api/certificates/${cert.id}/pdf`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="admin-link admin-link-primary"
+                    >
+                      PDF
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(cert.id)}
+                      className="admin-link admin-link-danger"
+                    >
+                      Delete
+                    </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {cert.certificate_number} · {new Date(cert.issued_at).toLocaleDateString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </div>
+                <p className="admin-list-item-meta">
+                  {cert.certificate_number} · {new Date(cert.issued_at).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
     </div>
   );
 }

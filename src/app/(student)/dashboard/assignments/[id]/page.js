@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -147,37 +148,37 @@ export default function AssignmentDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <p className="text-gray-500">Loading...</p>
+      <div className="space-y-6">
+        <div className="h-8 w-48 lms-skeleton rounded-lg" />
+        <div className="h-64 lms-skeleton rounded-xl" />
       </div>
     );
   }
 
   if (!assignment) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-600">Assignment not found.</p>
-        <Link href="/dashboard/assignments" className="text-primary font-medium mt-4 inline-block">Back to assignments</Link>
-      </div>
+      <LmsCard hoverable={false}>
+        <LmsEmptyState
+          title="Assignment not found"
+          action={<Link href="/dashboard/assignments" className="text-primary font-medium hover:underline">Back to assignments</Link>}
+        />
+      </LmsCard>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Link href="/dashboard/assignments" className="text-sm text-gray-500 hover:text-primary">← Assignments</Link>
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900">{assignment.title}</h1>
+    <div className="space-y-8">
+      <Link href="/dashboard/assignments" className="text-sm text-gray-500 hover:text-primary font-medium">← Assignments</Link>
+      <LmsCard title={assignment.title} hoverable={false}>
         {assignment.description && (
-          <div className="mt-4 text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: assignment.description }} />
+          <div className="text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: assignment.description }} />
         )}
         <p className="mt-4 text-sm text-gray-500">Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
-      </div>
+      </LmsCard>
 
       {submission ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Your submission</h2>
-          <p className="text-sm text-gray-500 mt-1">Submitted {formatDate(submission.submitted_at)}</p>
-          {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open link</a></p>}
+        <LmsCard title="Your submission" subtitle={`Submitted ${formatDate(submission.submitted_at)}`}>
+          {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open link</a></p>}
           {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
           {submission.text_content && <p className="mt-2 text-gray-700">{submission.text_content}</p>}
           {submission.status === 'graded' && (
@@ -186,10 +187,9 @@ export default function AssignmentDetailPage() {
               {submission.feedback && <p className="mt-2 text-gray-600">{submission.feedback}</p>}
             </div>
           )}
-        </div>
+        </LmsCard>
       ) : !deadlinePassed && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Submit</h2>
+        <LmsCard title="Submit">
           {message && <p className={`mt-2 text-sm ${message.startsWith('Submit') ? 'text-red-600' : 'text-green-600'}`}>{message}</p>}
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {(assignment.submission_type === 'link' || assignment.submission_type === 'multiple') && (
@@ -199,7 +199,7 @@ export default function AssignmentDetailPage() {
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="lms-form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="https://..."
                 />
               </div>
@@ -210,8 +210,8 @@ export default function AssignmentDetailPage() {
                 <textarea
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
-                  rows={6}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={6}
+                className="lms-form-textarea mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="Your response..."
                 />
               </div>
@@ -232,12 +232,12 @@ export default function AssignmentDetailPage() {
             <button
               type="submit"
               disabled={submitting || !canSubmit}
-              className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
+                className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
           </form>
-        </div>
+        </LmsCard>
       )}
 
       {deadlinePassed && !submission && (

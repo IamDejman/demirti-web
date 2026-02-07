@@ -5,4 +5,5 @@ node_modules/
 .vercel
 *.log
 .next
-data/
+data/demirti-web@0.1.0
+eslint

@@ -15,6 +15,7 @@ export default function robots() {
         '/payment-failed/',
         '/dashboard/',
         '/facilitator/',
+        '/impersonate/',
       ],
     },
     sitemap: `${origin}/sitemap.xml`,

@@ -185,7 +185,7 @@ export default function BulkEmailPage() {
     .section h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-top: 0; margin-bottom: 15px; }
     .steps-list { margin: 0; padding-left: 20px; }
     .steps-list li { margin: 10px 0; color: #666; line-height: 1.8; }
-    .cta { display: inline-block; background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; }
+    .cta { display: inline-block; background-color: #0066cc; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; }
     .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #666; font-size: 14px; border-top: 1px solid #e1e4e8; }
   </style>
 </head>
@@ -211,10 +211,9 @@ export default function BulkEmailPage() {
         </ul>
       </div>
       <p class="message">Places are limited. Secure your spot by registering today.</p>
-      <p><a href="${baseUrl}/datascience" class="cta">Register now →</a></p>
+      <p><a href="${baseUrl}/datascience" class="cta" style="color: white;">Register now →</a></p>
       <p class="message">Questions? Just reply to this email.</p>
       <div class="footer">
-        <p><strong>Best,</strong></p>
         <p>CVERSE Academy</p>
       </div>
     </div>

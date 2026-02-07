@@ -14,7 +14,7 @@ export async function POST(request, { params }) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
     if (!(await isMember(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

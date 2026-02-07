@@ -26,8 +26,8 @@ A modern, responsive website for Demirti Technologies' digital training programs
 
 ## 💻 Technologies Used
 
-- Next.js 14
-- React 18
+- Next.js 16
+- React 19
 - Resend (Email Service)
 - HTML5
 - CSS3

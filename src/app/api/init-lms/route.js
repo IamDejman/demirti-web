@@ -26,7 +26,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         error: 'Failed to initialize LMS schema',
-        details: error.message,
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
       },
       { status: 500 }
     );

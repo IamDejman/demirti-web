@@ -10,7 +10,7 @@ export async function GET(request) {
     return NextResponse.json({ success: true, goals });
   } catch (error) {
     console.error('Goals GET error:', error);
-    return NextResponse.json({ error: 'Failed to load goals', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load goals', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }
 
@@ -27,6 +27,6 @@ export async function POST(request) {
     return NextResponse.json({ success: true, goal });
   } catch (error) {
     console.error('Goals POST error:', error);
-    return NextResponse.json({ error: 'Failed to create goal', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create goal', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, { status: 500 });
   }
 }

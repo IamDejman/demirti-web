@@ -8,7 +8,7 @@ export async function DELETE(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Certificate ID required' }, { status: 400 });
     await ensureLmsSchema();
     await sql`DELETE FROM certificates WHERE id = ${id}`;

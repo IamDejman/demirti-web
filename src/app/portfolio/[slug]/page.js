@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import Navbar from '../../components/Navbar';
 
 export default async function PortfolioPublicPage({ params }) {
-  const slug = params?.slug;
+  const { slug } = await params;
   if (!slug) return notFound();
   await ensureLmsSchema();
   const portfolioRes = await sql`
@@ -55,7 +56,7 @@ export default async function PortfolioPublicPage({ params }) {
             {projectsRes.rows.map((project) => (
               <div key={project.id} className="bg-white rounded-xl border border-gray-200 p-5">
                 {project.image_url && (
-                  <img src={project.image_url} alt={project.title} className="w-full h-40 object-cover rounded-lg" />
+                  <Image src={project.image_url} alt={project.title} width={400} height={160} className="w-full h-40 object-cover rounded-lg" unoptimized />
                 )}
                 <h3 className="text-lg font-semibold text-gray-900 mt-3">{project.title}</h3>
                 {project.description && <p className="text-sm text-gray-600 mt-2">{project.description}</p>}

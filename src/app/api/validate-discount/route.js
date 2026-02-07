@@ -33,7 +33,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error validating discount:', error);
     return NextResponse.json(
-      { error: 'Failed to validate discount', details: error.message },
+      { error: 'Failed to validate discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

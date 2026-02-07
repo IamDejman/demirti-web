@@ -48,7 +48,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error checking scholarship status:', error);
     return NextResponse.json(
-      { error: 'Failed to check scholarship status', details: error.message },
+      { error: 'Failed to check scholarship status', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -97,7 +97,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error incrementing scholarship count:', error);
     return NextResponse.json(
-      { error: 'Failed to update scholarship count', details: error.message },
+      { error: 'Failed to update scholarship count', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

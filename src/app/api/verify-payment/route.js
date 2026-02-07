@@ -259,7 +259,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error verifying payment:', error);
     return NextResponse.json(
-      { error: 'Failed to verify payment', details: error.message },
+      { error: 'Failed to verify payment', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

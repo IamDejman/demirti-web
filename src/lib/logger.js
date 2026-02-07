@@ -38,3 +38,9 @@ export function reportError(error, context = {}) {
     stack: isDev && error?.stack ? error.stack : undefined,
   });
 }
+
+/** Safe error message for API responses - avoids leaking internal details in production */
+export function safeErrorMessage(error, fallback = 'Something went wrong') {
+  if (isDev && error?.message) return error.message;
+  return fallback;
+}

@@ -25,7 +25,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error getting track config:', error);
     return NextResponse.json(
-      { error: 'Failed to get track configuration', details: error.message },
+      { error: 'Failed to get track configuration', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }
@@ -60,7 +60,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error updating track config:', error);
     return NextResponse.json(
-      { error: 'Failed to update track configuration', details: error.message },
+      { error: 'Failed to update track configuration', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

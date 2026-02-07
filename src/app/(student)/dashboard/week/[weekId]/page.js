@@ -4,11 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function WeekPage() {
   const params = useParams();
@@ -24,7 +20,7 @@ export default function WeekPage() {
     if (!weekId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/weeks/${weekId}`, { headers: getAuthHeaders() });
+        const res = await fetch(`/api/weeks/${weekId}`, { headers: getLmsAuthHeaders() });
         const data = await res.json();
         if (!res.ok) {
           if (res.status === 403) setWeek({ locked: true });
@@ -35,7 +31,7 @@ export default function WeekPage() {
         setMaterials(data.materials || []);
         setChecklistItems(data.checklistItems || []);
         if (data.week?.cohort_id) {
-          const aRes = await fetch(`/api/cohorts/${data.week.cohort_id}/assignments`, { headers: getAuthHeaders() });
+          const aRes = await fetch(`/api/cohorts/${data.week.cohort_id}/assignments`, { headers: getLmsAuthHeaders() });
           const aData = await aRes.json();
           if (aRes.ok && aData.assignments) {
             setAssignments(aData.assignments.filter((a) => a.week_id === weekId));
@@ -52,7 +48,7 @@ export default function WeekPage() {
     try {
       await fetch(`/api/checklist/${itemId}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: '{}',
       });
       setChecklistItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, completed_at: new Date().toISOString() } : i)));
@@ -109,7 +105,7 @@ export default function WeekPage() {
                 try {
                   await fetch(`/api/live-classes/${week.live_class_id}/join-click`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                     body: '{}',
                   });
                 } catch {}

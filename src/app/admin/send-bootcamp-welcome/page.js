@@ -4,11 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '@/app/components/admin';
 import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 export default function SendBootcampWelcomePage() {
   const router = useRouter();

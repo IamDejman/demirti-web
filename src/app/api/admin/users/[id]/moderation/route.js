@@ -6,7 +6,7 @@ export async function POST(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const userId = params?.id;
+    const { id: userId } = await params;
     if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     const body = await request.json();
     const action = body.action;

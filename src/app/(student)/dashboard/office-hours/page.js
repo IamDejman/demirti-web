@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function StudentOfficeHoursPage() {
   const [slots, setSlots] = useState([]);
@@ -15,7 +12,7 @@ export default function StudentOfficeHoursPage() {
 
   const loadSlots = async () => {
     setLoading(true);
-    const res = await fetch('/api/office-hours/slots', { headers: getAuthHeaders() });
+    const res = await fetch('/api/office-hours/slots', { headers: getLmsAuthHeaders() });
     const data = await res.json();
     if (res.ok && data.slots) setSlots(data.slots);
     setLoading(false);
@@ -29,7 +26,7 @@ export default function StudentOfficeHoursPage() {
     setMessage('');
     const res = await fetch(`/api/office-hours/slots/${slotId}/book`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getLmsAuthHeaders(),
     });
     const data = await res.json();
     if (res.ok) {
@@ -43,7 +40,7 @@ export default function StudentOfficeHoursPage() {
   const handleCancel = async (slotId) => {
     await fetch(`/api/office-hours/slots/${slotId}/cancel`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getLmsAuthHeaders(),
     });
     await loadSlots();
   };

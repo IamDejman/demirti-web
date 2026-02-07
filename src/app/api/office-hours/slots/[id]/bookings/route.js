@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
     if (user.role !== 'facilitator' && user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Slot ID required' }, { status: 400 });
     const bookings = await getOfficeHourBookingsForSlot(id);
     return NextResponse.json({ bookings });

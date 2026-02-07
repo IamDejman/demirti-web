@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useToast } from '@/app/components/ToastProvider';
 
 const STEPS = { email: 1, otp: 2, password: 3 };
@@ -120,7 +121,7 @@ export default function ForgotPasswordPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <img src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" />
+          <Image src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" />
           <h1 className="auth-title">Reset password</h1>
           <p className="auth-subtitle">{STEP_LABELS[step]}</p>
         </div>

@@ -176,7 +176,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         error: 'Failed to send bulk email',
-        details: error.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined || 'Unknown error',
       },
       { status: 500 }
     );

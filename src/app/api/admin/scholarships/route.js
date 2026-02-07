@@ -40,7 +40,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error getting scholarship data:', error);
     return NextResponse.json(
-      { error: 'Failed to get scholarship data', details: error.message },
+      { error: 'Failed to get scholarship data', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

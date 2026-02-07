@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LmsCard } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function AiAssistantPage() {
   const [conversationId, setConversationId] = useState(null);
@@ -18,20 +15,20 @@ export default function AiAssistantPage() {
 
   useEffect(() => {
     const load = async () => {
-      const convRes = await fetch('/api/ai/conversations', { headers: getAuthHeaders() });
+      const convRes = await fetch('/api/ai/conversations', { headers: getLmsAuthHeaders() });
       const convData = await convRes.json();
       if (convRes.ok && convData.conversations?.length) {
         const conv = convData.conversations[0];
         setConversationId(conv.id);
-        const msgRes = await fetch(`/api/ai/conversations/${conv.id}`, { headers: getAuthHeaders() });
+        const msgRes = await fetch(`/api/ai/conversations/${conv.id}`, { headers: getLmsAuthHeaders() });
         const msgData = await msgRes.json();
         if (msgRes.ok && msgData.messages) setMessages(msgData.messages);
       }
-      const cohortRes = await fetch('/api/cohorts', { headers: getAuthHeaders() });
+      const cohortRes = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
       const cohortData = await cohortRes.json();
       if (cohortRes.ok && cohortData.cohorts?.length) {
         const cohortId = cohortData.cohorts[0].id;
-        const weeksRes = await fetch(`/api/cohorts/${cohortId}/weeks`, { headers: getAuthHeaders() });
+        const weeksRes = await fetch(`/api/cohorts/${cohortId}/weeks`, { headers: getLmsAuthHeaders() });
         const weeksData = await weeksRes.json();
         if (weeksRes.ok && weeksData.weeks?.length) {
           const currentWeek = weeksData.weeks.find((w) => !w.is_locked) || weeksData.weeks[0];
@@ -51,7 +48,7 @@ export default function AiAssistantPage() {
     setLoading(true);
     const res = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
       body: JSON.stringify({
         message: userMessage,
         conversationId,

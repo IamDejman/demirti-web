@@ -26,7 +26,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Analytics cron error:', error);
     return NextResponse.json(
-      { error: 'Cron failed', details: error.message },
+      { error: 'Cron failed', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

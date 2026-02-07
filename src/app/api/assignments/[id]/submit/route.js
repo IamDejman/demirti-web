@@ -10,7 +10,7 @@ export async function POST(request, { params }) {
     if (user.role !== 'student' && user.role !== 'alumni') {
       return NextResponse.json({ error: 'Only students can submit' }, { status: 403 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Assignment ID required' }, { status: 400 });
     const assignment = await getAssignmentById(id);
     if (!assignment) return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });

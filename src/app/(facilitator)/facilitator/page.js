@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function FacilitatorDashboardPage() {
   const [cohorts, setCohorts] = useState([]);
@@ -23,12 +20,12 @@ export default function FacilitatorDashboardPage() {
     (async () => {
       try {
         const [cohortsRes, queueRes, annRes, notifRes, calRes, prefRes] = await Promise.all([
-          fetch('/api/cohorts', { headers: getAuthHeaders() }),
-          fetch('/api/facilitator/grading-queue', { headers: getAuthHeaders() }),
-          fetch('/api/announcements?limit=5', { headers: getAuthHeaders() }),
-          fetch('/api/notifications?limit=5', { headers: getAuthHeaders() }),
-          fetch('/api/calendar', { headers: getAuthHeaders() }),
-          fetch('/api/notifications/preferences', { headers: getAuthHeaders() }),
+          fetch('/api/cohorts', { headers: getLmsAuthHeaders() }),
+          fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() }),
+          fetch('/api/announcements?limit=5', { headers: getLmsAuthHeaders() }),
+          fetch('/api/notifications?limit=5', { headers: getLmsAuthHeaders() }),
+          fetch('/api/calendar', { headers: getLmsAuthHeaders() }),
+          fetch('/api/notifications/preferences', { headers: getLmsAuthHeaders() }),
         ]);
         const cohortsData = await cohortsRes.json();
         const queueData = await queueRes.json();
@@ -145,7 +142,7 @@ export default function FacilitatorDashboardPage() {
             type="button"
             className="text-sm font-medium text-primary hover:underline"
             onClick={async () => {
-              await fetch('/api/notifications/read-all', { method: 'POST', headers: getAuthHeaders() });
+              await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
               setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
             }}
           >
@@ -165,7 +162,7 @@ export default function FacilitatorDashboardPage() {
                     type="button"
                     className="text-xs text-primary hover:underline"
                     onClick={async () => {
-                      await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getAuthHeaders() });
+                      await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
                       setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
                     }}
                   >
@@ -205,7 +202,7 @@ export default function FacilitatorDashboardPage() {
               setSavingPrefs(true);
               await fetch('/api/notifications/preferences', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
                 body: JSON.stringify({
                   inAppEnabled: prefs.in_app_enabled !== false,
                   emailEnabled: prefs.email_enabled !== false,

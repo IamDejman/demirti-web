@@ -102,7 +102,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('POST /api/admin/send-bootcamp-welcome:', error);
     return NextResponse.json(
-      { error: 'Failed to send bootcamp welcome emails', details: error.message },
+      { error: 'Failed to send bootcamp welcome emails', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
       { status: 500 }
     );
   }

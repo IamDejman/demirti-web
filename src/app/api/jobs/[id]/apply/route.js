@@ -6,11 +6,11 @@ import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(request, { params }) {
   try {
-    const jobId = params?.id;
+    const { id: jobId } = await params;
     if (!jobId) return NextResponse.json({ error: 'Job ID required' }, { status: 400 });
     await ensureLmsSchema();
     const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
-    const limiter = rateLimit(`job_apply_${ip}`, { windowMs: 10 * 60_000, limit: 10 });
+    const limiter = await rateLimit(`job_apply_${ip}`, { windowMs: 10 * 60_000, limit: 10 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many applications from this IP. Try later.' }, { status: 429 });
     }

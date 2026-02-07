@@ -9,7 +9,7 @@ export async function POST(request, { params }) {
     if (user.role !== 'student' && user.role !== 'alumni') {
       return NextResponse.json({ error: 'Only students can record join click' }, { status: 403 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Live class ID required' }, { status: 400 });
     const liveClass = await getLiveClassById(id);
     if (!liveClass) return NextResponse.json({ error: 'Live class not found' }, { status: 404 });

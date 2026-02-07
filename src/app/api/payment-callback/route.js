@@ -4,15 +4,16 @@ import { sql } from '@vercel/postgres';
 import { updateApplicationPayment, saveApplication, incrementScholarshipCount } from '@/lib/db';
 import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
 import { enrollPaidApplicant } from '@/lib/lms-enrollment';
+import { logger } from '@/lib/logger';
 
 async function maybeEnroll({ email, firstName, lastName, trackName, applicationId }) {
   try {
     const result = await enrollPaidApplicant({ email, firstName, lastName, trackName, applicationId });
     if (!result.enrolled) {
-      console.log('Enrollment skipped:', result.reason);
+      logger.info('Enrollment skipped', { reason: result.reason });
     }
   } catch (e) {
-    console.error('Enrollment error:', e);
+    logger.error('Enrollment error', { message: e?.message });
   }
 }
 
@@ -32,7 +33,7 @@ export async function GET(request) {
     // Validate and trim Paystack secret key
     const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
     if (!paystackSecretKey) {
-      console.error('PAYSTACK_SECRET_KEY is not configured in payment callback');
+      logger.error('PAYSTACK_SECRET_KEY is not configured in payment callback');
       if (checkOnly) {
         return NextResponse.json({ error: 'Payment service not configured' }, { status: 500 });
       }
@@ -50,10 +51,9 @@ export async function GET(request) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('Paystack verification error:', {
+      logger.error('Paystack verification error', {
         status: response.status,
         reference,
-        data: data
       });
     }
 
@@ -81,13 +81,12 @@ export async function GET(request) {
       const trackName = customFields.find(f => f.variable_name === 'track')?.value || 
                        metadata.track || '';
       
-      console.log('Payment verification successful:', {
+      logger.info('Payment verification successful', {
         reference,
-        email,
         trackName,
         amount,
         hasMetadata: !!metadata,
-        customFieldsCount: customFields.length
+        customFieldsCount: customFields.length,
       });
       
       // Update application status if we have email and track
@@ -107,14 +106,14 @@ export async function GET(request) {
           const updated = await updateApplicationPayment(email, trackName, reference, amount);
           
           if (updated) {
-            console.log('Application status updated to paid via GET callback');
+            logger.info('Application status updated to paid via GET callback');
             
             // Increment scholarship count
             try {
               await incrementScholarshipCount(trackName);
-              console.log(`Scholarship count incremented for track: ${trackName}`);
+              logger.info('Scholarship count incremented', { track: trackName });
             } catch (error) {
-              console.error('Error updating scholarship count:', error);
+              logger.error('Error updating scholarship count', { message: error?.message });
             }
             
             // Send confirmation email to user (names optional)
@@ -129,7 +128,7 @@ export async function GET(request) {
             await maybeEnroll({ email, firstName, lastName, trackName, applicationId: appData?.application_id });
           } else {
             // If updateApplicationPayment returned null, try to find and update by reference
-            console.log('No application found by email/track, trying to update by reference...');
+            logger.info('No application found by email/track, trying to update by reference');
             const result = await sql`
               UPDATE applications
               SET 
@@ -144,13 +143,13 @@ export async function GET(request) {
             `;
             
             if (result.rows.length > 0) {
-              console.log('Application updated by reference');
+              logger.info('Application updated by reference');
               // Increment scholarship count
               try {
                 await incrementScholarshipCount(trackName);
-                console.log(`Scholarship count incremented for track: ${trackName}`);
+                logger.info('Scholarship count incremented', { track: trackName });
               } catch (error) {
-                console.error('Error updating scholarship count:', error);
+                logger.error('Error updating scholarship count', { message: error?.message });
               }
               const updatedApp = result.rows[0];
               await maybeEnroll({
@@ -162,7 +161,7 @@ export async function GET(request) {
               });
             } else {
               // Last resort: try to update any application with this email and track, regardless of payment_reference
-              console.log('Trying to update any application with this email and track...');
+              logger.info('Trying to update any application with this email and track');
               const fallbackResult = await sql`
                 UPDATE applications
                 SET 
@@ -177,13 +176,13 @@ export async function GET(request) {
               `;
               
               if (fallbackResult.rows.length > 0) {
-                console.log('Application updated via fallback query');
+                logger.info('Application updated via fallback query');
                 // Increment scholarship count
                 try {
                   await incrementScholarshipCount(trackName);
-                  console.log(`Scholarship count incremented for track: ${trackName}`);
+                  logger.info('Scholarship count incremented', { track: trackName });
                 } catch (error) {
-                  console.error('Error updating scholarship count:', error);
+                  logger.error('Error updating scholarship count', { message: error?.message });
                 }
                 const updatedApp = fallbackResult.rows[0];
                 await maybeEnroll({
@@ -194,21 +193,21 @@ export async function GET(request) {
                   applicationId: updatedApp.application_id,
                 });
               } else {
-                console.log('No pending application found to update');
+                logger.info('No pending application found to update');
               }
             }
           }
         } catch (error) {
-          console.error('Error updating application status:', error);
+          logger.error('Error updating application status', { message: error?.message });
           // Continue even if update fails - webhook will handle it
         }
       } else {
-        console.log('Missing email or trackName in payment callback:', { 
-          email, 
-          trackName, 
+        logger.warn('Missing email or trackName in payment callback', { 
+          hasEmail: !!email,
+          hasTrackName: !!trackName, 
           hasCustomer: !!customer,
           hasMetadata: !!metadata,
-          metadataKeys: metadata ? Object.keys(metadata) : []
+          metadataKeys: metadata ? Object.keys(metadata) : [],
         });
         
         // Try to find application by payment reference as last resort
@@ -221,7 +220,7 @@ export async function GET(request) {
             `;
             
             if (refResult.rows.length > 0) {
-              console.log('Found application by payment reference, but already has reference set');
+              logger.info('Found application by payment reference, but already has reference set');
             } else {
               // Try to find any pending application and update it
               const pendingResult = await sql`
@@ -242,15 +241,15 @@ export async function GET(request) {
               
               if (pendingResult.rows.length > 0) {
                 const updatedApp = pendingResult.rows[0];
-                console.log('Updated most recent pending application:', updatedApp);
+                logger.info('Updated most recent pending application', { applicationId: updatedApp?.id });
                 
                 // Try to increment scholarship count if we have track name
                 if (updatedApp.track_name) {
                   try {
                     await incrementScholarshipCount(updatedApp.track_name);
-                    console.log(`Scholarship count incremented for track: ${updatedApp.track_name}`);
+                    logger.info('Scholarship count incremented', { track: updatedApp.track_name });
                   } catch (error) {
-                    console.error('Error updating scholarship count:', error);
+                    logger.error('Error updating scholarship count', { message: error?.message });
                   }
                 }
                 await maybeEnroll({
@@ -263,7 +262,7 @@ export async function GET(request) {
               }
             }
           } catch (error) {
-            console.error('Error in fallback update by reference:', error);
+            logger.error('Error in fallback update by reference', { message: error?.message });
           }
         }
       }
@@ -319,7 +318,7 @@ export async function GET(request) {
       });
     }
   } catch (error) {
-    console.error('Payment callback error:', error);
+    logger.error('Payment callback error', { message: error?.message });
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const html = `
       <!DOCTYPE html>
@@ -355,7 +354,7 @@ export async function POST(request) {
     // Verify webhook signature
     const secret = process.env.PAYSTACK_SECRET_KEY?.trim();
     if (!secret) {
-      console.error('PAYSTACK_SECRET_KEY is not configured in webhook');
+      logger.error('PAYSTACK_SECRET_KEY is not configured in webhook');
       return NextResponse.json(
         { error: 'Payment service not configured' },
         { status: 500 }
@@ -385,10 +384,9 @@ export async function POST(request) {
       const phone = customFields.find(f => f.variable_name === 'phone')?.value || '';
       const trackName = customFields.find(f => f.variable_name === 'track')?.value || '';
       
-      console.log('Payment successful:', {
+      logger.info('Payment successful', {
         reference,
-        customer: customer.email,
-        amount: amount / 100, // Convert from kobo to naira
+        amount: amount / 100,
         track: trackName,
       });
 
@@ -396,11 +394,11 @@ export async function POST(request) {
       let savedApplication = null;
       try {
         if (!customer?.email || !trackName) {
-          console.error('Webhook: Missing email or trackName:', { 
-            email: customer?.email, 
-            trackName,
+          logger.warn('Webhook: Missing email or trackName', { 
+            hasEmail: !!customer?.email, 
+            hasTrackName: !!trackName,
             hasCustomer: !!customer,
-            hasMetadata: !!metadata
+            hasMetadata: !!metadata,
           });
         } else {
           // Try to update existing pending application
@@ -411,15 +409,14 @@ export async function POST(request) {
             amount
           );
 
-          console.log('Webhook: updateApplicationPayment result:', {
+          logger.info('Webhook: updateApplicationPayment result', {
             found: !!savedApplication,
-            email: customer.email,
-            trackName
+            trackName,
           });
 
           // If no existing application found, create a new one
           if (!savedApplication) {
-            console.log('Webhook: No existing application found, creating new one');
+            logger.info('Webhook: No existing application found, creating new one');
             savedApplication = await saveApplication({
               firstName,
               lastName,
@@ -432,9 +429,9 @@ export async function POST(request) {
             });
           }
 
-          console.log('Webhook: Application saved with payment details:', {
+          logger.info('Webhook: Application saved with payment details', {
             id: savedApplication?.id,
-            status: savedApplication?.status
+            status: savedApplication?.status,
           });
         }
 
@@ -453,17 +450,17 @@ export async function POST(request) {
           });
         }
       } catch (error) {
-        console.error('Error saving application with payment:', error);
+        logger.error('Error saving application with payment', { message: error?.message });
       }
 
       // Increment scholarship count for this specific track if payment is successful
       try {
         if (trackName) {
           await incrementScholarshipCount(trackName);
-          console.log(`Scholarship count incremented for track: ${trackName}`);
+          logger.info('Scholarship count incremented', { track: trackName });
         }
       } catch (error) {
-        console.error('Error updating scholarship count:', error);
+        logger.error('Error updating scholarship count', { message: error?.message });
       }
 
       return NextResponse.json({ received: true });
@@ -471,7 +468,7 @@ export async function POST(request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', { message: error?.message });
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

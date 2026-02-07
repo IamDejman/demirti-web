@@ -4,7 +4,7 @@ import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 export async function GET(request, { params }) {
   try {
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
     const track = await getTrackByIdLms(id);
     if (!track) return NextResponse.json({ error: 'Track not found' }, { status: 404 });
@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
     const body = await request.json();
     const track = await updateTrackLms(id, {

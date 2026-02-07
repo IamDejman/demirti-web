@@ -28,10 +28,7 @@ const DATE_PRESETS = [
   { label: 'Last 365 days', days: 365 },
 ];
 
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getAuthHeaders } from '@/lib/authClient';
 
 function getDateRange(days, _customStart, _customEnd) {
   const end = new Date();

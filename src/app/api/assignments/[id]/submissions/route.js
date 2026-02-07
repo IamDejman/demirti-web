@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
   try {
     const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const id = params?.id;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Assignment ID required' }, { status: 400 });
     const assignment = await getAssignmentById(id);
     if (!assignment) return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });

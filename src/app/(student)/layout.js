@@ -3,11 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LmsLayoutShell } from '@/app/components/lms';
-
-function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function StudentLayout({ children }) {
   const router = useRouter();
@@ -20,7 +16,7 @@ export default function StudentLayout({ children }) {
       router.push('/login');
       return;
     }
-    fetch('/api/auth/me', { headers: getAuthHeaders() })
+    fetch('/api/auth/me', { headers: getLmsAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {

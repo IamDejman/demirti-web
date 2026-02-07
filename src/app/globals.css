@@ -1914,6 +1914,94 @@ textarea:focus {
   min-height: 36px;
 }
 
+/* ============================================
+   DATA SCIENCE SI FAQ PAGE
+============================================ */
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  transition: background 0.2s ease;
+}
+.faq-question:hover {
+  background: #f8f9fa;
+}
+.faq-answer {
+  padding: 0 1.25rem 1.25rem;
+  padding-left: 1.25rem;
+}
+.faq-answer-label {
+  font-weight: 600;
+  color: #0066cc;
+  margin-right: 0.25rem;
+}
+.faq-answer-content {
+  display: inline;
+  color: #666666;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+.faq-answer-content p {
+  margin: 0.5rem 0;
+  color: #666666;
+}
+.faq-answer-content p:first-child {
+  margin-top: 0;
+}
+.faq-answer-content ul,
+.faq-answer-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.faq-answer-content li {
+  margin: 0.25rem 0;
+}
+.faq-code {
+  display: block;
+  background: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  border: 1px solid #e1e4e8;
+}
+.faq-note {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
+  font-style: italic;
+  color: #666666;
+}
+.faq-link {
+  color: #0066cc;
+  text-decoration: underline;
+  font-weight: 500;
+}
+.faq-link:hover {
+  color: #004d99;
+}
+.faq-list {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.faq-list li {
+  margin: 0.35rem 0;
+  color: #666666;
+}
+.faq-ordered {
+  list-style-type: decimal;
+}
+
 .admin-moderation-actions {
   margin-top: 0.75rem;
 }

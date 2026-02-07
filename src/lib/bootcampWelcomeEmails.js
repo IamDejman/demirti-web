@@ -3,6 +3,8 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
 const TELEGRAM_LINK = 'https://t.me/+0D-tUJ90yxIzYTVk';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com';
+const FAQ_URL = `${BASE_URL}/datasciencesifaq`;
 
 export async function sendBootcampWelcomeEmail({ email, firstName = '', lastName = '' }) {
   if (!process.env.RESEND_API_KEY || !email) {
@@ -149,6 +151,7 @@ export async function sendBootcampWelcomeEmail({ email, firstName = '', lastName
           <li>Stable internet connection</li>
           <li>Installed software: Python (latest version), Anaconda, Jupyter Notebook, VS Code (recommended)</li>
         </ul>
+        <p class="message">For more details on how to install the software, visit our <a href="${FAQ_URL}" style="color: #0066cc;">FAQs page</a>.</p>
         <p class="message" style="margin-bottom: 0;">If you have any setup issues, feel free to reach out before orientation.</p>
       </div>
 

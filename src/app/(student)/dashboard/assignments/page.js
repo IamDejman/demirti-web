@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -35,49 +36,53 @@ export default function StudentAssignmentsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <p className="text-gray-500">Loading assignments...</p>
+      <div className="space-y-6">
+        <div className="h-8 w-48 lms-skeleton rounded-lg" />
+        <div className="h-64 lms-skeleton rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
-      {assignments.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <p className="text-gray-600">No assignments in this cohort yet.</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Title</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Week</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Deadline</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Max score</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignments.map((a) => (
-                <tr key={a.id} className="border-b border-gray-100 last:border-0">
-                  <td className="py-3 px-4 font-medium text-gray-900">{a.title}</td>
-                  <td className="py-3 px-4 text-gray-600">{a.week_title ?? a.week_number}</td>
-                  <td className="py-3 px-4 text-gray-600">{formatDate(a.deadline_at)}</td>
-                  <td className="py-3 px-4 text-gray-600">{a.max_score ?? 100}</td>
-                  <td className="py-3 px-4">
-                    <Link href={`/dashboard/assignments/${a.id}`} className="text-primary font-medium hover:underline">
-                      View / Submit
-                    </Link>
-                  </td>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
+        <p className="text-gray-600 mt-1">View and submit your cohort assignments.</p>
+      </div>
+      <LmsCard title="Assignments" hoverable={false}>
+        {assignments.length === 0 ? (
+          <LmsEmptyState title="No assignments in this cohort yet" description="Assignments will appear here when your facilitators add them." />
+        ) : (
+          <div className="lms-table-wrapper">
+            <table className="lms-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Week</th>
+                  <th>Deadline</th>
+                  <th>Max score</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {assignments.map((a) => (
+                  <tr key={a.id}>
+                    <td className="font-medium text-gray-900">{a.title}</td>
+                    <td className="text-gray-600">{a.week_title ?? a.week_number}</td>
+                    <td className="text-gray-600">{formatDate(a.deadline_at)}</td>
+                    <td className="text-gray-600">{a.max_score ?? 100}</td>
+                    <td>
+                      <Link href={`/dashboard/assignments/${a.id}`} className="text-primary font-medium hover:underline">
+                        View / Submit
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </LmsCard>
     </div>
   );
 }

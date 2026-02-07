@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -65,27 +66,26 @@ export default function WeekPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <p className="text-gray-500">Loading week...</p>
+      <div className="space-y-6">
+        <div className="h-8 w-48 lms-skeleton rounded-lg" />
+        <div className="h-64 lms-skeleton rounded-xl" />
       </div>
     );
   }
 
   if (!week) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-600">Week not found.</p>
-        <Link href="/dashboard" className="text-primary font-medium mt-4 inline-block">Back to dashboard</Link>
-      </div>
+      <LmsCard hoverable={false}>
+        <LmsEmptyState title="Week not found" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+      </LmsCard>
     );
   }
 
   if (week.locked) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-600">This week is not yet unlocked.</p>
-        <Link href="/dashboard" className="text-primary font-medium mt-4 inline-block">Back to dashboard</Link>
-      </div>
+      <LmsCard hoverable={false}>
+        <LmsEmptyState title="This week is not yet unlocked" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+      </LmsCard>
     );
   }
 
@@ -100,9 +100,7 @@ export default function WeekPage() {
       </div>
 
       {week.live_class_datetime && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Live class</h2>
-          <p className="text-sm text-gray-500 mt-1">{formatDate(week.live_class_datetime)}</p>
+        <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)}>
           {week.google_meet_link && (
             <a
               href={week.google_meet_link}
@@ -124,22 +122,16 @@ export default function WeekPage() {
           )}
           {week.recording_url && (
             <div className="mt-3">
-              <a
-                href={week.recording_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary text-sm font-medium hover:underline"
-              >
+              <a href={week.recording_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm font-medium hover:underline">
                 Watch recording
               </a>
             </div>
           )}
-        </div>
+        </LmsCard>
       )}
 
       {checklistItems.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Checklist</h2>
+        <LmsCard title="Checklist">
           <ul className="mt-4 space-y-2">
             {checklistItems.map((item) => (
               <li key={item.id} className="flex items-center gap-3">
@@ -157,12 +149,11 @@ export default function WeekPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
 
       {contentItems.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Content</h2>
+        <LmsCard title="Content">
           <ul className="mt-4 space-y-3">
             {contentItems.map((item) => (
               <li key={item.id}>
@@ -176,12 +167,11 @@ export default function WeekPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
 
       {materials.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Materials</h2>
+        <LmsCard title="Materials">
           <ul className="mt-4 space-y-2">
             {materials.map((m) => (
               <li key={m.id}>
@@ -192,12 +182,11 @@ export default function WeekPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
 
       {assignments.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Assignments</h2>
+        <LmsCard title="Assignments">
           <ul className="mt-4 space-y-3">
             {assignments.map((a) => (
               <li key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -208,7 +197,7 @@ export default function WeekPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
     </div>
   );

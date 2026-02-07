@@ -17,6 +17,7 @@ import {
   Bar,
   Legend,
 } from 'recharts';
+import { AdminPageHeader } from '../../components/admin';
 
 const DATE_PRESETS = [
   { label: 'Today', days: 0 },
@@ -443,37 +444,40 @@ export default function AdminAnalyticsPage() {
               No data for this period yet. Data appears once visitors browse the site with tracking consent enabled (cookie banner).
             </div>
           )}
-          <div className="admin-page-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'space-between' }}>
-            <h1 className="admin-page-title">Analytics</h1>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-              {!customRange ? (
-                <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8' }}>
-                  {DATE_PRESETS.map((p) => (
-                    <option key={p.days} value={p.days}>{p.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
-                  <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
-                </span>
-              )}
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input type="checkbox" checked={customRange} onChange={(e) => setCustomRange(e.target.checked)} />
-                Custom range
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} />
-                Compare
-              </label>
-              <button type="button" onClick={() => handleExport('events')} disabled={exporting} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', cursor: 'pointer' }}>
-                Export CSV
-              </button>
-              <button type="button" onClick={handleLmsExport} disabled={exporting} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', cursor: 'pointer' }}>
-                Export LMS events
-              </button>
-            </div>
-          </div>
+          <AdminPageHeader
+            title="Analytics"
+            description="Website and LMS analytics with customizable date ranges."
+            actions={
+              <div className="admin-action-group">
+                {!customRange ? (
+                  <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', width: 'auto' }}>
+                    {DATE_PRESETS.map((p) => (
+                      <option key={p.days} value={p.days}>{p.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
+                    <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
+                  </span>
+                )}
+                <label className="admin-form-checkbox" style={{ marginBottom: 0 }}>
+                  <input type="checkbox" checked={customRange} onChange={(e) => setCustomRange(e.target.checked)} />
+                  <span>Custom range</span>
+                </label>
+                <label className="admin-form-checkbox" style={{ marginBottom: 0 }}>
+                  <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} />
+                  <span>Compare</span>
+                </label>
+                <button type="button" onClick={() => handleExport('events')} disabled={exporting} className="admin-btn admin-btn-secondary">
+                  Export CSV
+                </button>
+                <button type="button" onClick={handleLmsExport} disabled={exporting} className="admin-btn admin-btn-secondary">
+                  Export LMS events
+                </button>
+              </div>
+            }
+          />
 
           {lmsMetrics && (
             <div style={sectionStyle}>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminPageHeader } from '../../components/admin';
+
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState([]);
   const [scholarshipRecipients, setScholarshipRecipients] = useState([]);
@@ -61,9 +63,10 @@ export default function ScholarshipsPage() {
     <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
-          <div className="admin-page-header">
-            <h1 className="admin-page-title">Scholarships</h1>
-          </div>
+          <AdminPageHeader
+            title="Scholarships"
+            description="Manage scholarship applications and recipients by track."
+          />
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: '4rem' }}>

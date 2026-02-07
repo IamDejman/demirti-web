@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { LmsCard, LmsEmptyState } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -49,43 +50,53 @@ export default function FacilitatorDashboardPage() {
     })();
   }, []);
 
+  const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <p className="text-gray-500">Loading...</p>
+      <div className="space-y-8">
+        <div className="h-10 w-64 lms-skeleton rounded-lg" />
+        <div className="h-32 lms-skeleton rounded-xl" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-40 lms-skeleton rounded-xl" />
+          <div className="h-40 lms-skeleton rounded-xl" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Facilitator dashboard</h1>
-        <p className="text-gray-600 mt-1">Your cohorts and quick actions.</p>
+      <div className="rounded-xl bg-gradient-to-br from-primary to-primary-dark p-6 text-white">
+        <h1 className="text-2xl font-bold">Facilitator dashboard</h1>
+        <p className="mt-1 text-white/90">Your cohorts and quick actions.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/facilitator/grading" className="bg-white rounded-xl border border-gray-200 p-6 hover:border-primary transition-colors block">
-          <h2 className="text-lg font-semibold text-gray-900">Grading queue</h2>
-          <p className="text-3xl font-bold text-primary mt-2">{pendingCount}</p>
-          <p className="text-sm text-gray-500 mt-1">Pending submissions</p>
+        <Link href="/facilitator/grading" className="block">
+          <LmsCard title="Grading queue">
+            <p className="text-3xl font-bold text-primary mt-2">{pendingCount}</p>
+            <p className="text-sm text-gray-500 mt-1">Pending submissions</p>
+          </LmsCard>
         </Link>
-        <Link href="/facilitator/attendance" className="bg-white rounded-xl border border-gray-200 p-6 hover:border-primary transition-colors block">
-          <h2 className="text-lg font-semibold text-gray-900">Attendance</h2>
-          <p className="text-sm text-gray-500 mt-1">Mark attendance for live classes</p>
+        <Link href="/facilitator/attendance" className="block">
+          <LmsCard title="Attendance">
+            <p className="text-sm text-gray-600 mt-2">Mark attendance for live classes</p>
+          </LmsCard>
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Your cohorts</h2>
+      <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`}>
         {cohorts.length === 0 ? (
-          <p className="text-gray-500 mt-4">No cohorts assigned yet.</p>
+          <LmsEmptyState title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-3">
             {cohorts.map((c) => (
               <li key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="font-medium text-gray-900">{c.name}</span>
-                <span className="text-sm text-gray-500">{c.track_name}</span>
+                <div>
+                  <span className="font-medium text-gray-900">{c.name}</span>
+                  <span className="text-sm text-gray-500 ml-2">{c.track_name}</span>
+                </div>
                 <Link href={`/facilitator/cohorts/${c.id}`} className="text-primary text-sm font-medium hover:underline">
                   View
                 </Link>
@@ -93,29 +104,31 @@ export default function FacilitatorDashboardPage() {
             ))}
           </ul>
         )}
-      </div>
+      </LmsCard>
 
       {events.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming events</h2>
-            <a href="/api/calendar/ics" className="text-sm text-primary font-medium hover:underline">Download .ics</a>
-          </div>
-          <ul className="mt-4 space-y-2">
+        <LmsCard
+          title="Upcoming events"
+          action={
+            <a href="/api/calendar/ics" className="text-sm font-medium text-primary hover:underline">
+              Download .ics
+            </a>
+          }
+        >
+          <ul className="space-y-2">
             {events.slice(0, 5).map((ev) => (
               <li key={ev.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span className="font-medium text-gray-900">{ev.title}</span>
-                <span className="text-sm text-gray-500">{new Date(ev.start).toLocaleString(undefined, { dateStyle: 'short' })}</span>
+                <span className="text-sm text-gray-500">{formatDate(ev.start)}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
 
       {announcements.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
-          <ul className="mt-4 space-y-3">
+        <LmsCard title="Announcements">
+          <ul className="space-y-3">
             {announcements.map((a) => (
               <li key={a.id} className="border-b border-gray-100 pb-3 last:border-0">
                 <p className="font-medium text-gray-900">{a.title}</p>
@@ -123,15 +136,15 @@ export default function FacilitatorDashboardPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </LmsCard>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
+      <LmsCard
+        title="Notifications"
+        action={
           <button
             type="button"
-            className="text-sm text-primary font-medium hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
             onClick={async () => {
               await fetch('/api/notifications/read-all', { method: 'POST', headers: getAuthHeaders() });
               setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
@@ -139,11 +152,12 @@ export default function FacilitatorDashboardPage() {
           >
             Mark all read
           </button>
-        </div>
+        }
+      >
         {notifications.length === 0 ? (
-          <p className="text-sm text-gray-500 mt-3">No notifications yet.</p>
+          <p className="text-sm text-gray-500">No notifications yet.</p>
         ) : (
-          <ul className="mt-4 space-y-2">
+          <ul className="space-y-2">
             {notifications.map((n) => (
               <li key={n.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span className={`text-sm ${n.is_read ? 'text-gray-500' : 'text-gray-900 font-medium'}`}>{n.title}</span>
@@ -163,16 +177,16 @@ export default function FacilitatorDashboardPage() {
             ))}
           </ul>
         )}
-      </div>
+      </LmsCard>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Notification preferences</h2>
-        <div className="mt-4 space-y-3">
+      <LmsCard title="Notification preferences">
+        <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
               checked={prefs.in_app_enabled !== false}
               onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             In-app notifications
           </label>
@@ -181,6 +195,7 @@ export default function FacilitatorDashboardPage() {
               type="checkbox"
               checked={prefs.email_enabled !== false}
               onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
             Email notifications (Resend)
           </label>
@@ -199,12 +214,12 @@ export default function FacilitatorDashboardPage() {
               });
               setSavingPrefs(false);
             }}
-            className="px-4 py-2 bg-primary text-white text-sm rounded-lg disabled:opacity-50"
+            className="mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
           >
             {savingPrefs ? 'Saving...' : 'Save preferences'}
           </button>
         </div>
-      </div>
+      </LmsCard>
     </div>
   );
 }

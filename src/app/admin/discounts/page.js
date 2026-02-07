@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
+import { AdminPageHeader, AdminButton } from '../../components/admin';
 
 export default function DiscountsPage() {
   const [discounts, setDiscounts] = useState([]);
@@ -260,35 +261,22 @@ export default function DiscountsPage() {
     <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
-          <div className="admin-page-header" style={{ justifyContent: 'space-between' }}>
-            <h1 className="admin-page-title">Discounts</h1>
-            <button
-              onClick={() => {
-                setShowForm(!showForm);
-                setEditingDiscount(null);
-                setFormData({ name: '', percentage: '' });
-              }}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#00c896',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#00a67d';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#00c896';
-              }}
-            >
-              {showForm ? 'Cancel' : '+ Create Discount'}
-            </button>
-          </div>
+          <AdminPageHeader
+            title="Discounts"
+            description="Create and manage discount codes for applications."
+            actions={
+              <AdminButton
+                variant={showForm ? 'secondary' : 'primary'}
+                onClick={() => {
+                  setShowForm(!showForm);
+                  setEditingDiscount(null);
+                  setFormData({ name: '', percentage: '' });
+                }}
+              >
+                {showForm ? 'Cancel' : '+ Create Discount'}
+              </AdminButton>
+            }
+          />
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: '4rem' }}>

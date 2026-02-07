@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { LmsCard } from '@/app/components/lms';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
@@ -160,7 +161,12 @@ export default function PortfolioPage() {
   };
 
   if (loading) {
-    return <p className="text-gray-500">Loading portfolio...</p>;
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-48 lms-skeleton rounded-lg" />
+        <div className="h-64 lms-skeleton rounded-xl" />
+      </div>
+    );
   }
 
   const publicUrl = portfolio?.slug ? `/portfolio/${portfolio.slug}` : null;
@@ -184,8 +190,7 @@ export default function PortfolioPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Profile details</h2>
+      <LmsCard title="Profile details">
         <form onSubmit={savePortfolio} className="mt-4 space-y-3">
           <input
             type="text"
@@ -257,14 +262,13 @@ export default function PortfolioPage() {
             />
             Make portfolio public
           </label>
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
             Save profile
           </button>
         </form>
-      </div>
+      </LmsCard>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Projects</h2>
+      <LmsCard title="Projects">
         <form onSubmit={saveProject} className="mt-4 space-y-3">
           <input
             type="text"
@@ -311,7 +315,7 @@ export default function PortfolioPage() {
             />
             {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
           </div>
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
             {editingProjectId ? 'Update project' : 'Add project'}
           </button>
           {editingProjectId && (
@@ -368,10 +372,9 @@ export default function PortfolioPage() {
             ))
           )}
         </div>
-      </div>
+      </LmsCard>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Social links</h2>
+      <LmsCard title="Social links">
         <form onSubmit={saveLink} className="mt-4 space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -438,7 +441,7 @@ export default function PortfolioPage() {
             ))
           )}
         </div>
-      </div>
+      </LmsCard>
     </div>
   );
 }

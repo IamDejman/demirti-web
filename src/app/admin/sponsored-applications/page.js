@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminPageHeader } from '../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -277,7 +279,10 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
   return (
     <>
     <div className="admin-dashboard admin-dashboard-content sponsored-apps-content" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem', boxSizing: 'border-box' }}>
-        <h1 className="admin-page-title" style={{ marginBottom: '1.5rem' }}>Sponsored Applications</h1>
+        <AdminPageHeader
+          title="Sponsored Applications"
+          description="Review and manage sponsored application submissions."
+        />
         <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <label style={{ fontWeight: '600', color: '#666' }}>Status:</label>
           <select

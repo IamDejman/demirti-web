@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cancelOfficeHourBooking, cancelOfficeHourSlot, getOfficeHourBookingsForSlot } from '@/lib/db-lms';
+import { cancelOfficeHourBooking, cancelOfficeHourSlot } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request, { params }) {

@@ -38,6 +38,7 @@ export async function ensureLmsSchema() {
         'course_templates',
         'notification_templates',
         'lms_events',
+        'user_password_resets',
         'office_hour_slots',
         'office_hour_bookings',
         'job_applications',
@@ -838,6 +839,18 @@ export async function initializeLmsSchema() {
   await sql`CREATE INDEX IF NOT EXISTS idx_lms_events_user_id ON lms_events(user_id);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_lms_events_name ON lms_events(name);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_lms_events_created_at ON lms_events(created_at);`.catch(() => {});
+
+  // User password reset (forgot-password OTP flow)
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_password_resets (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      otp VARCHAR(10) NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_user_password_resets_email_expires ON user_password_resets(email, expires_at);`.catch(() => {});
 
   console.log('LMS schema initialized');
 }

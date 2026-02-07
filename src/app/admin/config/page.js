@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '../../components/ToastProvider';
+import { AdminPageHeader } from '../../components/admin';
 
 export default function ConfigPage() {
   const [tracks, setTracks] = useState([]);
@@ -296,9 +297,10 @@ export default function ConfigPage() {
     <div className="admin-dashboard admin-content-area">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
-          <div className="admin-page-header">
-            <h1 className="admin-page-title">Configuration</h1>
-          </div>
+          <AdminPageHeader
+            title="Configuration"
+            description="Manage track settings, pricing, and admin accounts."
+          />
 
           {/* Tabs */}
           <div

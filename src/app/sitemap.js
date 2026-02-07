@@ -4,6 +4,7 @@ export default function sitemap() {
   const publicRoutes = [
     { url: '', changeFrequency: 'weekly', priority: 1 },
     { url: '/datascience', changeFrequency: 'weekly', priority: 0.9 },
+    { url: '/datasciencesifaq', changeFrequency: 'monthly', priority: 0.7 },
     { url: '/datascience/sponsored', changeFrequency: 'weekly', priority: 0.8 },
     { url: '/projectmanagement', changeFrequency: 'weekly', priority: 0.9 },
     { url: '/jobs', changeFrequency: 'weekly', priority: 0.8 },

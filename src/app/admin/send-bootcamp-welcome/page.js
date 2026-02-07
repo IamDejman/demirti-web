@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '@/app/components/admin';
 import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
@@ -17,6 +17,7 @@ export default function SendBootcampWelcomePage() {
   const [selectedEmails, setSelectedEmails] = useState(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const selectAllRef = useRef(null);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
@@ -89,6 +90,21 @@ export default function SendBootcampWelcomePage() {
       return next;
     });
   };
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedEmails(new Set(participants.map((p) => p.email)));
+    } else {
+      setSelectedEmails(new Set());
+    }
+  };
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate =
+        participants.length > 0 && selectedEmails.size > 0 && selectedEmails.size < participants.length;
+    }
+  }, [selectedEmails.size, participants.length]);
 
   const sendToSelected = () => sendEmails([...selectedEmails]);
   const sendToAll = () => sendEmails(participants.map((p) => p.email));
@@ -167,7 +183,16 @@ export default function SendBootcampWelcomePage() {
                   color: '#666',
                 }}
               >
-                <span />
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    ref={selectAllRef}
+                    checked={participants.length > 0 && selectedEmails.size === participants.length}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    aria-label="Select all"
+                    style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#0066cc' }}
+                  />
+                </label>
                 <span>Name</span>
                 <span>Email</span>
                 <span>Status</span>

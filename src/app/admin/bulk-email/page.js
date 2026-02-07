@@ -15,14 +15,11 @@ export default function BulkEmailPage() {
   const [recipients, setRecipients] = useState([]);
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
-  const [textContent, setTextContent] = useState('');
-  const [senderName, setSenderName] = useState('');
-  const [senderEmail, setSenderEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
-  const [emailInput, setEmailInput] = useState('');
-  const [nameInput, setNameInput] = useState('');
+  const [pasteEmailsInput, setPasteEmailsInput] = useState('');
   const [attachments, setAttachments] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -33,19 +30,30 @@ export default function BulkEmailPage() {
     }
   }, [router]);
 
-  const addRecipient = () => {
-    if (emailInput.trim() && emailInput.includes('@')) {
-      setRecipients([...recipients, {
-        name: nameInput.trim() || '',
-        email: emailInput.trim()
-      }]);
-      setEmailInput('');
-      setNameInput('');
-    }
-  };
-
   const removeRecipient = (index) => {
     setRecipients(recipients.filter((_, i) => i !== index));
+  };
+
+  const addFromPaste = () => {
+    const raw = pasteEmailsInput.trim();
+    if (!raw) {
+      showToast({ type: 'error', message: 'Paste some emails first.' });
+      return;
+    }
+    const parsed = raw
+      .split(/[\n,;]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e && e.includes('@'));
+    const unique = [...new Set(parsed)];
+    const existing = new Set(recipients.map((r) => r.email.toLowerCase()));
+    const newOnes = unique.filter((e) => !existing.has(e));
+    if (newOnes.length === 0) {
+      showToast({ type: 'error', message: 'No new valid emails to add (all duplicates or invalid).' });
+      return;
+    }
+    setRecipients([...recipients, ...newOnes.map((email) => ({ email, name: '' }))]);
+    setPasteEmailsInput('');
+    showToast({ type: 'success', message: `Added ${newOnes.length} recipient(s) from paste.` });
   };
 
   const handleCSVUpload = (e) => {
@@ -145,31 +153,80 @@ export default function BulkEmailPage() {
     e.target.value = '';
   };
 
-  const loadTestData = () => {
-    const testRecipients = [
-      { name: 'Timi Ojo', email: 'timilehinojo76@yahoo.com' },
-      { name: 'Ayo Elu', email: 'ayodejieluwande@gmail.com' }
-    ];
-    setRecipients(testRecipients);
-    showToast({ type: 'success', message: `Loaded ${testRecipients.length} test recipient(s).` });
-  };
+  const baseUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_BASE_URL
+    ? process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '')
+    : 'https://demirti.com';
 
-  const testBrevoConfig = async () => {
-    try {
-      const response = await fetch('/api/test-brevo', { headers: getAuthHeaders() });
-      const data = await response.json();
-
-      if (data.success) {
-        showToast({ type: 'success', message: `Brevo configuration OK. Sender: ${data.senderEmail || 'N/A'}.` });
-      } else {
-        showToast({ type: 'error', message: `Brevo configuration issue: ${data.error || 'Unknown error.'}` });
-      }
-    } catch (error) {
-      showToast({ type: 'error', message: `Error testing Brevo: ${error.message}` });
+  const loadTemplate = (templateId) => {
+    if (!templateId) return;
+    setSelectedTemplateId(templateId);
+    if (templateId === 'data-science-cohort') {
+      loadDataScienceCohortTemplate();
+    } else if (templateId === 'default') {
+      loadDefaultTemplate();
     }
   };
 
+  const loadDataScienceCohortTemplate = () => {
+    setSubject('Join the next CVerse Data Science cohort — Spots are limited');
+    setHtmlContent(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .email-container { max-width: 600px; margin: 0 auto; background-color: #fff; }
+    .header { background: linear-gradient(135deg, #0066cc 0%, #004d99 100%); color: white; padding: 40px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    .content { padding: 40px 30px; }
+    .message { font-size: 16px; color: #666; margin-bottom: 20px; line-height: 1.8; }
+    .section { background-color: #f8f9fa; border-radius: 12px; padding: 25px; margin: 25px 0; border-left: 4px solid #0066cc; }
+    .section h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-top: 0; margin-bottom: 15px; }
+    .steps-list { margin: 0; padding-left: 20px; }
+    .steps-list li { margin: 10px 0; color: #666; line-height: 1.8; }
+    .cta { display: inline-block; background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; }
+    .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #666; font-size: 14px; border-top: 1px solid #e1e4e8; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <h1>Join the next CVerse Data Science cohort</h1>
+    </div>
+    <div class="content">
+      <p class="message">Hi there,</p>
+      <p class="message">Ready to build real data science skills?</p>
+      <p class="message">Our next Data Science cohort is beginning soon. You'll learn hands-on with industry projects, guided by practitioners who've shipped data products in the real world.</p>
+      <div class="section">
+        <h2>Start date</h2>
+        <p class="message" style="margin-bottom: 0;">Saturday, February 28, 2026</p>
+      </div>
+      <div class="section">
+        <h2>What you'll get</h2>
+        <ul class="steps-list">
+          <li>Practical skills you can use immediately</li>
+          <li>Live sessions and mentor support</li>
+          <li>A focused program that fits your schedule</li>
+        </ul>
+      </div>
+      <p class="message">Places are limited. Secure your spot by registering today.</p>
+      <p><a href="${baseUrl}/datascience" class="cta">Register now →</a></p>
+      <p class="message">Questions? Just reply to this email.</p>
+      <div class="footer">
+        <p><strong>Best,</strong></p>
+        <p>CVERSE Academy</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`);
+    setStatus({ type: 'success', message: 'Data Science cohort template loaded' });
+    showToast({ type: 'success', message: 'Data Science cohort template loaded. Add recipients and send.' });
+  };
+
   const loadDefaultTemplate = () => {
+    setSubject('Message from CVERSE');
     const defaultTemplate = `<!DOCTYPE html>
 <html>
 <head>
@@ -207,12 +264,12 @@ export default function BulkEmailPage() {
     }
 
     if (!subject.trim()) {
-      showToast({ type: 'error', message: 'Please enter a subject.' });
+      showToast({ type: 'error', message: 'Please load a template first (subject comes from the template).' });
       setIsSubmitting(false);
       return;
     }
 
-    if (!htmlContent.trim() && !textContent.trim()) {
+    if (!htmlContent.trim()) {
       showToast({ type: 'error', message: 'Please enter email content.' });
       setIsSubmitting(false);
       return;
@@ -229,9 +286,6 @@ export default function BulkEmailPage() {
           recipients: validRecipients.map(r => ({ name: r.name, email: r.email })),
           subject: subject.trim(),
           htmlContent: htmlContent.trim(),
-          textContent: textContent.trim(),
-          senderName: senderName.trim() || 'CVERSE by Demirti',
-          senderEmail: senderEmail.trim() || process.env.NEXT_PUBLIC_DEFAULT_SENDER_EMAIL || 'admin@demirti.com',
           attachments: attachments.length > 0 ? attachments : undefined,
         }),
       });
@@ -246,9 +300,7 @@ export default function BulkEmailPage() {
           setRecipients([]);
           setSubject('');
           setHtmlContent('');
-          setTextContent('');
-          setSenderName('');
-          setSenderEmail('');
+          setSelectedTemplateId('');
           setAttachments([]);
         }
       } else {
@@ -264,13 +316,14 @@ export default function BulkEmailPage() {
   };
 
   return (
-    <>
-      <AdminPageHeader
-        title="Bulk Email"
-        description="Send emails to multiple recipients. Add manually or import from CSV."
-      />
-      <div style={{ minHeight: '50vh', padding: '1.5rem', backgroundColor: '#f5f5f5', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', backgroundColor: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+    <div className="admin-dashboard admin-content-area">
+      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Bulk Email"
+          description="Send emails to multiple recipients. Add manually or import from CSV."
+        />
+        <div className="bulk-email-page" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <div className="bulk-email-card">
           {status.message && (
             <div style={{
               padding: '1rem', marginBottom: '1.5rem', borderRadius: '4px',
@@ -285,40 +338,16 @@ export default function BulkEmailPage() {
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#555' }}>Sender Information</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sender Name (optional)</label>
-                  <input type="text" value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="CVERSE by Demirti"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem' }} disabled={isSubmitting} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sender Email (optional)</label>
-                  <input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem' }} disabled={isSubmitting} />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.2rem', color: '#555', margin: 0 }}>Recipients</h2>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button type="button" onClick={testBrevoConfig} disabled={isSubmitting} style={{ padding: '0.5rem 1rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: isSubmitting ? 0.5 : 1 }}>Test Brevo Config</button>
-                  <button type="button" onClick={loadTestData} disabled={isSubmitting} style={{ padding: '0.5rem 1rem', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: isSubmitting ? 0.5 : 1 }}>Load Test Data</button>
-                </div>
+              <h2 style={{ fontSize: '1.2rem', color: '#555', margin: 0, marginBottom: '1rem' }}>Recipients</h2>
+              <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Paste emails (one per line or comma-separated)</label>
+                <textarea value={pasteEmailsInput} onChange={(e) => setPasteEmailsInput(e.target.value)} placeholder="Paste emails here..."
+                  rows={3} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem', marginBottom: '0.5rem', fontFamily: 'monospace' }} />
+                <button type="button" onClick={addFromPaste} disabled={isSubmitting || !pasteEmailsInput.trim()} style={{ padding: '0.5rem 1rem', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: (!pasteEmailsInput.trim() || isSubmitting) ? 0.5 : 1 }}>Add from paste</button>
               </div>
               <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #ddd' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload CSV (Name, Email columns)</label>
                 <input type="file" accept=".csv" onChange={handleCSVUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Add Recipient</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '0.5rem' }}>
-                  <input type="text" value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Name (optional)" style={{ padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px' }} disabled={isSubmitting} />
-                  <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addRecipient(); } }} placeholder="Email" style={{ padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px' }} disabled={isSubmitting} />
-                  <button type="button" onClick={addRecipient} disabled={isSubmitting || !emailInput.trim()} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', opacity: (!emailInput.trim() || isSubmitting) ? 0.5 : 1 }}>Add</button>
-                </div>
               </div>
               <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f9f9f9' }}>
                 {recipients.length === 0 ? <p style={{ color: '#999', fontStyle: 'italic' }}>No recipients yet.</p> : (
@@ -334,24 +363,21 @@ export default function BulkEmailPage() {
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Subject *</label>
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} required placeholder="Email subject"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem' }} disabled={isSubmitting} />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ fontWeight: '500' }}>HTML Content *</label>
-                <button type="button" onClick={loadDefaultTemplate} disabled={isSubmitting} style={{ padding: '0.5rem 1rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: isSubmitting ? 0.5 : 1 }}>Load Template</button>
-              </div>
-              <input type="file" accept=".html,.htm" onChange={handleHTMLFileUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Template</label>
+              <select
+                className="bulk-email-template-select"
+                value={selectedTemplateId}
+                onChange={(e) => loadTemplate(e.target.value)}
+                disabled={isSubmitting}
+                style={{ padding: '0.5rem 0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', backgroundColor: 'white', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+              >
+                <option value="">Select a template...</option>
+                <option value="data-science-cohort">Data Science Cohort</option>
+                <option value="default">Default Template</option>
+              </select>
+              <input type="file" accept=".html,.htm" onChange={handleHTMLFileUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
+              <label style={{ display: 'block', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>HTML Content *</label>
               <textarea value={htmlContent} onChange={(e) => setHtmlContent(e.target.value)} required placeholder="HTML email content. Use {{name}} for personalization." rows={10}
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'monospace' }} disabled={isSubmitting} />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Plain Text (optional)</label>
-              <textarea value={textContent} onChange={(e) => setTextContent(e.target.value)} placeholder="Plain text fallback" rows={4}
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'monospace' }} disabled={isSubmitting} />
             </div>
 
@@ -362,6 +388,7 @@ export default function BulkEmailPage() {
           </form>
         </div>
       </div>
-    </>
+      </div>
+    </div>
   );
 }

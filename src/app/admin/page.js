@@ -49,8 +49,7 @@ export default function AdminDashboard() {
       }
 
 
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

@@ -7,7 +7,7 @@ import { rateLimit } from '@/lib/rateLimit';
 export async function POST(request) {
   try {
     const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
-    const limiter = rateLimit(`admin_login_${ip}`, { windowMs: 60_000, limit: 8 });
+    const limiter = await rateLimit(`admin_login_${ip}`, { windowMs: 60_000, limit: 8 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
     }
@@ -26,11 +26,9 @@ export async function POST(request) {
     
     // Verify credentials against database
     try {
-      console.log('Login attempt for email:', normalizedEmail);
       const admin = await verifyAdminCredentials(normalizedEmail, password);
 
       if (admin) {
-        console.log('Login successful for admin ID:', admin.id);
         const token = crypto.randomBytes(32).toString('hex');
         await createAdminSession(admin.id, token);
         return NextResponse.json({
@@ -45,14 +43,13 @@ export async function POST(request) {
           message: 'Login successful'
         });
       } else {
-        console.log('Login failed: Invalid credentials for email:', normalizedEmail);
         return NextResponse.json(
           { error: 'Invalid email or password. Please check your credentials and try again.' },
           { status: 401 }
         );
       }
     } catch (dbError) {
-      console.error('Database error during login:', dbError);
+      console.error('Database error during login');
       // Check if it's a database connection error
       if (dbError.message && dbError.message.includes('relation') && dbError.message.includes('does not exist')) {
         return NextResponse.json(
@@ -66,7 +63,7 @@ export async function POST(request) {
       throw dbError; // Re-throw to be caught by outer catch
     }
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error');
     
     if (error.message === 'Admin account is disabled') {
       return NextResponse.json(

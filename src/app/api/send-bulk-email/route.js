@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import * as brevo from '@getbrevo/brevo';
+import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 export async function POST(request) {
+  const admin = await getAdminOrUserFromRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { recipients, subject, htmlContent, textContent, senderName, senderEmail, attachments } = body;

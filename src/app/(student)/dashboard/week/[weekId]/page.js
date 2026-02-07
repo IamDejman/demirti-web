@@ -41,8 +41,7 @@ export default function WeekPage() {
             setAssignments(aData.assignments.filter((a) => a.week_id === weekId));
           }
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -57,8 +56,7 @@ export default function WeekPage() {
         body: '{}',
       });
       setChecklistItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, completed_at: new Date().toISOString() } : i)));
-    } catch (e) {
-      console.error(e);
+    } catch {
     }
   };
 

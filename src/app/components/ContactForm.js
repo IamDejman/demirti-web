@@ -41,12 +41,11 @@ export default function ContactForm() {
           message: data.error || 'There was a problem sending your message. Please try again.',
         });
       }
-    } catch (error) {
+    } catch {
       showToast({
         type: 'error',
         message: 'There was a problem sending your message. Please try again or email admin@demirti.com directly.',
       });
-      console.error('Error:', error);
     } finally {
       setIsSubmitting(false);
     }

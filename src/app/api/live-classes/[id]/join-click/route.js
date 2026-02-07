@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getLiveClassById, upsertAttendanceJoinClick } from '@/lib/db-lms';
-import { sql } from '@vercel/postgres';
-import { ensureLmsSchema } from '@/lib/db-lms';
+import { getLiveClassById, upsertAttendanceJoinClick, isStudentInCohort } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
-
-async function isStudentInCohort(cohortId, studentId) {
-  await ensureLmsSchema();
-  const r = await sql`SELECT 1 FROM cohort_students WHERE cohort_id = ${cohortId} AND student_id = ${studentId} LIMIT 1`;
-  return r.rows.length > 0;
-}
 
 export async function POST(request, { params }) {
   try {

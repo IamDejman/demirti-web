@@ -119,8 +119,7 @@ export default function ApplicationForm({
           message: data.message || 'Invalid discount code'
         });
       }
-    } catch (error) {
-      console.error('Error validating discount:', error);
+    } catch {
       setAppliedDiscount(null);
       showToast({
         type: 'error',
@@ -161,8 +160,7 @@ export default function ApplicationForm({
         const statusResponse = await fetch(`/api/scholarship-status?track=${encodeURIComponent(trackName)}`);
         const statusData = await statusResponse.json();
         finalScholarshipAvailable = statusData.available || false;
-      } catch (error) {
-        console.error('Error checking scholarship status:', error);
+      } catch {
         // Use cached value if check fails
       }
 
@@ -201,8 +199,7 @@ export default function ApplicationForm({
               : formData.referralSource,
           }),
         });
-      } catch (saveError) {
-        console.error('Error saving application:', saveError);
+      } catch {
         // Continue with payment even if save fails
         showToast({
           type: 'error',
@@ -233,8 +230,7 @@ export default function ApplicationForm({
         try {
           setIsPaystackLoading(true);
           await loadPaystackScript();
-        } catch (scriptError) {
-          console.error(scriptError);
+        } catch {
           showToast({
             type: 'error',
             message: 'Unable to load payment widget. Please check your connection and try again.',
@@ -277,7 +273,6 @@ export default function ApplicationForm({
           setTimeout(() => clearInterval(pollInterval), 600000);
         } else {
           // Fallback to redirect if PaystackPop is not loaded
-          console.warn('PaystackPop not found, falling back to redirect');
           if (data.authorization_url) {
             window.location.href = data.authorization_url;
           } else {
@@ -294,13 +289,12 @@ export default function ApplicationForm({
         });
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch {
       showToast({
         type: 'error',
         message: 'An unexpected error occurred while starting payment. Please try again.',
       });
       setIsSubmitting(false);
-      console.error('Error:', error);
     }
   };
 

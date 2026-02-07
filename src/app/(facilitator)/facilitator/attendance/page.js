@@ -67,8 +67,7 @@ export default function FacilitatorAttendancePage() {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ updates }),
       });
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally {
       setSaving(false);
     }

@@ -2,16 +2,32 @@ import { NextResponse } from 'next/server';
 import { initializeDatabase } from '@/lib/db';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
+import { logger } from '@/lib/logger';
 
-// Initialize database tables (run once)
-export async function GET() {
+// Initialize database tables (run once). Requires CRON_SECRET Bearer token.
+export async function GET(request) {
+  const authHeader = request.headers.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const cronSecret = process.env.CRON_SECRET;
+  const allowed = !!cronSecret && !!token && token === cronSecret;
+  if (!allowed) {
+    if (process.env.NODE_ENV === 'development') {
+      logger.warn('init-db auth failed', {
+        hasCronSecret: !!cronSecret,
+        hasToken: !!token,
+        tokenLength: token?.length ?? 0,
+      });
+    }
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // First, check database connection
     try {
       await sql`SELECT 1 as test`;
-      console.log('Database connection successful');
+      logger.info('Database connection successful');
     } catch (connError) {
-      console.error('Database connection error:', connError);
+      logger.error('Database connection error', { hint: connError?.message });
       return NextResponse.json(
         { 
           error: 'Database connection failed',
@@ -31,7 +47,7 @@ export async function GET() {
       ORDER BY table_name;
     `;
     
-    console.log('Existing tables:', tablesCheck.rows.map(r => r.table_name));
+    logger.info('Existing tables', { tables: tablesCheck.rows.map(r => r.table_name) });
 
     // Initialize database
     await initializeDatabase();
@@ -42,7 +58,7 @@ export async function GET() {
       await ensureLmsSchema();
       lmsOk = true;
     } catch (lmsErr) {
-      console.warn('LMS schema init skipped or failed:', lmsErr.message);
+      logger.warn('LMS schema init skipped or failed', { message: lmsErr.message });
       lmsError = lmsErr.message;
     }
 
@@ -78,8 +94,8 @@ export async function GET() {
     `;
     const lmsTablesPresent = lmsCheck.rows.map((r) => r.table_name);
 
-    console.log('Tables after initialization:', tablesAfter.rows.map(r => r.table_name));
-    console.log('LMS tables present:', lmsTablesPresent);
+    logger.info('Tables after initialization', { tables: tablesAfter.rows.map(r => r.table_name) });
+    logger.info('LMS tables present', { tables: lmsTablesPresent });
 
     return NextResponse.json({
       success: true,
@@ -91,8 +107,7 @@ export async function GET() {
       lmsTablesPresent: lmsTablesPresent.length > 0 ? lmsTablesPresent : undefined
     });
   } catch (error) {
-    console.error('Database initialization error:', error);
-    console.error('Error stack:', error.stack);
+    logger.error('Database initialization error', { message: error?.message });
     return NextResponse.json(
       { 
         error: 'Failed to initialize database',

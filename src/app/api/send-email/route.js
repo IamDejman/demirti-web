@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import * as brevo from '@getbrevo/brevo';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(request) {
+  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const limiter = await rateLimit(`contact_form_${ip}`, { windowMs: 60_000, limit: 5 });
+  if (!limiter.allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     const { name, email, message, subject, recipients } = body;

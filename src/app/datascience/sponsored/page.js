@@ -36,7 +36,7 @@ export default function SponsoredCohortPage() {
             margin: '0 auto',
             border: '1px solid #e1e4e8'
           }}>
-            <SponsoredApplicationForm cohortName="Data Science Feb 2026" />
+            <SponsoredApplicationForm />
           </div>
         </div>
       </section>

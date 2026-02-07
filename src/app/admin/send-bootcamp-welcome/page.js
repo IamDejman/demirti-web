@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '@/app/components/admin';
+import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -32,7 +33,7 @@ export default function SendBootcampWelcomePage() {
     try {
       const [appsRes, sponsoredRes] = await Promise.all([
         fetch('/api/admin/applications?track=Data%20Science', { headers: getAuthHeaders() }),
-        fetch('/api/admin/sponsored-applications?reviewStatus=accepted&cohortName=Data%20Science%20Feb%202026', {
+        fetch(`/api/admin/sponsored-applications?reviewStatus=accepted&cohortName=${encodeURIComponent(DEFAULT_SPONSORED_COHORT)}`, {
           headers: getAuthHeaders(),
         }),
       ]);
@@ -73,8 +74,7 @@ export default function SendBootcampWelcomePage() {
 
       setParticipants(list);
       setSelectedEmails(new Set());
-    } catch (err) {
-      console.error(err);
+    } catch {
       setMessage({ type: 'error', text: 'Failed to load participants' });
     } finally {
       setLoading(false);
@@ -121,8 +121,7 @@ export default function SendBootcampWelcomePage() {
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to send emails' });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setMessage({ type: 'error', text: 'An error occurred while sending emails' });
     } finally {
       setIsSubmitting(false);

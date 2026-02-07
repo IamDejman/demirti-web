@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminPageHeader } from '../../components/admin';
+
 export default function AdminExportsPage() {
   const router = useRouter();
 
@@ -18,8 +20,10 @@ export default function AdminExportsPage() {
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-        <h1 className="text-2xl font-bold text-gray-900">Data Exports</h1>
-        <p className="text-sm text-gray-600 mt-2">Download CSV exports for LMS operations.</p>
+        <AdminPageHeader
+          title="Data Exports"
+          description="Download CSV exports for LMS operations (users, cohort enrollments, submissions, attendance)."
+        />
         <div className="mt-6 grid gap-3">
           <button type="button" className="px-4 py-2 bg-primary text-white rounded-lg text-sm" onClick={() => download('users')}>
             Export users

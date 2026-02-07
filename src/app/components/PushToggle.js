@@ -51,7 +51,6 @@ export default function PushToggle() {
     }
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!publicKey) {
-      console.warn('Missing NEXT_PUBLIC_VAPID_PUBLIC_KEY');
       setLoading(false);
       return;
     }

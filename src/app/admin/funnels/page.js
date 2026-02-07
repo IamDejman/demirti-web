@@ -33,8 +33,7 @@ export default function AdminFunnelsPage() {
       const data = await res.json();
       if (res.ok && data.success) setFunnels(data.funnels || []);
       else if (res.status === 401) router.push('/admin/login');
-    } catch (err) {
-      console.error(err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -61,8 +60,7 @@ export default function AdminFunnelsPage() {
       } else {
         alert(data.error || 'Failed to save');
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Failed to save funnel');
     }
   };
@@ -74,8 +72,7 @@ export default function AdminFunnelsPage() {
       const data = await res.json();
       if (res.ok && data.success) loadFunnels();
       else alert(data.error || 'Failed to delete');
-    } catch (err) {
-      console.error(err);
+    } catch {
     }
   };
 

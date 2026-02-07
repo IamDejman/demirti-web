@@ -24,8 +24,7 @@ export default function StudentAssignmentsPage() {
           const aData = await aRes.json();
           if (aRes.ok && aData.assignments) setAssignments(aData.assignments);
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }

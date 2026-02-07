@@ -22,7 +22,9 @@ function isValidLinkedInUrl(url) {
   }
 }
 
-export default function SponsoredApplicationForm({ cohortName = 'Data Science Feb 2026' }) {
+import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
+
+export default function SponsoredApplicationForm({ cohortName = DEFAULT_SPONSORED_COHORT }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -130,8 +132,7 @@ export default function SponsoredApplicationForm({ cohortName = 'Data Science Fe
         type: 'success',
         message: "Application received. We'll review and get back to you."
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
       showToast({
         type: 'error',
         message: 'Something went wrong. Please try again.'

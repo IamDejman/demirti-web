@@ -33,8 +33,7 @@ export default function AdminCohortsPage() {
       const res = await fetch('/api/cohorts', { headers: getAuthHeaders() });
       const data = await res.json();
       if (res.ok && data.cohorts) setCohorts(data.cohorts);
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -45,8 +44,7 @@ export default function AdminCohortsPage() {
       const res = await fetch('/api/tracks');
       const data = await res.json();
       if (res.ok && data.tracks) setTracks(data.tracks);
-    } catch (e) {
-      console.error(e);
+    } catch {
     }
   };
 
@@ -73,8 +71,7 @@ export default function AdminCohortsPage() {
       } else {
         alert(data.error || 'Failed to create cohort');
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert('Failed to create cohort');
     }
   };

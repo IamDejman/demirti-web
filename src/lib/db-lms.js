@@ -48,7 +48,6 @@ export async function ensureLmsSchema() {
         SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = 'public'
-          AND table_name = ANY(${requiredTables});
       `;
       const existing = new Set(tableCheck.rows.map((r) => r.table_name));
       const hasAll = requiredTables.every((t) => existing.has(t));
@@ -1578,6 +1577,13 @@ export async function getCohortIdsForUser(userId, role) {
     return res.rows.map((r) => r.cohort_id);
   }
   return [];
+}
+
+/** Check if a user is enrolled as a student in a cohort. */
+export async function isStudentInCohort(cohortId, studentId) {
+  await ensureLmsSchema();
+  const r = await sql`SELECT 1 FROM cohort_students WHERE cohort_id = ${cohortId} AND student_id = ${studentId} LIMIT 1`;
+  return r.rows.length > 0;
 }
 
 export async function getAnnouncementsForUser(userId, role, limit = 50) {

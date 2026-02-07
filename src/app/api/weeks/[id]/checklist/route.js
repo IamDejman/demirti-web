@@ -1,20 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getWeekById, getChecklistItemsByWeek, createChecklistItem, getCohortFacilitators } from '@/lib/db-lms';
-import { sql } from '@vercel/postgres';
-import { ensureLmsSchema } from '@/lib/db-lms';
-import { getUserFromRequest } from '@/lib/auth';
-import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
-
-async function isStudentInCohort(cohortId, studentId) {
-  await ensureLmsSchema();
-  const r = await sql`SELECT 1 FROM cohort_students WHERE cohort_id = ${cohortId} AND student_id = ${studentId} LIMIT 1`;
-  return r.rows.length > 0;
-}
+import { getWeekById, getChecklistItemsByWeek, createChecklistItem, getCohortFacilitators, isStudentInCohort } from '@/lib/db-lms';
+import { requireAdminOrUser } from '@/lib/adminAuth';
 
 export async function GET(request, { params }) {
   try {
-    const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const [user, errorRes] = await requireAdminOrUser(request);
+    if (errorRes) return errorRes;
     const id = params?.id;
     if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
@@ -36,8 +27,8 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   try {
-    const user = await getAdminOrUserFromRequest(request) || (await getUserFromRequest(request));
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const [user, errorRes] = await requireAdminOrUser(request);
+    if (errorRes) return errorRes;
     const id = params?.id;
     if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);

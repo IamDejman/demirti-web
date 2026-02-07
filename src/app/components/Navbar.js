@@ -57,7 +57,7 @@ export default function Navbar() {
   return (
     <header>
       <div className="container header-container">
-        <Image src="/logo.png" alt="CVERSE Logo" className="logo" width={150} height={50} />
+        <Image src="/logo.png" alt="CVERSE Logo" className="logo" width={150} height={50} style={{ width: 'auto', height: 'auto' }} />
         <nav>
           <ul className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <li>

@@ -66,8 +66,7 @@ export default function AdminLogin() {
         });
         setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch {
       showToast({
         type: 'error',
         message: 'An error occurred during login. Please try again.'

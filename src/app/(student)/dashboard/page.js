@@ -78,8 +78,7 @@ export default function StudentDashboardPage() {
         if (calRes.ok && calData.events) setEvents(calData.events);
         if (prefRes.ok && prefData.preferences) setPrefs(prefData.preferences);
         if (certRes.ok && certData.certificates) setCertificates(certData.certificates);
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }

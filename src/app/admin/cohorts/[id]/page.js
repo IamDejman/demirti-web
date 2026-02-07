@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AdminPageHeader } from '../../../components/admin';
+
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -94,8 +96,7 @@ export default function AdminCohortDetailPage() {
         if (facRes.ok && facData.facilitators) setFacilitators(facData.facilitators);
         if (weeksRes.ok && weeksData.weeks) setWeeks(weeksData.weeks);
         if (liveRes.ok && liveData.liveClasses) setLiveClasses(liveData.liveClasses);
-      } catch (e) {
-        console.error(e);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -449,9 +450,11 @@ export default function AdminCohortDetailPage() {
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-        <Link href="/admin/cohorts" className="text-sm text-gray-500 hover:text-primary mb-4 inline-block">← Cohorts</Link>
-        <h1 className="text-2xl font-bold text-gray-900">{cohort.name}</h1>
-        <p className="text-gray-600 mt-1">{cohort.track_name} · {formatDate(cohort.start_date)} – {formatDate(cohort.end_date)} · {cohort.status}</p>
+        <AdminPageHeader
+          breadcrumb={<Link href="/admin/cohorts">← Cohorts</Link>}
+          title={cohort.name}
+          description={`${cohort.track_name} · ${formatDate(cohort.start_date)} – ${formatDate(cohort.end_date)} · ${cohort.status}`}
+        />
 
         <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Enroll student</h2>

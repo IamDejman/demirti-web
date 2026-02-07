@@ -2,6 +2,12 @@
 const path = require('path');
 
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/bulk-email', destination: '/admin/bulk-email', permanent: true },
+      { source: '/bulk-email/', destination: '/admin/bulk-email', permanent: true },
+    ];
+  },
   // Set project root to prevent workspace detection issues
   turbopack: {
     // Explicitly set the root directory to prevent workspace detection issues

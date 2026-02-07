@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
   const rawHost = request.headers.get('host') || '';
   const host = rawHost.split(':')[0].toLowerCase();
@@ -29,24 +29,6 @@ export async function middleware(request) {
       }
     } catch {
       // ignore lookup failures
-    }
-  }
-  const lmsToken = request.cookies.get('lms_token')?.value;
-  const adminToken = request.cookies.get('admin_token')?.value;
-
-  // Student / facilitator dashboard: require LMS cookie (or client will redirect via layout)
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/facilitator')) {
-    if (!lmsToken) {
-      const login = new URL('/login', request.url);
-      return NextResponse.redirect(login);
-    }
-  }
-
-  // Admin: optional cookie check (admin often uses localStorage; layout handles redirect)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !pathname.startsWith('/admin/forgot-password')) {
-    if (!adminToken && !lmsToken) {
-      // No cookie - let client layout handle redirect if they use localStorage
-      return NextResponse.next();
     }
   }
 

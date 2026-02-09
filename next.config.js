@@ -41,6 +41,26 @@ const nextConfig = {
         ],
       },
       {
+        // CDN: long-lived cache for static assets (1 year, immutable)
+        source: '/(favicon.ico|logo.png|logo.svg|3.jpg|CVerse_Datascience.jpg|CVerse_ProjectMgt.jpg)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ],
+      },
+      {
+        // Service worker: shorter cache for faster updates
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=86400, stale-while-revalidate'
+          }
+        ],
+      },
+      {
         // Apply restrictive CORS headers only to API routes
         source: '/api/:path*',
         headers: [

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sqlRead } from '@/lib/db-read';
 import { getCohortIdsForUser } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -10,7 +10,7 @@ export async function GET(request) {
     const cohortIds = await getCohortIdsForUser(user.id, user.role);
 
     const liveRes = cohortIds.length > 0
-      ? await sql`
+      ? await sqlRead`
           SELECT lc.id, lc.scheduled_at, lc.google_meet_link, w.title AS week_title, c.name AS cohort_name
           FROM live_classes lc
           JOIN weeks w ON w.id = lc.week_id
@@ -19,7 +19,7 @@ export async function GET(request) {
         `
       : { rows: [] };
     const assignRes = cohortIds.length > 0
-      ? await sql`
+      ? await sqlRead`
           SELECT a.id, a.deadline_at, a.title, c.name AS cohort_name
           FROM assignments a
           JOIN cohorts c ON c.id = a.cohort_id
@@ -28,13 +28,13 @@ export async function GET(request) {
       : { rows: [] };
 
     const officeRes = user.role === 'facilitator'
-      ? await sql`
+      ? await sqlRead`
           SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
           FROM office_hour_slots s
           LEFT JOIN cohorts c ON c.id = s.cohort_id
           WHERE s.facilitator_id = ${user.id} AND s.is_cancelled = false;
         `
-      : await sql`
+      : await sqlRead`
           SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
           FROM office_hour_bookings b
           JOIN office_hour_slots s ON s.id = b.slot_id

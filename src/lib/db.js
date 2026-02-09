@@ -1,3 +1,7 @@
+/**
+ * Primary database connection for writes and init.
+ * For read-only queries (public catalogs, analytics), use sqlRead from @/lib/db-read.
+ */
 import { sql } from '@vercel/postgres';
 import { DEFAULT_SPONSORED_COHORT, validateEnv } from './config';
 

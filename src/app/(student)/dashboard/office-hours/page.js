@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -47,17 +48,15 @@ export default function StudentOfficeHoursPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Office Hours</h1>
-        <p className="text-gray-600 mt-1">Book time with facilitators for extra support.</p>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
-      </div>
+      <LmsPageHeader title="Office Hours" subtitle="Book time with facilitators for extra support." icon={LmsIcons.clock}>
+        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
+      </LmsPageHeader>
       {loading ? (
         <div className="h-64 lms-skeleton rounded-xl" />
       ) : (
         <LmsCard title="Available slots" subtitle={slots.length === 0 ? undefined : `${slots.length} slot${slots.length !== 1 ? 's' : ''} available`}>
           {slots.length === 0 ? (
-            <LmsEmptyState title="No office hour slots available" description="Check back later or contact your facilitator." />
+            <LmsEmptyState icon={LmsIcons.calendar} title="No office hour slots available" description="Check back later or contact your facilitator." />
           ) : (
             <div className="grid gap-4">
               {slots.map((slot) => (

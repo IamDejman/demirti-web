@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PushToggle from '../../components/PushToggle';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -110,14 +111,12 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-xl bg-gradient-to-br from-primary to-primary-dark p-6 text-white">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="mt-1 text-white/90">Welcome back. Here&apos;s your learning overview.</p>
-      </div>
+      <LmsPageHeader title="Dashboard" subtitle="Welcome back. Here&apos;s your learning overview." />
 
       {!currentCohort ? (
         <LmsCard hoverable={false}>
           <LmsEmptyState
+            icon={LmsIcons.inbox}
             title="You're not enrolled in any cohort yet"
             description="Contact support or check the catalog for available tracks."
           />
@@ -125,7 +124,7 @@ export default function StudentDashboardPage() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <LmsCard title="Current cohort" subtitle={currentCohort.track_name}>
+            <LmsCard title="Current cohort" subtitle={currentCohort.track_name} icon={LmsIcons.graduation}>
               <p className="text-primary font-semibold">{currentCohort.name}</p>
               {currentCohort.start_date && (
                 <p className="text-sm text-gray-500 mt-1">
@@ -134,16 +133,16 @@ export default function StudentDashboardPage() {
               )}
               <p className="text-sm text-gray-600 mt-2">Week {currentCohort.current_week ?? 1} of 12</p>
             </LmsCard>
-            <LmsCard title="Course progress">
-              <div className="mt-2 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+            <LmsCard title="Course progress" icon={LmsIcons.chart}>
+              <div className="mt-2 lms-progress-bar">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  className="lms-progress-bar-fill"
                   style={{ width: `${weekProgressPercent}%` }}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2">{Math.round(weekProgressPercent)}% complete</p>
             </LmsCard>
-            <LmsCard title="Portfolio" subtitle="Build your public profile and showcase projects.">
+            <LmsCard title="Portfolio" subtitle="Build your public profile and showcase projects." icon={LmsIcons.briefcase}>
               <Link
                 href="/dashboard/portfolio"
                 className="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
@@ -176,10 +175,10 @@ export default function StudentDashboardPage() {
             </LmsCard>
           )}
 
-          <LmsCard title="Checklist progress">
-            <div className="mt-2 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+          <LmsCard title="Checklist progress" icon={LmsIcons.checkCircle}>
+            <div className="mt-2 lms-progress-bar">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
+                className="lms-progress-bar-fill"
                 style={{ width: `${completionPercent}%` }}
               />
             </div>
@@ -191,6 +190,7 @@ export default function StudentDashboardPage() {
           {upcomingDeadlines.length > 0 && (
             <LmsCard
               title="Upcoming deadlines"
+              icon={LmsIcons.bell}
               action={
                 <Link href="/dashboard/assignments" className="text-sm font-medium text-primary hover:underline">
                   View all
@@ -211,6 +211,7 @@ export default function StudentDashboardPage() {
           {events.length > 0 && (
             <LmsCard
               title="Upcoming events"
+              icon={LmsIcons.calendar}
               action={
                 <a href="/api/calendar/ics" className="text-sm font-medium text-primary hover:underline">
                   Download .ics
@@ -229,7 +230,7 @@ export default function StudentDashboardPage() {
           )}
 
           {announcements.length > 0 && (
-            <LmsCard title="Announcements">
+            <LmsCard title="Announcements" icon={LmsIcons.megaphone}>
               <ul className="space-y-3">
                 {announcements.map((a) => (
                   <li key={a.id} className="border-b border-gray-100 pb-3 last:border-0">
@@ -242,7 +243,7 @@ export default function StudentDashboardPage() {
           )}
 
           {certificates.length > 0 && (
-            <LmsCard title="Certificates">
+            <LmsCard title="Certificates" icon={LmsIcons.trophy}>
               <ul className="space-y-2">
                 {certificates.map((c) => (
                   <li key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -258,6 +259,7 @@ export default function StudentDashboardPage() {
 
           <LmsCard
             title="Notifications"
+            icon={LmsIcons.bell}
             action={
               <button
                 type="button"
@@ -316,25 +318,34 @@ export default function StudentDashboardPage() {
                 />
                 Email notifications (Resend)
               </label>
-              <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm text-gray-600">
-                <div>
-                  <p className="font-medium text-gray-700">In-app categories</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm text-gray-600">
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.bell}</span>
+                    <p className="font-semibold text-gray-900 text-sm">In-app</p>
+                  </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_grades !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_grades: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Grades</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_deadlines !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_deadlines: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Deadlines</label>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-700">Email categories</p>
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.megaphone}</span>
+                    <p className="font-semibold text-gray-900 text-sm">Email</p>
+                  </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_grades !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_grades: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Grades</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_deadlines !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_deadlines: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Deadlines</label>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-700">Push categories</p>
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.chat}</span>
+                    <p className="font-semibold text-gray-900 text-sm">Push</p>
+                  </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>

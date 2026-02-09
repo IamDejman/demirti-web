@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LmsLayoutShell } from '@/app/components/lms';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import AuditPageViewTracker from '@/app/components/AuditPageViewTracker';
 
 export default function FacilitatorLayout({ children }) {
   const router = useRouter();
@@ -66,6 +67,7 @@ export default function FacilitatorLayout({ children }) {
 
   return (
     <LmsLayoutShell variant="facilitator" user={user} pendingCount={pendingCount}>
+      <AuditPageViewTracker />
       {children}
     </LmsLayoutShell>
   );

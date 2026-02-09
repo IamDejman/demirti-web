@@ -91,7 +91,7 @@ export default function AdminNavbar() {
       <nav className="admin-nav">
         <div className="admin-nav-inner">
           <Link href="/admin" className="admin-nav-logo" onClick={closeMenu}>
-            <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-nav-logo-img" style={{ width: 'auto', height: 'auto' }} />
+            <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-nav-logo-img" style={{ width: 'auto', height: 'auto' }} priority />
           </Link>
 
           <div className="admin-nav-desktop" ref={navRef}>

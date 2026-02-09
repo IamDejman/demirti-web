@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -58,10 +59,7 @@ export default function FacilitatorGradingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Grading queue</h1>
-        <p className="text-gray-600 mt-1">Review and grade student submissions.</p>
-      </div>
+      <LmsPageHeader title="Grading queue" subtitle="Review and grade student submissions." icon={LmsIcons.grading} />
 
       {grading ? (
         <LmsCard title="Grade submission" subtitle={`${grading.assignment_title} · ${grading.first_name} ${grading.last_name}`}>
@@ -108,7 +106,7 @@ export default function FacilitatorGradingPage() {
 
       <LmsCard title="Pending submissions" hoverable={false}>
         {submissions.length === 0 ? (
-          <LmsEmptyState title="No pending submissions to grade" description="New submissions will appear here when students submit." />
+          <LmsEmptyState icon={LmsIcons.checkCircle} title="No pending submissions to grade" description="New submissions will appear here when students submit." />
         ) : (
           <div className="lms-table-wrapper">
             <table className="lms-table">

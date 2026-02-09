@@ -29,6 +29,7 @@ const DATE_PRESETS = [
 ];
 
 import { getAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 function getDateRange(days, _customStart, _customEnd) {
   const end = new Date();
@@ -201,10 +202,10 @@ export default function AdminAnalyticsPage() {
     }
   }, [queryDays, checkAuth]);
 
-  // Use event-log path; /api/admin/analytics/events is often blocked by content blockers (ERR_BLOCKED_BY_CONTENT_BLOCKER).
+  // Use /insights/activity only - /analytics/event-log is often blocked by content blockers.
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/analytics/event-log?days=${queryDays}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admin/insights/activity?days=${queryDays}`, { headers: getAuthHeaders() });
       if (checkAuth(res)) return;
       const data = await res.json();
       if (res.ok && data.success) setEventsData(data.data);
@@ -370,8 +371,6 @@ export default function AdminAnalyticsPage() {
     }
   };
 
-  const cardStyle = { backgroundColor: 'white', padding: '1.5rem', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' };
-  const sectionStyle = { ...cardStyle, marginBottom: '1.5rem' };
 
   const pctChange = (curr, prev) => {
     if (prev == null || prev === 0) return null;
@@ -399,43 +398,38 @@ export default function AdminAnalyticsPage() {
 
   if (loading && !overview) {
     return (
-      <div className="admin-dashboard admin-content-area">
-          <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
-            <p style={{ textAlign: 'center', color: 'var(--text-light)' }}>Loading analytics...</p>
-          </div>
+      <div className="admin-dashboard admin-content-area admin-analytics-page">
+        <div className="admin-analytics-loading">
+          <div className="admin-analytics-loading-spinner" />
+          <p className="admin-loading">Loading analytics...</p>
         </div>
+      </div>
     );
   }
 
   if (!loading && !overview) {
     return (
-      <div className="admin-dashboard admin-content-area">
-          <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
-            <div style={{ ...cardStyle, maxWidth: 480, margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Analytics couldn’t load</h2>
-              <p style={{ color: 'var(--text-light)', marginBottom: '1rem' }}>
-                Your session may have expired. Log out and log in again, then open Analytics.
-              </p>
-              <button
-                type="button"
-                onClick={() => router.push('/admin/login')}
-                style={{ padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
-              >
-                Go to login
-              </button>
-            </div>
-          </div>
+      <div className="admin-dashboard admin-content-area admin-analytics-page">
+        <div className="admin-analytics-empty">
+              <h2 >Analytics couldn’t load</h2>
+          <p style={{ color: 'var(--text-light)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
+            Your session may have expired. Log out and log in again, then open Analytics.
+          </p>
+          <button type="button" onClick={() => router.push('/admin/login')} className="admin-btn admin-btn-primary">
+            Go to login
+          </button>
         </div>
+      </div>
     );
   }
 
   const hasNoData = overview && overview.totalPageviews === 0 && overview.totalSessions === 0;
 
   return (
-    <div className="admin-dashboard admin-content-area">
-        <div className="container" style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <div className="admin-dashboard admin-content-area admin-analytics-page">
+        <div className="container">
           {hasNoData && (
-            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, color: '#0369a1', fontSize: '0.9rem' }}>
+            <div className="admin-analytics-no-data">
               No data for this period yet. Data appears once visitors browse the site with tracking consent enabled (cookie banner).
             </div>
           )}
@@ -443,17 +437,17 @@ export default function AdminAnalyticsPage() {
             title="Analytics"
             description="Website and LMS analytics with customizable date ranges."
             actions={
-              <div className="admin-action-group">
+              <div className="admin-action-group admin-analytics-header-actions">
                 {!customRange ? (
-                  <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', width: 'auto' }}>
+                  <select value={days} onChange={(e) => setDays(Number(e.target.value))} className="admin-analytics-select">
                     {DATE_PRESETS.map((p) => (
                       <option key={p.days} value={p.days}>{p.label}</option>
                     ))}
                   </select>
                 ) : (
-                  <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
-                    <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #e1e4e8' }} />
+                  <span className="admin-analytics-daterange">
+                    <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+                    <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
                   </span>
                 )}
                 <label className="admin-form-checkbox" style={{ marginBottom: 0 }}>
@@ -464,50 +458,52 @@ export default function AdminAnalyticsPage() {
                   <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} />
                   <span>Compare</span>
                 </label>
-                <button type="button" onClick={() => handleExport('events')} disabled={exporting} className="admin-btn admin-btn-secondary">
-                  Export CSV
-                </button>
-                <button type="button" onClick={handleLmsExport} disabled={exporting} className="admin-btn admin-btn-secondary">
-                  Export LMS events
-                </button>
+                <div className="admin-analytics-export-btns">
+                  <button type="button" onClick={() => handleExport('events')} disabled={exporting} className="admin-btn admin-btn-secondary">
+                    Export CSV
+                  </button>
+                  <button type="button" onClick={handleLmsExport} disabled={exporting} className="admin-btn admin-btn-secondary">
+                    Export LMS events
+                  </button>
+                </div>
               </div>
             }
           />
 
           {lmsMetrics && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS metrics</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Active cohorts</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.cohorts?.active ?? 0}</p>
-                  <p style={{ fontSize: '0.75rem', color: '#999' }}>Total: {lmsMetrics.cohorts?.total ?? 0}</p>
+            <div className="admin-analytics-section">
+              <h2>LMS metrics</h2>
+              <div className="admin-analytics-stats-grid">
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Active cohorts</p>
+                  <p className="admin-analytics-stat-value">{lmsMetrics.cohorts?.active ?? 0}</p>
+                  <p className="admin-analytics-stat-meta">Total: {lmsMetrics.cohorts?.total ?? 0}</p>
                 </div>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Enrolled students</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.enrolledStudents ?? 0}</p>
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Enrolled students</p>
+                  <p className="admin-analytics-stat-value">{lmsMetrics.enrolledStudents ?? 0}</p>
                 </div>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Completion rate</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.completion?.rate ?? 0}%</p>
-                  <p style={{ fontSize: '0.75rem', color: '#999' }}>
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Completion rate</p>
+                  <p className="admin-analytics-stat-value">{lmsMetrics.completion?.rate ?? 0}%</p>
+                  <p className="admin-analytics-stat-meta">
                     {lmsMetrics.completion?.completed ?? 0} / {lmsMetrics.completion?.total ?? 0}
                   </p>
                 </div>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Average grade</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Average grade</p>
+                  <p className="admin-analytics-stat-value">
                     {lmsMetrics.avgScore ? lmsMetrics.avgScore.toFixed(1) : '—'}
                   </p>
                 </div>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Submissions</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.submissions ?? 0}</p>
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Submissions</p>
+                  <p className="admin-analytics-stat-value">{lmsMetrics.submissions ?? 0}</p>
                 </div>
-                <div style={cardStyle}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4 }}>Attendance</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{lmsMetrics.attendance?.present ?? 0}</p>
-                  <p style={{ fontSize: '0.75rem', color: '#999' }}>Total: {lmsMetrics.attendance?.total ?? 0}</p>
+                <div className="admin-analytics-stat-card">
+                  <p className="admin-analytics-stat-label">Attendance</p>
+                  <p className="admin-analytics-stat-value">{lmsMetrics.attendance?.present ?? 0}</p>
+                  <p className="admin-analytics-stat-meta">Total: {lmsMetrics.attendance?.total ?? 0}</p>
                 </div>
               </div>
               {Array.isArray(lmsMetrics.roles) && lmsMetrics.roles.length > 0 && (
@@ -519,9 +515,9 @@ export default function AdminAnalyticsPage() {
           )}
 
           {lmsSeries.length > 0 && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS time-series</h2>
-              <div style={{ width: '100%', height: 320 }}>
+            <div className="admin-analytics-section">
+              <h2>LMS time-series</h2>
+              <div className="admin-analytics-chart-wrap">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={lmsSeries}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -539,9 +535,9 @@ export default function AdminAnalyticsPage() {
           )}
 
           {Array.isArray(lmsFunnel) && lmsFunnel.length > 0 && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Completion funnel</h2>
-              <div style={{ width: '100%', height: 260 }}>
+            <div className="admin-analytics-section">
+              <h2>Completion funnel</h2>
+              <div className="admin-analytics-chart-wrap" style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={lmsFunnel}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -556,19 +552,19 @@ export default function AdminAnalyticsPage() {
           )}
 
           {Array.isArray(lmsCohorts) && lmsCohorts.length > 0 && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Cohort comparisons</h2>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: '0.9rem' }}>
+            <div className="admin-analytics-section">
+              <h2>Cohort comparisons</h2>
+              <div className="admin-analytics-table-wrap">
+                <table>
                   <thead>
-                    <tr style={{ textAlign: 'left', color: '#666' }}>
-                      <th style={{ paddingBottom: 8 }}>Cohort</th>
-                      <th style={{ paddingBottom: 8 }}>Track</th>
-                      <th style={{ paddingBottom: 8 }}>Enrolled</th>
-                      <th style={{ paddingBottom: 8 }}>Completed</th>
-                      <th style={{ paddingBottom: 8 }}>Completion %</th>
-                      <th style={{ paddingBottom: 8 }}>Avg score</th>
-                      <th style={{ paddingBottom: 8 }}>Attendance %</th>
+                    <tr>
+                      <th>Cohort</th>
+                      <th>Track</th>
+                      <th>Enrolled</th>
+                      <th>Completed</th>
+                      <th>Completion %</th>
+                      <th>Avg score</th>
+                      <th>Attendance %</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -580,14 +576,14 @@ export default function AdminAnalyticsPage() {
                       const attendancePresent = Number(c.attendance_present || 0);
                       const attendanceRate = attendanceTotal ? Math.round((attendancePresent / attendanceTotal) * 100) : 0;
                       return (
-                        <tr key={c.id} style={{ borderTop: '1px solid #f0f0f0' }}>
-                          <td style={{ padding: '8px 0' }}>{c.name}</td>
-                          <td style={{ padding: '8px 0' }}>{c.track_name || '—'}</td>
-                          <td style={{ padding: '8px 0' }}>{enrolled}</td>
-                          <td style={{ padding: '8px 0' }}>{completed}</td>
-                          <td style={{ padding: '8px 0' }}>{completionRate}%</td>
-                          <td style={{ padding: '8px 0' }}>{c.avg_score ? Number(c.avg_score).toFixed(1) : '—'}</td>
-                          <td style={{ padding: '8px 0' }}>{attendanceRate}%</td>
+                        <tr key={c.id}>
+                          <td>{c.name}</td>
+                          <td>{c.track_name || '—'}</td>
+                          <td>{enrolled}</td>
+                          <td>{completed}</td>
+                          <td>{completionRate}%</td>
+                          <td>{c.avg_score ? Number(c.avg_score).toFixed(1) : '—'}</td>
+                          <td>{attendanceRate}%</td>
                         </tr>
                       );
                     })}
@@ -598,13 +594,13 @@ export default function AdminAnalyticsPage() {
           )}
 
           {Array.isArray(lmsEvents) && lmsEvents.length > 0 && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>LMS event counts</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+            <div className="admin-analytics-section">
+              <h2>LMS event counts</h2>
+              <div className="admin-analytics-stats-grid">
                 {lmsEvents.map((ev) => (
-                  <div key={ev.name} style={{ padding: '0.75rem', borderRadius: 10, border: '1px solid #eee', background: '#fff' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#666' }}>{ev.name}</p>
-                    <p style={{ fontSize: '1.25rem', fontWeight: 700 }}>{ev.count}</p>
+                  <div key={ev.name} className="admin-analytics-stat-card">
+                    <p className="admin-analytics-stat-label">{ev.name}</p>
+                    <p className="admin-analytics-stat-value">{ev.count}</p>
                   </div>
                 ))}
               </div>
@@ -612,12 +608,12 @@ export default function AdminAnalyticsPage() {
           )}
 
           {/* Real-time */}
-          <div style={sectionStyle}>
-            <button type="button" onClick={() => setRealtimeOpen(!realtimeOpen)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="admin-analytics-section">
+            <button type="button" onClick={() => setRealtimeOpen(!realtimeOpen)} className="admin-analytics-realtime-toggle">
               {realtimeOpen ? '▼' : '▶'} Real-time
             </button>
             {realtimeOpen && realtime && (
-              <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div className="admin-analytics-stats-grid" style={{ marginTop: '1rem' }}>
                 <div><strong>Active now</strong>: {realtime.activeCount}</div>
                 <div>
                   <strong>By page</strong>
@@ -625,7 +621,7 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div>
                   <strong>Last 20 events</strong>
-                  <ul style={{ margin: '4px 0 0', paddingLeft: 20, maxHeight: 200, overflow: 'auto' }}>{realtime.recentEvents?.map((e, i) => <li key={i}>{e.type} {e.name} – {new Date(e.created_at).toLocaleTimeString()}</li>) || []}</ul>
+                  <ul style={{ margin: '4px 0 0', paddingLeft: 20, maxHeight: 200, overflow: 'auto' }}>{realtime.recentEvents?.map((e, i) => <li key={i}>{e.type} {e.name} – {formatTimeLagos(e.created_at)}</li>) || []}</ul>
                 </div>
               </div>
             )}
@@ -633,31 +629,34 @@ export default function AdminAnalyticsPage() {
 
           {/* Overview cards */}
           {overview && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-              {[
-                { label: 'Pageviews', value: overview.totalPageviews, prev: overview.previous?.totalPageviews, color: '#0066cc' },
-                { label: 'Unique visitors', value: overview.uniqueVisitors, prev: overview.previous?.uniqueVisitors, color: '#00c896' },
-                { label: 'Sessions', value: overview.totalSessions, prev: overview.previous?.totalSessions, color: '#ffc107' },
-                { label: 'Bounce rate', value: `${(overview.bounceRate * 100).toFixed(1)}%`, prev: overview.previous ? (overview.previous.bounceRate * 100).toFixed(1) + '%' : null, color: '#6f42c1' },
-                { label: 'Avg session', value: `${Math.round(overview.avgSessionDuration)}s`, prev: overview.previous ? `${Math.round(overview.previous.avgSessionDuration)}s` : null, color: '#28a745' },
-                { label: 'Goal completions', value: overview.goalCompletions, prev: overview.previous?.goalCompletions, color: '#dc3545' },
-              ].map((item, i) => (
-                <div key={i} style={{ ...cardStyle, borderLeft: `4px solid ${item.color}` }}>
-                  <h3 style={{ fontSize: '0.85rem', color: '#666', marginBottom: 4, textTransform: 'uppercase' }}>{item.label}</h3>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{item.value}</p>
-                  {compare && item.prev != null && typeof item.value === 'number' && (
-                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: 4 }}>Prev: {item.prev} ({pctChange(item.value, item.prev)}%)</p>
-                  )}
-                </div>
-              ))}
+            <div className="admin-analytics-section">
+              <h2>Overview</h2>
+              <div className="admin-analytics-stats-grid">
+                {[
+                  { label: 'Pageviews', value: overview.totalPageviews, prev: overview.previous?.totalPageviews, color: '#0066cc' },
+                  { label: 'Unique visitors', value: overview.uniqueVisitors, prev: overview.previous?.uniqueVisitors, color: '#00c896' },
+                  { label: 'Sessions', value: overview.totalSessions, prev: overview.previous?.totalSessions, color: '#ffc107' },
+                  { label: 'Bounce rate', value: `${(overview.bounceRate * 100).toFixed(1)}%`, prev: overview.previous ? (overview.previous.bounceRate * 100).toFixed(1) + '%' : null, color: '#6f42c1' },
+                  { label: 'Avg session', value: `${Math.round(overview.avgSessionDuration)}s`, prev: overview.previous ? `${Math.round(overview.previous.avgSessionDuration)}s` : null, color: '#28a745' },
+                  { label: 'Goal completions', value: overview.goalCompletions, prev: overview.previous?.goalCompletions, color: '#dc3545' },
+                ].map((item, i) => (
+                  <div key={i} className="admin-analytics-stat-card accent" style={{ borderLeftColor: item.color }}>
+                    <p className="admin-analytics-stat-label">{item.label}</p>
+                    <p className="admin-analytics-stat-value">{item.value}</p>
+                    {compare && item.prev != null && typeof item.value === 'number' && (
+                      <p className="admin-analytics-stat-meta">Prev: {item.prev} ({pctChange(item.value, item.prev)}%)</p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Traffic */}
           {traffic && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Traffic sources</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) 2fr', gap: '2rem', alignItems: 'start' }}>
+            <div className="admin-analytics-section">
+              <h2>Traffic sources</h2>
+              <div className="admin-analytics-traffic-grid">
                 {traffic.byChannel?.length > 0 && (
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
@@ -668,31 +667,33 @@ export default function AdminAnalyticsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 )}
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e1e4e8' }}>
-                      <th style={{ padding: '0.5rem', textAlign: 'left' }}>Source / Medium</th>
-                      <th style={{ padding: '0.5rem', textAlign: 'right' }}>Pageviews</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {traffic.bySourceMedium?.slice(0, 10).map((r, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: '0.5rem' }}>{r.source} / {r.medium || '(none)'}</td>
-                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>{r.pageviews}</td>
+                <div className="admin-analytics-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Source / Medium</th>
+                        <th style={{ textAlign: 'right' }}>Pageviews</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {traffic.bySourceMedium?.slice(0, 10).map((r, i) => (
+                        <tr key={i}>
+                          <td>{r.source} / {r.medium || '(none)'}</td>
+                          <td style={{ textAlign: 'right' }}>{r.pageviews}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {/* Pages */}
           {pages && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Pages</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            <div className="admin-analytics-section">
+              <h2>Pages</h2>
+              <div className="admin-analytics-pages-grid">
                 <div>
                   <h3 style={{ fontSize: '1rem', marginBottom: 8 }}>Top by views</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -717,10 +718,10 @@ export default function AdminAnalyticsPage() {
 
           {/* Engagement */}
           {engagement && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Engagement</h2>
+            <div className="admin-analytics-section">
+              <h2>Engagement</h2>
               {engagement.pageviewsByDay?.length > 0 && (
-                <div style={{ height: 280, marginBottom: '1.5rem' }}>
+                <div className="admin-analytics-chart-wrap" style={{ marginBottom: '1.5rem' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={engagement.pageviewsByDay.map((r) => ({ ...r, day: new Date(r.day).toLocaleDateString() }))}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -733,8 +734,9 @@ export default function AdminAnalyticsPage() {
                 </div>
               )}
               {engagement.scrollDepth?.length > 0 && (
-                <div style={{ height: 220 }}>
-                  <h3 style={{ fontSize: '1rem', marginBottom: 8 }}>Scroll depth</h3>
+                <div>
+                  <h3>Scroll depth</h3>
+                  <div className="admin-analytics-chart-wrap" style={{ height: 200 }}>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={engagement.scrollDepth.map((r) => ({ depth: `${r.depth}%`, count: r.count }))}>
                       <XAxis dataKey="depth" />
@@ -743,6 +745,7 @@ export default function AdminAnalyticsPage() {
                       <Bar dataKey="count" fill="#00c896" name="Page exits" />
                     </BarChart>
                   </ResponsiveContainer>
+                  </div>
                 </div>
               )}
             </div>
@@ -750,9 +753,9 @@ export default function AdminAnalyticsPage() {
 
           {/* Audience */}
           {audience && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Audience</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
+            <div className="admin-analytics-section">
+              <h2>Audience</h2>
+              <div className="admin-analytics-audience-grid">
                 {audience.newVsReturning?.length > 0 && (
                   <div>
                     <h3 style={{ fontSize: '1rem', marginBottom: 8 }}>New vs returning</h3>
@@ -796,9 +799,9 @@ export default function AdminAnalyticsPage() {
           )}
 
           {/* Funnels */}
-          <div style={sectionStyle}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Funnels</h2>
-            <select value={selectedFunnelId || ''} onChange={(e) => setSelectedFunnelId(e.target.value ? Number(e.target.value) : null)} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid #e1e4e8', marginBottom: '1rem' }}>
+          <div className="admin-analytics-section">
+            <h2>Funnels</h2>
+            <select value={selectedFunnelId || ''} onChange={(e) => setSelectedFunnelId(e.target.value ? Number(e.target.value) : null)} className="admin-analytics-select" style={{ marginBottom: '1rem' }}>
               <option value="">Select funnel</option>
               {funnels.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
@@ -819,49 +822,53 @@ export default function AdminAnalyticsPage() {
 
           {/* Goals */}
           {goalsPerf && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Goals</h2>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #e1e4e8' }}>
-                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Goal</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Completions</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {goalsPerf.map((g) => (
-                    <tr key={g.id} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '0.5rem' }}>{g.name}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>{g.completions}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>{(g.completionRate * 100).toFixed(1)}%</td>
+            <div className="admin-analytics-section">
+              <h2>Goals</h2>
+              <div className="admin-analytics-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Goal</th>
+                      <th style={{ textAlign: 'right' }}>Completions</th>
+                      <th style={{ textAlign: 'right' }}>Rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {goalsPerf.map((g) => (
+                      <tr key={g.id}>
+                        <td>{g.name}</td>
+                        <td style={{ textAlign: 'right' }}>{g.completions}</td>
+                        <td style={{ textAlign: 'right' }}>{(g.completionRate * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* Event explorer */}
           {eventsData && (
-            <div style={sectionStyle}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Event explorer</h2>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #e1e4e8' }}>
-                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Event</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Count</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eventsData.eventCounts?.map((r, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '0.5rem' }}>{r.name || '(unnamed)'}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>{r.count}</td>
+            <div className="admin-analytics-section">
+              <h2>Event explorer</h2>
+              <div className="admin-analytics-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th style={{ textAlign: 'right' }}>Count</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {eventsData.eventCounts?.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.name || '(unnamed)'}</td>
+                        <td style={{ textAlign: 'right' }}>{r.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

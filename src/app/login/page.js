@@ -46,7 +46,7 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <Image src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" />
+          <Image src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" priority />
           <h1 className="auth-title">Sign in</h1>
           <p className="auth-subtitle">CVERSE Academy</p>
         </div>

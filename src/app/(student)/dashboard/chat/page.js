@@ -1,14 +1,13 @@
 'use client';
 
 import ChatPanel from '@/app/components/ChatPanel';
+import { LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 export default function StudentChatPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Chat</h1>
-        <p className="text-gray-600 mt-1">Message your cohort and facilitators.</p>
-      </div>
+      <LmsPageHeader title="Chat" subtitle="Message your cohort and facilitators." icon={LmsIcons.chat} />
       <ChatPanel />
     </div>
   );

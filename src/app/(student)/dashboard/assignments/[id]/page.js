@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader, LmsBadge } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -156,6 +157,7 @@ export default function AssignmentDetailPage() {
     return (
       <LmsCard hoverable={false}>
         <LmsEmptyState
+          icon={LmsIcons.inbox}
           title="Assignment not found"
           action={<Link href="/dashboard/assignments" className="text-primary font-medium hover:underline">Back to assignments</Link>}
         />
@@ -165,8 +167,13 @@ export default function AssignmentDetailPage() {
 
   return (
     <div className="space-y-8">
-      <Link href="/dashboard/assignments" className="text-sm text-gray-500 hover:text-primary font-medium">← Assignments</Link>
-      <LmsCard title={assignment.title} hoverable={false}>
+      <LmsPageHeader
+        title={assignment.title}
+        subtitle={`Due ${formatDate(assignment.deadline_at)} · Max score: ${assignment.max_score ?? 100}`}
+        icon={LmsIcons.clipboard}
+        breadcrumb={{ href: '/dashboard/assignments', label: 'Assignments' }}
+      />
+      <LmsCard title="Details" hoverable={false}>
         {assignment.description && (
           <div className="text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(assignment.description, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'code', 'pre'] }) }} />
         )}
@@ -175,6 +182,13 @@ export default function AssignmentDetailPage() {
 
       {submission ? (
         <LmsCard title="Your submission" subtitle={`Submitted ${formatDate(submission.submitted_at)}`}>
+          <div className="flex gap-2 mb-3">
+            {submission.status === 'graded' ? (
+              <LmsBadge variant="success">Graded</LmsBadge>
+            ) : (
+              <LmsBadge variant="info" dot>Submitted</LmsBadge>
+            )}
+          </div>
           {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open link</a></p>}
           {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
           {submission.text_content && <p className="mt-2 text-gray-700">{submission.text_content}</p>}
@@ -238,7 +252,12 @@ export default function AssignmentDetailPage() {
       )}
 
       {deadlinePassed && !submission && (
-        <p className="text-gray-500">The deadline for this assignment has passed.</p>
+        <LmsCard hoverable={false}>
+          <div className="flex items-center gap-2">
+            <LmsBadge variant="danger">Deadline passed</LmsBadge>
+            <span className="text-sm text-gray-500">The deadline for this assignment has passed.</span>
+          </div>
+        </LmsCard>
       )}
     </div>
   );

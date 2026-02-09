@@ -32,17 +32,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const eventName = searchParams.get('event');
     const { start, end } = getRange(searchParams);
+    const eventNameParam = eventName || null;
     const rows = await sql`
       SELECT name, COUNT(*)::int AS count
       FROM lms_events
       WHERE created_at BETWEEN ${start} AND ${end}
-      ${eventName ? sql`AND name = ${eventName}` : sql``}
+        AND (${eventNameParam}::text IS NULL OR name = ${eventNameParam})
       GROUP BY name
       ORDER BY count DESC;
     `;
     return NextResponse.json({ success: true, events: rows.rows });
   } catch (e) {
     console.error('GET /api/admin/analytics/lms/events:', e);
-    return NextResponse.json({ error: 'Failed to load LMS events' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to load LMS events';
+    return NextResponse.json({ error: 'Failed to load LMS events', detail: msg }, { status: 500 });
   }
 }

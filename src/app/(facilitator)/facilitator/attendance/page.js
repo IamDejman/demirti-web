@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LmsCard } from '@/app/components/lms';
+import { LmsCard, LmsPageHeader, LmsBadge } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -83,10 +84,7 @@ export default function FacilitatorAttendancePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-        <p className="text-gray-600 mt-1">Mark attendance for live classes.</p>
-      </div>
+      <LmsPageHeader title="Attendance" subtitle="Mark attendance for live classes." icon={LmsIcons.users} />
       <LmsCard title="Select cohort">
         <label className="block text-sm font-medium text-gray-700">Cohort</label>
         <select

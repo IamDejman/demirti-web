@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AdminPageHeader, AdminButton } from '../../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
+import { formatDateLagos } from '@/lib/dateUtils';
 
 export default function AdminCohortsPage() {
   const [cohorts, setCohorts] = useState([]);
@@ -38,7 +39,7 @@ export default function AdminCohortsPage() {
 
   const loadTracks = async () => {
     try {
-      const res = await fetch('/api/tracks');
+      const res = await fetch('/api/track-config');
       const data = await res.json();
       if (res.ok && data.tracks) setTracks(data.tracks);
     } catch {
@@ -73,7 +74,7 @@ export default function AdminCohortsPage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : 'N/A');
+  const formatDate = (d) => (d ? formatDateLagos(d) : 'N/A');
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
@@ -192,10 +193,30 @@ export default function AdminCohortsPage() {
                           {c.status}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
+                      <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <Link href={`/admin/cohorts/${c.id}`} style={{ color: '#0066cc', fontWeight: '600', textDecoration: 'none' }}>
                           View
                         </Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm(`Delete cohort "${c.name}"? This cannot be undone.`)) return;
+                            try {
+                              const res = await fetch(`/api/cohorts/${c.id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                              const data = await res.json();
+                              if (res.ok && data.deleted) {
+                                setCohorts((prev) => prev.filter((x) => x.id !== c.id));
+                              } else {
+                                alert(data.error || 'Failed to delete cohort');
+                              }
+                            } catch {
+                              alert('Failed to delete cohort');
+                            }
+                          }}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', color: '#dc3545', background: 'none', border: '1px solid #dc3545', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}

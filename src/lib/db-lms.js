@@ -18,6 +18,8 @@ export async function ensureLmsSchema() {
     try {
       const requiredTables = [
         'users',
+        'tracks',
+        'cohorts',
         'announcements',
         'notifications',
         'notification_preferences',
@@ -936,16 +938,20 @@ export async function createCohort({ trackId, name, startDate, endDate, status =
 
 export async function getCohorts(filters = {}) {
   await ensureLmsSchema();
-  let query = sql`
+  const trackIdParam =
+    filters.trackId != null && !Number.isNaN(Number(filters.trackId))
+      ? Number(filters.trackId)
+      : null;
+  const statusParam =
+    filters.status && String(filters.status).trim() ? String(filters.status).trim() : null;
+  const result = await sql`
     SELECT c.*, t.track_name, t.slug AS track_slug
     FROM cohorts c
     JOIN tracks t ON t.id = c.track_id
-    WHERE 1=1
+    WHERE (${trackIdParam}::int IS NULL OR c.track_id = ${trackIdParam})
+      AND (${statusParam}::text IS NULL OR c.status = ${statusParam})
+    ORDER BY c.start_date DESC
   `;
-  if (filters.trackId != null) query = sql`${query} AND c.track_id = ${filters.trackId}`;
-  if (filters.status) query = sql`${query} AND c.status = ${filters.status}`;
-  query = sql`${query} ORDER BY c.start_date DESC`;
-  const result = await query;
   return result.rows;
 }
 
@@ -973,6 +979,14 @@ export async function updateCohort(id, updates) {
   const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
   await sql`UPDATE cohorts SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
   return getCohortById(id);
+}
+
+export async function deleteCohort(id) {
+  await ensureLmsSchema();
+  const cohort = await getCohortById(id);
+  if (!cohort) return null;
+  await sql`DELETE FROM cohorts WHERE id = ${id}`;
+  return cohort;
 }
 
 export async function getCohortFacilitators(cohortId) {

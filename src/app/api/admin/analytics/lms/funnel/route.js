@@ -30,7 +30,7 @@ export async function GET(request) {
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await ensureLmsSchema();
     const { searchParams } = new URL(request.url);
-    const cohortId = searchParams.get('cohortId');
+    const cohortIdParam = searchParams.get('cohortId') || null;
     const { start, end } = getRange(searchParams);
 
     const result = await sql`
@@ -38,7 +38,7 @@ export async function GET(request) {
         SELECT student_id, cohort_id
         FROM cohort_students
         WHERE enrolled_at BETWEEN ${start} AND ${end}
-          ${cohortId ? sql`AND cohort_id = ${cohortId}` : sql``}
+          AND (${cohortIdParam}::uuid IS NULL OR cohort_id = ${cohortIdParam}::uuid)
       ),
       submitted AS (
         SELECT DISTINCT s.student_id, a.cohort_id
@@ -75,6 +75,7 @@ export async function GET(request) {
     return NextResponse.json({ success: true, steps });
   } catch (e) {
     console.error('GET /api/admin/analytics/lms/funnel:', e);
-    return NextResponse.json({ error: 'Failed to load LMS funnel' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to load LMS funnel';
+    return NextResponse.json({ error: 'Failed to load LMS funnel', detail: msg }, { status: 500 });
   }
 }

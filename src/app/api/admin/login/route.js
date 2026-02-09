@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { verifyAdminCredentials, createAdminSession } from '@/lib/admin';
 import { rateLimit } from '@/lib/rateLimit';
+import { recordAuditLog } from '@/lib/audit';
 
 // POST - Admin login
 export async function POST(request) {
@@ -31,6 +32,20 @@ export async function POST(request) {
       if (admin) {
         const token = crypto.randomBytes(32).toString('hex');
         await createAdminSession(admin.id, token);
+        const ipAddress = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null;
+        try {
+          await recordAuditLog({
+            userId: null,
+            action: 'admin.login',
+            targetType: 'admin',
+            targetId: String(admin.id),
+            details: {},
+            ipAddress,
+            actorEmail: admin.email,
+          });
+        } catch (auditErr) {
+          console.error('Audit log admin.login (non-blocking):', auditErr);
+        }
         return NextResponse.json({
           success: true,
           token,

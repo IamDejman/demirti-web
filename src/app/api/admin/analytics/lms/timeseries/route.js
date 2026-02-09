@@ -30,14 +30,14 @@ export async function GET(request) {
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await ensureLmsSchema();
     const { searchParams } = new URL(request.url);
-    const cohortId = searchParams.get('cohortId');
+    const cohortIdParam = searchParams.get('cohortId') || null;
     const { start, end } = getRange(searchParams);
 
     const enrollments = await sql`
       SELECT DATE_TRUNC('day', enrolled_at)::DATE AS day, COUNT(*)::int AS count
       FROM cohort_students
       WHERE enrolled_at BETWEEN ${start} AND ${end}
-      ${cohortId ? sql`AND cohort_id = ${cohortId}` : sql``}
+        AND (${cohortIdParam}::uuid IS NULL OR cohort_id = ${cohortIdParam}::uuid)
       GROUP BY day
       ORDER BY day ASC;
     `;
@@ -46,7 +46,7 @@ export async function GET(request) {
       FROM cohort_students
       WHERE completed_at IS NOT NULL
         AND completed_at BETWEEN ${start} AND ${end}
-        ${cohortId ? sql`AND cohort_id = ${cohortId}` : sql``}
+        AND (${cohortIdParam}::uuid IS NULL OR cohort_id = ${cohortIdParam}::uuid)
       GROUP BY day
       ORDER BY day ASC;
     `;
@@ -55,7 +55,7 @@ export async function GET(request) {
       FROM assignment_submissions s
       JOIN assignments a ON a.id = s.assignment_id
       WHERE s.submitted_at BETWEEN ${start} AND ${end}
-        ${cohortId ? sql`AND a.cohort_id = ${cohortId}` : sql``}
+        AND (${cohortIdParam}::uuid IS NULL OR a.cohort_id = ${cohortIdParam}::uuid)
       GROUP BY day
       ORDER BY day ASC;
     `;
@@ -63,7 +63,7 @@ export async function GET(request) {
       SELECT DATE_TRUNC('day', issued_at)::DATE AS day, COUNT(*)::int AS count
       FROM certificates
       WHERE issued_at BETWEEN ${start} AND ${end}
-        ${cohortId ? sql`AND cohort_id = ${cohortId}` : sql``}
+        AND (${cohortIdParam}::uuid IS NULL OR cohort_id = ${cohortIdParam}::uuid)
       GROUP BY day
       ORDER BY day ASC;
     `;
@@ -81,6 +81,7 @@ export async function GET(request) {
     });
   } catch (e) {
     console.error('GET /api/admin/analytics/lms/timeseries:', e);
-    return NextResponse.json({ error: 'Failed to load LMS timeseries' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to load LMS timeseries';
+    return NextResponse.json({ error: 'Failed to load LMS timeseries', detail: msg }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import AdminNavigationLoader from './AdminNavigationLoader';
+import AuditPageViewTracker from './AuditPageViewTracker';
 
 const AUTH_PATHS = ['/admin/login', '/admin/forgot-password'];
 const STORAGE_KEY = 'admin_sidebar_collapsed';
@@ -85,6 +86,7 @@ export default function AdminLayoutShell({ children }) {
   const sidebarWidth = collapsed ? 72 : 280;
   return (
     <AdminNavigationLoader>
+    <AuditPageViewTracker />
     <div className="admin-app">
       <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
       <main className="admin-main" style={{ marginLeft: sidebarWidth }}>
@@ -104,6 +106,8 @@ export default function AdminLayoutShell({ children }) {
           padding: 2.5rem 2rem 2rem 2rem;
           overflow-y: auto;
           transition: margin-left 0.2s ease;
+          position: relative;
+          z-index: 0;
         }
         @media (max-width: 768px) {
           .admin-main {

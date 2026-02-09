@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { sqlRead } from '@/lib/db-read';
 import crypto from 'crypto';
 import { ensureLmsSchema, recordLmsEvent } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
@@ -28,7 +29,7 @@ export async function GET(request) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await ensureLmsSchema();
-    const portfolioRes = await sql`
+    const portfolioRes = await sqlRead`
       SELECT * FROM portfolios WHERE user_id = ${user.id} LIMIT 1;
     `;
     const portfolio = portfolioRes.rows[0] || null;
@@ -36,8 +37,8 @@ export async function GET(request) {
       return NextResponse.json({ portfolio: null, projects: [], socialLinks: [] });
     }
     const [projectsRes, linksRes] = await Promise.all([
-      sql`SELECT * FROM portfolio_projects WHERE portfolio_id = ${portfolio.id} ORDER BY order_index ASC;`,
-      sql`SELECT * FROM portfolio_social_links WHERE portfolio_id = ${portfolio.id} ORDER BY id ASC;`,
+      sqlRead`SELECT * FROM portfolio_projects WHERE portfolio_id = ${portfolio.id} ORDER BY order_index ASC;`,
+      sqlRead`SELECT * FROM portfolio_social_links WHERE portfolio_id = ${portfolio.id} ORDER BY id ASC;`,
     ]);
     return NextResponse.json({ portfolio, projects: projectsRes.rows, socialLinks: linksRes.rows });
   } catch (e) {

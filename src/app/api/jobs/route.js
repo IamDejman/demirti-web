@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sqlRead } from '@/lib/db-read';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
@@ -13,13 +13,13 @@ export async function GET(request) {
     const trackId = searchParams.get('trackId');
     const q = (searchParams.get('q') || '').trim();
 
-    const result = await sql`
+    const result = await sqlRead`
       SELECT j.*, t.track_name
       FROM jobs j
       LEFT JOIN tracks t ON t.id = j.track_id
       WHERE j.is_active = true
-        ${trackId ? sql`AND j.track_id = ${parseInt(trackId, 10)}` : sql``}
-        ${q ? sql`AND (j.title ILIKE ${`%${q}%`} OR j.company ILIKE ${`%${q}%`})` : sql``}
+        ${trackId ? sqlRead`AND j.track_id = ${parseInt(trackId, 10)}` : sqlRead``}
+        ${q ? sqlRead`AND (j.title ILIKE ${`%${q}%`} OR j.company ILIKE ${`%${q}%`})` : sqlRead``}
       ORDER BY j.created_at DESC
       LIMIT ${limit}
       OFFSET ${offset};

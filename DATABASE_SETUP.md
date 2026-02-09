@@ -61,6 +61,10 @@ RESEND_API_KEY=your_resend_api_key
 RESEND_FROM_EMAIL=no-reply@demirti.com
 PAYSTACK_SECRET_KEY=your_paystack_secret_key
 NEXT_PUBLIC_BASE_URL=https://your-domain.com
+
+# Optional: Read replica for scaling read operations (Neon same-region replica)
+# When set, read-heavy routes use this for SELECT queries; falls back to POSTGRES_URL if unset
+POSTGRES_URL_READ_REPLICA=
 ```
 
 ## Step 4: Initialize Database Tables

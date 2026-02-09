@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { LmsCard } from '@/app/components/lms';
+import { LmsCard, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
 const emptyPortfolioForm = {
@@ -170,52 +171,62 @@ export default function PortfolioPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Portfolio</h1>
-        <p className="text-gray-600 mt-1">Build a public profile for recruiters and showcase your projects.</p>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
+      <LmsPageHeader title="Portfolio" subtitle="Build a public profile for recruiters and showcase your projects." icon={LmsIcons.briefcase}>
+        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
         {publicUrl && portfolio?.is_public && (
-          <p className="text-sm text-primary mt-2">
-            Public profile: <Link href={publicUrl}>{publicUrl}</Link>
+          <p className="text-sm text-white/90 mt-2">
+            Public profile: <Link href={publicUrl} className="underline text-white">{publicUrl}</Link>
           </p>
         )}
         {portfolio?.custom_domain && portfolio?.domain_verified_at && (
-          <p className="text-sm text-primary mt-1">
-            Custom domain: <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer">{portfolio.custom_domain}</a>
+          <p className="text-sm text-white/90 mt-1">
+            Custom domain: <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="underline text-white">{portfolio.custom_domain}</a>
           </p>
         )}
-      </div>
+      </LmsPageHeader>
 
       <LmsCard title="Profile details">
-        <form onSubmit={savePortfolio} className="mt-4 space-y-3">
-          <input
-            type="text"
-            placeholder="Portfolio slug (e.g. jane-doe)"
-            value={form.slug}
-            onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <input
-            type="text"
-            placeholder="Headline"
-            value={form.headline}
-            onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <textarea
-            rows={4}
-            placeholder="Bio"
-            value={form.bio}
-            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <input
-            type="text"
-            placeholder="Resume URL"
-            value={form.resumeUrl}
-            onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
+        <form onSubmit={savePortfolio} className="mt-4 space-y-4">
+          <div>
+            <label className="lms-form-label">Portfolio slug</label>
+            <input
+              type="text"
+              placeholder="e.g. jane-doe"
+              value={form.slug}
+              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="lms-form-label">Headline</label>
+            <input
+              type="text"
+              placeholder="Your professional headline"
+              value={form.headline}
+              onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="lms-form-label">Bio</label>
+            <textarea
+              rows={4}
+              placeholder="Tell recruiters about yourself..."
+              value={form.bio}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              className="lms-form-textarea w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="lms-form-label">Resume URL</label>
+            <input
+              type="text"
+              placeholder="https://..."
+              value={form.resumeUrl}
+              onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <input
               type="file"
@@ -232,13 +243,16 @@ export default function PortfolioPage() {
             {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
             {uploadMessage && <span className="text-xs text-gray-500">{uploadMessage}</span>}
           </div>
-          <input
-            type="text"
-            placeholder="Custom domain (e.g. portfolio.yourdomain.com)"
-            value={form.customDomain}
-            onChange={(e) => setForm((f) => ({ ...f, customDomain: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
+          <div>
+            <label className="lms-form-label">Custom domain</label>
+            <input
+              type="text"
+              placeholder="e.g. portfolio.yourdomain.com"
+              value={form.customDomain}
+              onChange={(e) => setForm((f) => ({ ...f, customDomain: e.target.value }))}
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
           {domainStatus && (
             <p className="text-xs text-gray-500">
               Domain status: {domainStatus}
@@ -264,21 +278,23 @@ export default function PortfolioPage() {
         </form>
       </LmsCard>
 
-      <LmsCard title="Projects">
+      <hr className="lms-section-divider" />
+
+      <LmsCard title="Projects" icon={LmsIcons.book}>
         <form onSubmit={saveProject} className="mt-4 space-y-3">
           <input
             type="text"
             placeholder="Project title"
             value={projectForm.title}
             onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
           <textarea
             rows={3}
             placeholder="Project description"
             value={projectForm.description}
             onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -286,14 +302,14 @@ export default function PortfolioPage() {
               placeholder="Project link"
               value={projectForm.linkUrl}
               onChange={(e) => setProjectForm((f) => ({ ...f, linkUrl: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
             <input
               type="text"
               placeholder="Image URL"
               value={projectForm.imageUrl}
               onChange={(e) => setProjectForm((f) => ({ ...f, imageUrl: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -370,7 +386,9 @@ export default function PortfolioPage() {
         </div>
       </LmsCard>
 
-      <LmsCard title="Social links">
+      <hr className="lms-section-divider" />
+
+      <LmsCard title="Social links" icon={LmsIcons.chat}>
         <form onSubmit={saveLink} className="mt-4 space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -378,14 +396,14 @@ export default function PortfolioPage() {
               placeholder="Platform (e.g. LinkedIn)"
               value={linkForm.platform}
               onChange={(e) => setLinkForm((f) => ({ ...f, platform: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
             <input
               type="text"
               placeholder="URL"
               value={linkForm.url}
               onChange={(e) => setLinkForm((f) => ({ ...f, url: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
           <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg">

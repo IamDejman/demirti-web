@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -63,20 +64,17 @@ export default function FacilitatorDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-xl bg-gradient-to-br from-primary to-primary-dark p-6 text-white">
-        <h1 className="text-2xl font-bold">Facilitator dashboard</h1>
-        <p className="mt-1 text-white/90">Your cohorts and quick actions.</p>
-      </div>
+      <LmsPageHeader title="Facilitator dashboard" subtitle="Your cohorts and quick actions." />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Link href="/facilitator/grading" className="block">
-          <LmsCard title="Grading queue">
+          <LmsCard title="Grading queue" icon={LmsIcons.grading}>
             <p className="text-3xl font-bold text-primary mt-2">{pendingCount}</p>
             <p className="text-sm text-gray-500 mt-1">Pending submissions</p>
           </LmsCard>
         </Link>
         <Link href="/facilitator/attendance" className="block">
-          <LmsCard title="Attendance">
+          <LmsCard title="Attendance" icon={LmsIcons.users}>
             <p className="text-sm text-gray-600 mt-2">Mark attendance for live classes</p>
           </LmsCard>
         </Link>
@@ -84,7 +82,7 @@ export default function FacilitatorDashboardPage() {
 
       <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`}>
         {cohorts.length === 0 ? (
-          <LmsEmptyState title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
+          <LmsEmptyState icon={LmsIcons.inbox} title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
         ) : (
           <ul className="space-y-3">
             {cohorts.map((c) => (

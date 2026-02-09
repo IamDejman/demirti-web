@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AdminPageHeader } from '../../../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos, formatDateLagos } from '@/lib/dateUtils';
 
 export default function AdminCohortDetailPage() {
   const params = useParams();
@@ -423,22 +424,44 @@ export default function AdminCohortDetailPage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'short' }) : '');
+  const formatDate = (d) => (d ? formatDateLagos(d) : '');
+
+  const statusColors = { upcoming: '#6b7280', active: '#059669', completed: '#2563eb' };
+  const StatusBadge = ({ status }) => (
+    <span
+      style={{
+        display: 'inline-block',
+        padding: '0.25rem 0.6rem',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        borderRadius: 6,
+        textTransform: 'capitalize',
+        backgroundColor: `${statusColors[status] || '#6b7280'}20`,
+        color: statusColors[status] || '#6b7280',
+      }}
+    >
+      {status}
+    </span>
+  );
 
   if (loading) {
     return (
-      <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-          <p className="text-gray-500">Loading...</p>
-        </div>
+      <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-loading">
+        <div className="admin-cohort-loading-spinner" />
+        <p className="admin-loading">Loading cohort...</p>
+      </div>
     );
   }
 
   if (!cohort) {
     return (
-      <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-          <p className="text-gray-600">Cohort not found.</p>
-          <Link href="/admin/cohorts" className="text-primary font-medium mt-4 inline-block">Back to cohorts</Link>
+      <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-empty">
+        <div className="admin-cohort-empty-card">
+          <p className="admin-cohort-empty-title">Cohort not found</p>
+          <p style={{ color: 'var(--text-light)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>This cohort may have been deleted or the link is incorrect.</p>
+          <Link href="/admin/cohorts" className="admin-btn admin-btn-secondary">← Back to cohorts</Link>
         </div>
+      </div>
     );
   }
 
@@ -446,127 +469,131 @@ export default function AdminCohortDetailPage() {
   const paidNotEnrolled = applications.filter((a) => a.status === 'paid' && !enrolledEmails.has(a.email));
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">
         <AdminPageHeader
-          breadcrumb={<Link href="/admin/cohorts">← Cohorts</Link>}
+          breadcrumb={<Link href="/admin/cohorts" style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>← Cohorts</Link>}
           title={cohort.name}
-          description={`${cohort.track_name} · ${formatDate(cohort.start_date)} – ${formatDate(cohort.end_date)} · ${cohort.status}`}
+          description={
+            <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem 1rem', fontSize: '0.9375rem' }}>
+              <span style={{ color: 'var(--text-light)' }}>{cohort.track_name}</span>
+              <span style={{ color: '#9ca3af' }}>·</span>
+              <span style={{ color: 'var(--text-light)' }}>{formatDate(cohort.start_date)} – {formatDate(cohort.end_date)}</span>
+              <StatusBadge status={cohort.status} />
+            </span>
+          }
+          actions={
+            <button
+              type="button"
+              onClick={async () => {
+                if (!confirm(`Delete cohort "${cohort.name}"? This cannot be undone.`)) return;
+                try {
+                  const res = await fetch(`/api/cohorts/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                  const data = await res.json();
+                  if (res.ok && data.deleted) {
+                    router.push('/admin/cohorts');
+                  } else {
+                    alert(data.error || 'Failed to delete cohort');
+                  }
+                } catch {
+                  alert('Failed to delete cohort');
+                }
+              }}
+              className="admin-btn admin-btn-danger admin-btn-sm"
+            >
+              Delete cohort
+            </button>
+          }
         />
 
-        <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Enroll student</h2>
-          <form onSubmit={handleEnrollByEmail} className="flex gap-3 flex-wrap items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={enrollEmail}
-                onChange={(e) => setEnrollEmail(e.target.value)}
-                placeholder="student@example.com"
-                className="mt-1 block w-64 px-3 py-2 border border-gray-300 rounded-lg"
-              />
+        <div className="admin-card">
+          <h2 className="admin-card-title">Enroll student</h2>
+          <form onSubmit={handleEnrollByEmail} className="admin-form-group admin-action-group admin-cohort-enroll-form">
+            <div className="admin-form-group admin-cohort-enroll-input">
+              <label className="admin-form-label">Email</label>
+              <div className="admin-form-field">
+                <input
+                  type="email"
+                  value={enrollEmail}
+                  onChange={(e) => setEnrollEmail(e.target.value)}
+                  placeholder="student@example.com"
+                />
+              </div>
             </div>
-            <button type="submit" disabled={enrolling} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
+            <button type="submit" disabled={enrolling} className="admin-btn admin-btn-primary">
               {enrolling ? 'Enrolling...' : 'Enroll'}
             </button>
           </form>
-          {enrollMessage && <p className="mt-2 text-sm text-gray-600">{enrollMessage}</p>}
+          {enrollMessage && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: enrollMessage.includes('success') ? '#059669' : 'inherit' }}>{enrollMessage}</p>}
         </div>
 
         {paidNotEnrolled.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Enroll from paid applications</h2>
-            <p className="text-sm text-gray-500 mb-4">Paid applicants not yet in this cohort:</p>
-            <ul className="space-y-2">
+          <div className="admin-card">
+            <h2 className="admin-card-title">Enroll from paid applications</h2>
+            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Paid applicants not yet in this cohort:</p>
+            <ul className="admin-cohort-app-list">
               {paidNotEnrolled.slice(0, 20).map((app) => (
-                <li key={app.id} className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <span className="font-medium text-gray-900">{app.first_name} {app.last_name}</span>
-                  <span className="text-sm text-gray-500">{app.email}</span>
-                  <span className="text-sm text-gray-500">{app.track_name}</span>
+                <li key={app.id} className="admin-cohort-app-card">
+                  <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{app.first_name} {app.last_name}</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>{app.email}</span>
+                    {app.track_name && <span style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{app.track_name}</span>}
+                  </div>
                   <button
                     type="button"
                     onClick={() => handleEnrollFromApplication(app)}
                     disabled={enrolling}
-                    className="px-3 py-1 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark disabled:opacity-50"
+                    className="admin-btn admin-btn-primary admin-btn-sm"
                   >
                     Enroll
                   </button>
                 </li>
               ))}
             </ul>
-            {paidNotEnrolled.length > 20 && <p className="text-sm text-gray-500 mt-2">Showing first 20. Use email field above for others.</p>}
+            {paidNotEnrolled.length > 20 && <p className="admin-form-hint" style={{ marginTop: '1rem' }}>Showing first 20. Use email field above for others.</p>}
           </div>
         )}
 
-        <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Weeks and content</h2>
-          {lmsMessage && <p className="text-sm text-gray-600 mb-4">{lmsMessage}</p>}
+        <div className="admin-card">
+          <h2 className="admin-card-title">Weeks and content</h2>
+          {lmsMessage && <p className="admin-form-hint" style={{ marginBottom: '1rem', color: lmsMessage.includes('created') || lmsMessage.includes('added') || lmsMessage.includes('updated') ? '#059669' : 'inherit' }}>{lmsMessage}</p>}
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Create week</h3>
-              <form onSubmit={handleCreateWeek} className="space-y-3">
-                <input
-                  type="number"
-                  placeholder="Week number"
-                  value={weekForm.weekNumber}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, weekNumber: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Week title"
-                  value={weekForm.title}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <textarea
-                  placeholder="Description (optional)"
-                  value={weekForm.description}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <input
-                  type="datetime-local"
-                  value={weekForm.unlockDate}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, unlockDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <input
-                  type="datetime-local"
-                  value={weekForm.liveClassDatetime}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, liveClassDatetime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Google Meet link (optional)"
-                  value={weekForm.googleMeetLink}
-                  onChange={(e) => setWeekForm((f) => ({ ...f, googleMeetLink: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={!weekForm.isLocked}
-                    onChange={(e) => setWeekForm((f) => ({ ...f, isLocked: !e.target.checked }))}
-                  />
+          <div className="admin-cohort-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div className="admin-cohort-section-card">
+              <h3 className="admin-card-title">Create week</h3>
+              <form onSubmit={handleCreateWeek} className="admin-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="admin-form-field">
+                  <input type="number" placeholder="Week number" value={weekForm.weekNumber} onChange={(e) => setWeekForm((f) => ({ ...f, weekNumber: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <input type="text" placeholder="Week title" value={weekForm.title} onChange={(e) => setWeekForm((f) => ({ ...f, title: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <textarea placeholder="Description (optional)" value={weekForm.description} onChange={(e) => setWeekForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+                </div>
+                <div className="admin-form-field">
+                  <input type="datetime-local" value={weekForm.unlockDate} onChange={(e) => setWeekForm((f) => ({ ...f, unlockDate: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <input type="datetime-local" value={weekForm.liveClassDatetime} onChange={(e) => setWeekForm((f) => ({ ...f, liveClassDatetime: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <input type="text" placeholder="Google Meet link (optional)" value={weekForm.googleMeetLink} onChange={(e) => setWeekForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+                </div>
+                <label className="admin-form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={!weekForm.isLocked} onChange={(e) => setWeekForm((f) => ({ ...f, isLocked: !e.target.checked }))} />
                   Unlock immediately
                 </label>
-                <button type="submit" disabled={savingWeek} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
-                  {savingWeek ? 'Saving...' : 'Create week'}
-                </button>
+                <button type="submit" disabled={savingWeek} className="admin-btn admin-btn-primary">{savingWeek ? 'Saving...' : 'Create week'}</button>
               </form>
             </div>
 
-            <div>
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Select week</h3>
-              <select
-                value={selectedWeekId}
-                onChange={(e) => setSelectedWeekId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
+            <div className="admin-cohort-section-card">
+              <h3 className="admin-card-title">Select week</h3>
+              <div className="admin-form-field">
+                <select
+                  value={selectedWeekId}
+                  onChange={(e) => setSelectedWeekId(e.target.value)}
+                >
                 <option value="">Select a week</option>
                 {weeks.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -574,26 +601,24 @@ export default function AdminCohortDetailPage() {
                   </option>
                 ))}
               </select>
+              </div>
 
               {weekDetails && (
-                <div className="mt-4 text-sm text-gray-600">
+                <div className="admin-form-hint" style={{ marginTop: '1rem' }}>
                   <p><strong>Title:</strong> {weekDetails.week.title}</p>
-                  <p><strong>Unlock:</strong> {weekDetails.week.unlock_date ? new Date(weekDetails.week.unlock_date).toLocaleString() : '—'}</p>
+                  <p><strong>Unlock:</strong> {weekDetails.week.unlock_date ? formatTimeLagos(weekDetails.week.unlock_date) : '—'}</p>
                 </div>
               )}
             </div>
           </div>
 
           {selectedWeekId && (
-            <div className="grid gap-6 md:grid-cols-2 mt-8">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-3">Add content item</h3>
-                <form onSubmit={handleCreateContent} className="space-y-3">
-                  <select
-                    value={contentForm.type}
-                    onChange={(e) => setContentForm((f) => ({ ...f, type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  >
+            <div className="admin-cohort-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+              <div className="admin-cohort-section-card">
+                <h3 className="admin-card-title">Add content item</h3>
+                <form onSubmit={handleCreateContent} className="admin-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="admin-form-field">
+                    <select value={contentForm.type} onChange={(e) => setContentForm((f) => ({ ...f, type: e.target.value }))}>
                     <option value="pdf">PDF</option>
                     <option value="slides">Slides</option>
                     <option value="video_embed">Video</option>
@@ -601,294 +626,207 @@ export default function AdminCohortDetailPage() {
                     <option value="link">Link</option>
                     <option value="recording">Recording</option>
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={contentForm.title}
-                    onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <textarea
-                    placeholder="Description (optional)"
-                    value={contentForm.description}
-                    onChange={(e) => setContentForm((f) => ({ ...f, description: e.target.value }))}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="File URL (optional)"
-                    value={contentForm.fileUrl}
-                    onChange={(e) => setContentForm((f) => ({ ...f, fileUrl: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="External URL (optional)"
-                    value={contentForm.externalUrl}
-                    onChange={(e) => setContentForm((f) => ({ ...f, externalUrl: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Order index"
-                    value={contentForm.orderIndex}
-                    onChange={(e) => setContentForm((f) => ({ ...f, orderIndex: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={contentForm.isDownloadable}
-                      onChange={(e) => setContentForm((f) => ({ ...f, isDownloadable: e.target.checked }))}
-                    />
+                  </div>
+                  <div className="admin-form-field"><input type="text" placeholder="Title" value={contentForm.title} onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))} /></div>
+                  <div className="admin-form-field"><textarea placeholder="Description (optional)" value={contentForm.description} onChange={(e) => setContentForm((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+                  <div className="admin-form-field"><input type="text" placeholder="File URL (optional)" value={contentForm.fileUrl} onChange={(e) => setContentForm((f) => ({ ...f, fileUrl: e.target.value }))} /></div>
+                  <div className="admin-form-field"><input type="text" placeholder="External URL (optional)" value={contentForm.externalUrl} onChange={(e) => setContentForm((f) => ({ ...f, externalUrl: e.target.value }))} /></div>
+                  <div className="admin-form-field"><input type="number" placeholder="Order index" value={contentForm.orderIndex} onChange={(e) => setContentForm((f) => ({ ...f, orderIndex: e.target.value }))} /></div>
+                  <label className="admin-form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={contentForm.isDownloadable} onChange={(e) => setContentForm((f) => ({ ...f, isDownloadable: e.target.checked }))} />
                     Downloadable
                   </label>
-                  <button type="submit" disabled={savingContent} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
-                    {savingContent ? 'Saving...' : editingContentId ? 'Update content' : 'Add content'}
-                  </button>
+                  <button type="submit" disabled={savingContent} className="admin-btn admin-btn-primary">{savingContent ? 'Saving...' : editingContentId ? 'Update content' : 'Add content'}</button>
                 </form>
               </div>
 
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-3">Add material</h3>
-                <form onSubmit={handleCreateMaterial} className="space-y-3">
-                  <select
-                    value={materialForm.type}
-                    onChange={(e) => setMaterialForm((f) => ({ ...f, type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  >
+              <div className="admin-cohort-section-card">
+                <h3 className="admin-card-title">Add material</h3>
+                <form onSubmit={handleCreateMaterial} className="admin-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="admin-form-field">
+                    <select value={materialForm.type} onChange={(e) => setMaterialForm((f) => ({ ...f, type: e.target.value }))}>
                     <option value="book">Book</option>
                     <option value="software">Software</option>
                     <option value="starter_file">Starter file</option>
                     <option value="resource">Resource</option>
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={materialForm.title}
-                    onChange={(e) => setMaterialForm((f) => ({ ...f, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <textarea
-                    placeholder="Description (optional)"
-                    value={materialForm.description}
-                    onChange={(e) => setMaterialForm((f) => ({ ...f, description: e.target.value }))}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="URL (optional)"
-                    value={materialForm.url}
-                    onChange={(e) => setMaterialForm((f) => ({ ...f, url: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="File URL (optional)"
-                    value={materialForm.fileUrl}
-                    onChange={(e) => setMaterialForm((f) => ({ ...f, fileUrl: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <button type="submit" disabled={savingMaterial} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
-                    {savingMaterial ? 'Saving...' : editingMaterialId ? 'Update material' : 'Add material'}
-                  </button>
+                  </div>
+                  <div className="admin-form-field"><input type="text" placeholder="Title" value={materialForm.title} onChange={(e) => setMaterialForm((f) => ({ ...f, title: e.target.value }))} /></div>
+                  <div className="admin-form-field"><textarea placeholder="Description (optional)" value={materialForm.description} onChange={(e) => setMaterialForm((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+                  <div className="admin-form-field"><input type="text" placeholder="URL (optional)" value={materialForm.url} onChange={(e) => setMaterialForm((f) => ({ ...f, url: e.target.value }))} /></div>
+                  <div className="admin-form-field"><input type="text" placeholder="File URL (optional)" value={materialForm.fileUrl} onChange={(e) => setMaterialForm((f) => ({ ...f, fileUrl: e.target.value }))} /></div>
+                  <button type="submit" disabled={savingMaterial} className="admin-btn admin-btn-primary">{savingMaterial ? 'Saving...' : editingMaterialId ? 'Update material' : 'Add material'}</button>
                 </form>
               </div>
             </div>
           )}
 
           {selectedWeekId && weekDetails && (
-            <div className="grid gap-6 md:grid-cols-2 mt-8">
+            <div className="admin-cohort-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-3">Current content</h3>
+                <h3 className="admin-card-title" style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Current content</h3>
                 {weekDetails.contentItems?.length ? (
-                  <ul className="space-y-2 text-sm text-gray-700">
+                  <ul className="admin-cohort-item-list">
                     {weekDetails.contentItems.map((item) => (
-                      <li key={item.id} className="flex items-center justify-between border-b border-gray-100 py-2">
-                        <div>
-                          <span className="font-medium">{item.title}</span>
-                          <span className="text-gray-500 ml-2">{item.type}</span>
+                      <li key={item.id} className="admin-cohort-item-row">
+                        <div style={{ flex: '1 1 150px', minWidth: 0 }}>
+                          <span style={{ fontWeight: 600 }}>{item.title}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.5rem' }}>{item.type}</span>
                         </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={() => handleEditContent(item)} className="text-xs text-primary hover:underline">
-                            Edit
-                          </button>
-                          <button type="button" onClick={() => handleDeleteContent(item.id)} className="text-xs text-red-600 hover:underline">
-                            Delete
-                          </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                          <button type="button" onClick={() => handleEditContent(item)} className="admin-btn admin-btn-ghost admin-btn-sm">Edit</button>
+                          <button type="button" onClick={() => handleDeleteContent(item.id)} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Delete</button>
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">No content items yet.</p>
+                  <p className="admin-form-hint">No content items yet.</p>
                 )}
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-3">Current materials</h3>
+                <h3 className="admin-card-title" style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Current materials</h3>
                 {weekDetails.materials?.length ? (
-                  <ul className="space-y-2 text-sm text-gray-700">
+                  <ul className="admin-cohort-item-list">
                     {weekDetails.materials.map((item) => (
-                      <li key={item.id} className="flex items-center justify-between border-b border-gray-100 py-2">
-                        <div>
-                          <span className="font-medium">{item.title}</span>
-                          <span className="text-gray-500 ml-2">{item.type}</span>
+                      <li key={item.id} className="admin-cohort-item-row">
+                        <div style={{ flex: '1 1 150px', minWidth: 0 }}>
+                          <span style={{ fontWeight: 600 }}>{item.title}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.5rem' }}>{item.type}</span>
                         </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={() => handleEditMaterial(item)} className="text-xs text-primary hover:underline">
-                            Edit
-                          </button>
-                          <button type="button" onClick={() => handleDeleteMaterial(item.id)} className="text-xs text-red-600 hover:underline">
-                            Delete
-                          </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                          <button type="button" onClick={() => handleEditMaterial(item)} className="admin-btn admin-btn-ghost admin-btn-sm">Edit</button>
+                          <button type="button" onClick={() => handleDeleteMaterial(item.id)} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Delete</button>
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">No materials yet.</p>
+                  <p className="admin-form-hint">No materials yet.</p>
                 )}
               </div>
             </div>
           )}
         </div>
 
-        <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Live classes</h2>
-          <form onSubmit={handleCreateLiveClass} className="grid gap-3 md:grid-cols-3">
-            <select
-              value={liveClassForm.weekId}
-              onChange={(e) => setLiveClassForm((f) => ({ ...f, weekId: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              <option value="">Select week</option>
-              {weeks.map((w) => (
-                <option key={w.id} value={w.id}>Week {w.week_number} · {w.title}</option>
-              ))}
-            </select>
-            <input
-              type="datetime-local"
-              value={liveClassForm.scheduledAt}
-              onChange={(e) => setLiveClassForm((f) => ({ ...f, scheduledAt: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="Google Meet link"
-              value={liveClassForm.googleMeetLink}
-              onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <button type="submit" disabled={savingLiveClass} className="md:col-span-3 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
+        <div className="admin-card">
+          <h2 className="admin-card-title">Live classes</h2>
+          <form onSubmit={handleCreateLiveClass} className="admin-form-group admin-action-group admin-cohort-live-form">
+            <div className="admin-form-field">
+              <select value={liveClassForm.weekId} onChange={(e) => setLiveClassForm((f) => ({ ...f, weekId: e.target.value }))}>
+                <option value="">Select week</option>
+                {weeks.map((w) => (
+                  <option key={w.id} value={w.id}>Week {w.week_number} · {w.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="admin-form-field">
+              <input type="datetime-local" value={liveClassForm.scheduledAt} onChange={(e) => setLiveClassForm((f) => ({ ...f, scheduledAt: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <input type="text" placeholder="Google Meet link" value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+            </div>
+            <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary admin-cohort-live-submit">
               {savingLiveClass ? 'Scheduling...' : 'Schedule live class'}
             </button>
           </form>
 
           {liveClasses.length === 0 ? (
-            <p className="text-sm text-gray-500 mt-4">No live classes scheduled yet.</p>
+            <p className="admin-form-hint" style={{ marginTop: '1rem' }}>No live classes scheduled yet.</p>
           ) : (
-            <table className="w-full mt-4">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Week</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Scheduled</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Meet link</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liveClasses.map((lc) => (
-                  <tr key={lc.id} className="border-b border-gray-100 last:border-0">
-                    <td className="py-3 px-4 text-gray-900">{lc.week_title || lc.week_number}</td>
-                    <td className="py-3 px-4 text-gray-600">{lc.scheduled_at ? new Date(lc.scheduled_at).toLocaleString() : '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{lc.google_meet_link || '—'}</td>
+            <div className="admin-cohort-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th className="admin-table-th">Week</th>
+                    <th className="admin-table-th">Scheduled</th>
+                    <th className="admin-table-th">Meet link</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {liveClasses.map((lc) => (
+                    <tr key={lc.id} className="admin-table-tr">
+                      <td className="admin-table-td" style={{ fontWeight: 500 }}>{lc.week_title || lc.week_number}</td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{lc.scheduled_at ? formatTimeLagos(lc.scheduled_at) : '—'}</td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{lc.google_meet_link || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
-        <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Facilitators</h2>
-          <form onSubmit={handleAssignFacilitator} className="flex gap-3 flex-wrap items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Facilitator email</label>
-              <input
-                type="email"
-                value={facilitatorEmail}
-                onChange={(e) => setFacilitatorEmail(e.target.value)}
-                placeholder="facilitator@example.com"
-                className="mt-1 block w-64 px-3 py-2 border border-gray-300 rounded-lg"
-              />
+        <div className="admin-card">
+          <h2 className="admin-card-title">Facilitators</h2>
+          <form onSubmit={handleAssignFacilitator} className="admin-form-group admin-action-group admin-cohort-enroll-form">
+            <div className="admin-form-group admin-cohort-enroll-input">
+              <label className="admin-form-label">Facilitator email</label>
+              <div className="admin-form-field">
+                <input type="email" value={facilitatorEmail} onChange={(e) => setFacilitatorEmail(e.target.value)} placeholder="facilitator@example.com" />
+              </div>
             </div>
-            <button type="submit" disabled={assigningFacilitator} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50">
-              {assigningFacilitator ? 'Assigning...' : 'Assign'}
-            </button>
+            <button type="submit" disabled={assigningFacilitator} className="admin-btn admin-btn-primary">{assigningFacilitator ? 'Assigning...' : 'Assign'}</button>
           </form>
-          {facilitatorMessage && <p className="mt-2 text-sm text-gray-600">{facilitatorMessage}</p>}
+          {facilitatorMessage && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: facilitatorMessage.includes('assigned') || facilitatorMessage.includes('removed') ? '#059669' : 'inherit' }}>{facilitatorMessage}</p>}
 
           {facilitators.length === 0 ? (
-            <p className="text-gray-500 mt-4">No facilitators assigned yet.</p>
+            <p className="admin-form-hint" style={{ marginTop: '1rem' }}>No facilitators assigned yet.</p>
           ) : (
-            <table className="w-full mt-4">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Assigned</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {facilitators.map((f) => (
-                  <tr key={f.id} className="border-b border-gray-100 last:border-0">
-                    <td className="py-3 px-4 font-medium text-gray-900">{f.first_name} {f.last_name}</td>
-                    <td className="py-3 px-4 text-gray-600">{f.email}</td>
-                    <td className="py-3 px-4 text-gray-600">{formatDate(f.assigned_at)}</td>
-                    <td className="py-3 px-4">
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFacilitator(f.id)}
-                        disabled={assigningFacilitator}
-                        className="text-red-600 text-sm font-medium hover:underline disabled:opacity-50"
-                      >
-                        Remove
-                      </button>
-                    </td>
+            <div className="admin-cohort-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th className="admin-table-th">Name</th>
+                    <th className="admin-table-th">Email</th>
+                    <th className="admin-table-th">Assigned</th>
+                    <th className="admin-table-th">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {facilitators.map((f) => (
+                    <tr key={f.id} className="admin-table-tr">
+                      <td className="admin-table-td" style={{ fontWeight: 500 }}>{f.first_name} {f.last_name}</td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{f.email}</td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{formatDate(f.assigned_at)}</td>
+                      <td className="admin-table-td">
+                        <button type="button" onClick={() => handleRemoveFacilitator(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Remove</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
-        <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Students ({students.length})</h2>
+        <div className="admin-card">
+          <h2 className="admin-card-title">Students ({students.length})</h2>
           {students.length === 0 ? (
-            <p className="text-gray-500">No students enrolled yet.</p>
+            <p className="admin-form-hint">No students enrolled yet.</p>
           ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Enrolled</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((s) => (
-                  <tr key={s.id} className="border-b border-gray-100 last:border-0">
-                    <td className="py-3 px-4 font-medium text-gray-900">{s.first_name} {s.last_name}</td>
-                    <td className="py-3 px-4 text-gray-600">{s.email}</td>
-                    <td className="py-3 px-4 text-gray-600">{s.status}</td>
-                    <td className="py-3 px-4 text-gray-600">{formatDate(s.enrolled_at)}</td>
+            <div className="admin-cohort-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th className="admin-table-th">Name</th>
+                    <th className="admin-table-th">Email</th>
+                    <th className="admin-table-th">Status</th>
+                    <th className="admin-table-th">Enrolled</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {students.map((s) => (
+                    <tr key={s.id} className="admin-table-tr">
+                      <td className="admin-table-td" style={{ fontWeight: 500 }}>{s.first_name} {s.last_name}</td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{s.email}</td>
+                      <td className="admin-table-td"><StatusBadge status={s.status || 'active'} /></td>
+                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{formatDate(s.enrolled_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

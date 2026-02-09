@@ -10,18 +10,19 @@ export async function GET(request) {
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await ensureLmsSchema();
     const { searchParams } = new URL(request.url);
-    const activeOnly = searchParams.get('activeOnly') === 'true';
+    const activeOnlyParam = searchParams.get('activeOnly') === 'true' ? true : null;
     const result = await sql`
       SELECT j.*, t.track_name
       FROM jobs j
       LEFT JOIN tracks t ON t.id = j.track_id
-      ${activeOnly ? sql`WHERE j.is_active = true` : sql``}
+      WHERE (${activeOnlyParam}::boolean IS NULL OR j.is_active = true)
       ORDER BY j.created_at DESC;
     `;
     return NextResponse.json({ jobs: result.rows });
   } catch (e) {
     console.error('GET /api/admin/jobs:', e);
-    return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch jobs';
+    return NextResponse.json({ error: 'Failed to fetch jobs', detail: msg }, { status: 500 });
   }
 }
 
@@ -51,14 +52,19 @@ export async function POST(request) {
       RETURNING *;
     `;
     const ipAddress = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null;
-    await recordAuditLog({
-      userId: admin.id,
-      action: 'job.create',
-      targetType: 'job',
-      targetId: result.rows[0].id,
-      details: { title: result.rows[0].title },
-      ipAddress,
-    });
+    try {
+      await recordAuditLog({
+        userId: typeof admin.id === 'string' && /^[0-9a-f-]{36}$/i.test(admin.id) ? admin.id : null,
+        action: 'job.create',
+        targetType: 'job',
+        targetId: result.rows[0].id,
+        details: { title: result.rows[0].title },
+        ipAddress,
+        actorEmail: admin.email,
+      });
+    } catch (auditErr) {
+      console.error('Audit log job.create (non-blocking):', auditErr);
+    }
     return NextResponse.json({ job: result.rows[0] });
   } catch (e) {
     console.error('POST /api/admin/jobs:', e);

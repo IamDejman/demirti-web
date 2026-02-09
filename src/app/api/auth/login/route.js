@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyUserCredentials, createUserSession, generateSessionToken } from '@/lib/auth';
 import { rateLimit } from '@/lib/rateLimit';
+import { recordAuditLog } from '@/lib/audit';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
@@ -28,6 +29,16 @@ export async function POST(request) {
     }
     const token = generateSessionToken();
     await createUserSession(user.id, token);
+    const ipAddress = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null;
+    await recordAuditLog({
+      userId: user.id,
+      action: 'user.login',
+      targetType: 'user',
+      targetId: user.id,
+      details: { role: user.role },
+      ipAddress,
+      actorEmail: user.email,
+    });
     const res = NextResponse.json({
       success: true,
       token,

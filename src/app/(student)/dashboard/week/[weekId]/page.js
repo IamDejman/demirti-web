@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function WeekPage() {
@@ -70,7 +71,7 @@ export default function WeekPage() {
   if (!week) {
     return (
       <LmsCard hoverable={false}>
-        <LmsEmptyState title="Week not found" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+        <LmsEmptyState icon={LmsIcons.inbox} title="Week not found" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
       </LmsCard>
     );
   }
@@ -78,23 +79,22 @@ export default function WeekPage() {
   if (week.locked) {
     return (
       <LmsCard hoverable={false}>
-        <LmsEmptyState title="This week is not yet unlocked" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+        <LmsEmptyState icon={LmsIcons.lock} title="This week is not yet unlocked" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
       </LmsCard>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard" className="text-gray-500 hover:text-primary text-sm font-medium">← Dashboard</Link>
-      </div>
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{week.title}</h1>
-        {week.description && <p className="text-gray-600 mt-2">{week.description}</p>}
-      </div>
+      <LmsPageHeader
+        title={week.title}
+        subtitle={week.description}
+        icon={LmsIcons.book}
+        breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
+      />
 
       {week.live_class_datetime && (
-        <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)}>
+        <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)} icon={LmsIcons.video}>
           {week.google_meet_link && (
             <a
               href={week.google_meet_link}
@@ -125,7 +125,7 @@ export default function WeekPage() {
       )}
 
       {checklistItems.length > 0 && (
-        <LmsCard title="Checklist">
+        <LmsCard title="Checklist" icon={LmsIcons.checkCircle}>
           <ul className="mt-4 space-y-2">
             {checklistItems.map((item) => (
               <li key={item.id} className="flex items-center gap-3">
@@ -147,7 +147,7 @@ export default function WeekPage() {
       )}
 
       {contentItems.length > 0 && (
-        <LmsCard title="Content">
+        <LmsCard title="Content" icon={LmsIcons.book}>
           <ul className="mt-4 space-y-3">
             {contentItems.map((item) => (
               <li key={item.id}>
@@ -165,7 +165,7 @@ export default function WeekPage() {
       )}
 
       {materials.length > 0 && (
-        <LmsCard title="Materials">
+        <LmsCard title="Materials" icon={LmsIcons.briefcase}>
           <ul className="mt-4 space-y-2">
             {materials.map((m) => (
               <li key={m.id}>
@@ -180,7 +180,7 @@ export default function WeekPage() {
       )}
 
       {assignments.length > 0 && (
-        <LmsCard title="Assignments">
+        <LmsCard title="Assignments" icon={LmsIcons.clipboard}>
           <ul className="mt-4 space-y-3">
             {assignments.map((a) => (
               <li key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">

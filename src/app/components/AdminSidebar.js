@@ -94,6 +94,7 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'Settings', icon: 'settings', items: [
     { href: '/admin/config', label: 'Config' },
     { href: '/admin/notification-templates', label: 'Notif Templates' },
+    { href: '/admin/audit-logs', label: 'Audit Logs' },
   ]},
   { id: 'adminTools', label: 'Admin Tools', icon: 'adminTools', items: [
     { href: '/admin/moderation', label: 'Moderation' },
@@ -148,6 +149,10 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
     }
   };
 
+  const openFlyoutOnHover = (id) => {
+    if (collapsed) setFlyoutSection(id);
+  };
+
   const closeFlyout = () => setFlyoutSection(null);
 
   const isActive = (path) => pathname === path || (path !== '/admin' && pathname.startsWith(path));
@@ -185,9 +190,9 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
               onClick={() => { setMobileOpen(false); closeFlyout(); }}
             >
               {collapsed ? (
-                <Image src="/favicon.ico" alt="CVERSE" width={32} height={32} className="admin-sidebar-logo-img" />
+                <Image src="/favicon.ico" alt="CVERSE" width={32} height={32} className="admin-sidebar-logo-img" priority />
               ) : (
-                <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-sidebar-logo-img" style={{ width: 'auto', height: 'auto' }} />
+                <Image src="/logo.png" alt="CVERSE Admin" width={120} height={40} className="admin-sidebar-logo-img" style={{ width: 'auto', height: 'auto' }} priority />
               )}
             </Link>
             {onToggleCollapse && (
@@ -222,12 +227,13 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                   <div key={item.href} className="admin-sidebar-parent">
                     <div
                       className={`admin-sidebar-parent-btn admin-sidebar-dashboard-link ${isActive(item.href) ? 'active' : ''}`}
+                      title={collapsed ? item.label : undefined}
                     >
                       <Link
                         href={item.href}
                         onClick={() => { setMobileOpen(false); closeFlyout(); }}
                         className="admin-sidebar-dashboard-link-inner"
-                        title={collapsed ? item.label : undefined}
+                        aria-label={collapsed ? item.label : undefined}
                       >
                         <span className="admin-sidebar-item-content">
                           <span className="admin-sidebar-icon">{ICONS[item.icon]}</span>
@@ -243,7 +249,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
               const flyoutOpen = flyoutSection === item.id;
               const listId = `admin-sidebar-${item.id}`;
               return (
-                <div key={item.id} className="admin-sidebar-parent admin-sidebar-parent-with-flyout">
+                <div key={item.id} className="admin-sidebar-parent admin-sidebar-parent-with-flyout" onMouseEnter={() => collapsed && openFlyoutOnHover(item.id)}>
                   <button
                     type="button"
                     className={`admin-sidebar-parent-btn ${isExpanded ? 'expanded' : ''} ${getSectionWithActiveRoute(pathname) === item.id ? 'has-active' : ''} ${flyoutOpen ? 'flyout-open' : ''}`}
@@ -251,6 +257,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                     aria-expanded={collapsed ? flyoutOpen : isExpanded}
                     aria-controls={listId}
                     title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? `${item.label} (hover for menu)` : undefined}
                   >
                     <span className="admin-sidebar-item-content">
                       <span className="admin-sidebar-icon">{ICONS[item.icon]}</span>
@@ -373,7 +380,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           border-right: 1px solid #e8ecf0;
           display: flex;
           flex-direction: column;
-          z-index: 1000;
+          z-index: 1050;
           overflow-y: auto;
           overflow-x: hidden;
           flex-shrink: 0;
@@ -384,6 +391,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           width: 72px;
           min-width: 72px;
           max-width: 72px;
+          overflow-x: visible;
         }
         .admin-sidebar-inner {
           display: flex;
@@ -391,6 +399,12 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           align-items: stretch;
           min-height: 100%;
           padding: 1.5rem 0;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .admin-sidebar.collapsed .admin-sidebar-inner {
+          padding-left: 0;
+          padding-right: 0;
         }
         .admin-sidebar-header {
           display: flex;
@@ -403,7 +417,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
         }
         .admin-sidebar.collapsed .admin-sidebar-header {
           flex-direction: column;
-          padding: 0 1rem 1rem;
+          padding: 0 0.5rem 1rem;
           gap: 0.5rem;
         }
         .admin-sidebar-logo {
@@ -431,6 +445,9 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           padding: 1rem 1.25rem;
           overflow-y: auto;
           gap: 0.5rem;
+        }
+        .admin-sidebar.collapsed .admin-sidebar-nav {
+          padding: 1rem 0.5rem;
         }
         .admin-sidebar-parent {
           display: flex;
@@ -561,17 +578,20 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           position: absolute;
           left: 100%;
           top: 0;
-          min-width: 200px;
+          min-width: 220px;
+          max-width: 280px;
           padding: 0.75rem;
           background: #fff;
           border-radius: 10px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+          box-shadow: 0 4px 24px rgba(0,0,0,0.15);
           border: 1px solid #e8ecf0;
-          z-index: 1001;
+          z-index: 1100;
           display: flex;
           flex-direction: column;
           gap: 0.25rem;
           margin-left: 4px;
+          white-space: normal;
+          pointer-events: auto;
         }
         .admin-sidebar-flyout-header {
           font-size: 0.8rem;

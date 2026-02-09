@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getAuditLogs } from '@/lib/audit';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 function toCsv(rows) {
   if (!rows || rows.length === 0) return '';
-  const headers = ['created_at', 'user_email', 'action', 'target_type', 'target_id', 'ip_address'];
+  const headers = ['created_at_lagos', 'user_email', 'action', 'page', 'target_type', 'target_id', 'ip_address'];
   const lines = [headers.join(',')];
   for (const row of rows) {
-    const values = headers.map((h) => {
-      const val = row[h] ?? '';
-      const safe = String(val).replace(/\"/g, '\"\"');
-      return `"${safe}"`;
-    });
+    const actionDisplay = row.action === 'page.view' ? 'Viewed page' : (row.action ?? '');
+    const pagePath = row.action === 'page.view' ? (row.details?.path ?? row.target_id ?? '') : '';
+    const values = [
+      formatTimeLagos(row.created_at),
+      row.user_email ?? '',
+      actionDisplay,
+      pagePath,
+      row.target_type ?? '',
+      row.target_id ?? '',
+      row.ip_address ?? '',
+    ].map((v) => `"${String(v).replace(/"/g, '""')}"`);
     lines.push(values.join(','));
   }
   return lines.join('\n');
@@ -38,6 +45,7 @@ export async function GET(request) {
     return NextResponse.json({ logs });
   } catch (e) {
     console.error('GET /api/admin/audit-logs:', e);
-    return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch audit logs';
+    return NextResponse.json({ error: 'Failed to fetch audit logs', detail: msg }, { status: 500 });
   }
 }

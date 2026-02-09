@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -41,13 +42,10 @@ export default function StudentAssignmentsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
-        <p className="text-gray-600 mt-1">View and submit your cohort assignments.</p>
-      </div>
-      <LmsCard title="Assignments" hoverable={false}>
+      <LmsPageHeader title="Assignments" subtitle="View and submit your cohort assignments." icon={LmsIcons.clipboard} />
+      <LmsCard title="Assignments" icon={LmsIcons.clipboard} hoverable={false}>
         {assignments.length === 0 ? (
-          <LmsEmptyState title="No assignments in this cohort yet" description="Assignments will appear here when your facilitators add them." />
+          <LmsEmptyState icon={LmsIcons.clipboard} title="No assignments in this cohort yet" description="Assignments will appear here when your facilitators add them." />
         ) : (
           <div className="lms-table-wrapper">
             <table className="lms-table">

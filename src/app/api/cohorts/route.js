@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getCohorts, getCohortsForUser, createCohort } from '@/lib/db-lms';
+import { getCohorts, getCohortsForUser, createCohort, getCohortById } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request) {
   try {
@@ -22,7 +23,8 @@ export async function GET(request) {
     return NextResponse.json({ cohorts });
   } catch (e) {
     console.error('GET /api/cohorts:', e);
-    return NextResponse.json({ error: 'Failed to fetch cohorts' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch cohorts';
+    return NextResponse.json({ error: 'Failed to fetch cohorts', detail: msg }, { status: 500 });
   }
 }
 
@@ -47,7 +49,22 @@ export async function POST(request) {
       endDate,
       status: status || 'upcoming',
     });
-    return NextResponse.json({ cohort });
+    const ipAddress = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null;
+    try {
+      await recordAuditLog({
+        userId: admin.id,
+        action: 'cohort.create',
+        targetType: 'cohort',
+        targetId: cohort.id,
+        details: { name: cohort.name },
+        ipAddress,
+        actorEmail: admin.email,
+      });
+    } catch (auditErr) {
+      console.error('Audit log cohort.create (non-blocking):', auditErr);
+    }
+    const fullCohort = await getCohortById(cohort.id) || cohort;
+    return NextResponse.json({ cohort: fullCohort });
   } catch (e) {
     console.error('POST /api/cohorts:', e);
     return NextResponse.json({ error: 'Failed to create cohort' }, { status: 500 });

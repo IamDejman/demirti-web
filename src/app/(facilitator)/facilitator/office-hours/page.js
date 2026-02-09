@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
 const emptyForm = {
@@ -72,68 +73,87 @@ export default function FacilitatorOfficeHoursPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Office Hours</h1>
-        <p className="text-gray-600 mt-1">Create slots and manage bookings.</p>
-        {message && <p className="text-sm text-gray-600 mt-2">{message}</p>}
-      </div>
+      <LmsPageHeader title="Office Hours" subtitle="Create slots and manage bookings." icon={LmsIcons.clock}>
+        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
+      </LmsPageHeader>
 
-      <LmsCard title="Create slot">
-        <form onSubmit={handleCreate} className="mt-4 space-y-3">
-          <input
-            type="text"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <textarea
-            rows={3}
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <div className="grid gap-3 md:grid-cols-2">
-            <input
-              type="datetime-local"
-              value={form.startTime}
-              onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <input
-              type="datetime-local"
-              value={form.endTime}
-              onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
+      <LmsCard title="Create slot" icon={LmsIcons.clock}>
+        <form onSubmit={handleCreate} className="mt-4 space-y-4">
+          <div>
+            <label className="lms-form-label">Title</label>
             <input
               type="text"
-              placeholder="Meeting link"
-              value={form.meetingLink}
-              onChange={(e) => setForm((f) => ({ ...f, meetingLink: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <input
-              type="number"
-              min="1"
-              value={form.capacity}
-              onChange={(e) => setForm((f) => ({ ...f, capacity: parseInt(e.target.value, 10) || 1 }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="Office hour title"
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
-          <select
-            value={form.cohortId}
-            onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">Open to all cohorts</option>
-            {cohorts.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <div>
+            <label className="lms-form-label">Description</label>
+            <textarea
+              rows={3}
+              placeholder="What will be covered..."
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              className="lms-form-textarea w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="lms-form-label">Start time</label>
+              <input
+                type="datetime-local"
+                value={form.startTime}
+                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="lms-form-label">End time</label>
+              <input
+                type="datetime-local"
+                value={form.endTime}
+                onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="lms-form-label">Meeting link</label>
+              <input
+                type="text"
+                placeholder="https://..."
+                value={form.meetingLink}
+                onChange={(e) => setForm((f) => ({ ...f, meetingLink: e.target.value }))}
+                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="lms-form-label">Capacity</label>
+              <input
+                type="number"
+                min="1"
+                value={form.capacity}
+                onChange={(e) => setForm((f) => ({ ...f, capacity: parseInt(e.target.value, 10) || 1 }))}
+                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="lms-form-label">Cohort</label>
+            <select
+              value={form.cohortId}
+              onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
+              className="lms-form-select w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">Open to all cohorts</option>
+              {cohorts.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
             Create slot
           </button>
@@ -142,7 +162,7 @@ export default function FacilitatorOfficeHoursPage() {
 
       <LmsCard title="Your slots">
         {slots.length === 0 ? (
-          <LmsEmptyState title="No slots yet" description="Create a slot above to allow students to book office hours." />
+          <LmsEmptyState icon={LmsIcons.calendar} title="No slots yet" description="Create a slot above to allow students to book office hours." />
         ) : (
           <ul className="space-y-3">
             {slots.map((slot) => (

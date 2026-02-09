@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getTracksLms, createTrackLms } from '@/lib/db-lms';
+import { getAllTracks } from '@/lib/db';
+import { createTrackLms } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 export async function GET() {
   try {
-    const tracks = await getTracksLms(true);
+    const tracks = await getAllTracks();
     return NextResponse.json({ tracks });
   } catch (e) {
     console.error('GET /api/tracks:', e);

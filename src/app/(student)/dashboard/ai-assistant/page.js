@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LmsCard } from '@/app/components/lms';
+import { LmsCard, LmsPageHeader } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -69,12 +70,9 @@ export default function AiAssistantPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">AI Study Assistant</h1>
-        <p className="text-gray-600 mt-1">Get guidance, hints, and structured explanations.</p>
-      </div>
+      <LmsPageHeader title="AI Study Assistant" subtitle="Get guidance, hints, and structured explanations." icon={LmsIcons.sparkle} />
 
-      <LmsCard title="Chat" subtitle="Ask questions about your course content">
+      <LmsCard title="Chat" subtitle="Ask questions about your course content" icon={LmsIcons.sparkle}>
         <div className="flex items-center gap-3 text-sm text-gray-600">
           <label className="flex items-center gap-2">
             <input
@@ -88,12 +86,15 @@ export default function AiAssistantPage() {
         </div>
         <div className="mt-4 h-[420px] overflow-auto border border-gray-100 rounded-lg p-4 space-y-4 bg-gray-50/50">
           {messages.length === 0 ? (
-            <p className="text-sm text-gray-500">Ask a question to get started.</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="mb-2">{LmsIcons.sparkle}</div>
+              <p className="text-sm">Ask a question to get started.</p>
+            </div>
           ) : (
             messages.map((m, idx) => (
-              <div key={idx} className={m.role === 'assistant' ? 'bg-white p-3 rounded-lg border border-gray-100' : 'ml-8'}>
-                <p className="text-xs text-gray-400 font-medium">{m.role === 'assistant' ? 'Assistant' : 'You'}</p>
-                <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{m.content}</p>
+              <div key={idx} className={m.role === 'assistant' ? 'lms-chat-assistant' : 'lms-chat-user'}>
+                <p className="text-xs opacity-60 font-medium mb-1">{m.role === 'assistant' ? 'Assistant' : 'You'}</p>
+                <p className="text-sm whitespace-pre-wrap">{m.content}</p>
               </div>
             ))
           )}

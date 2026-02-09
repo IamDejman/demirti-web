@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { LmsCard, LmsEmptyState } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader, LmsBadge } from '@/app/components/lms';
+import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
@@ -60,6 +61,7 @@ export default function FacilitatorCohortPage() {
     return (
       <LmsCard>
         <LmsEmptyState
+          icon={LmsIcons.inbox}
           title="Cohort not found"
           description="You may not have access to this cohort or it no longer exists."
           action={<Link href="/facilitator" className="text-primary font-medium hover:underline">Back to dashboard</Link>}
@@ -70,19 +72,18 @@ export default function FacilitatorCohortPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <Link href="/facilitator" className="text-sm text-gray-500 hover:text-primary font-medium">← Dashboard</Link>
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{cohort.name}</h1>
-        <p className="text-gray-600 mt-1">{cohort.track_name}</p>
+      <LmsPageHeader
+        title={cohort.name}
+        subtitle={cohort.track_name}
+        icon={LmsIcons.graduation}
+        breadcrumb={{ href: '/facilitator', label: 'Dashboard' }}
+      >
         {cohort.start_date && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-white/80 mt-2">
             {formatDate(cohort.start_date)} – {formatDate(cohort.end_date)}
           </p>
         )}
-      </div>
+      </LmsPageHeader>
 
       <div className="grid gap-4 md:grid-cols-2">
         <LmsCard title="Quick actions" hoverable={false}>
@@ -105,19 +106,20 @@ export default function FacilitatorCohortPage() {
 
       <LmsCard
         title="Weeks"
+        icon={LmsIcons.calendar}
         subtitle={`${weeks.length} weeks in curriculum`}
         action={
           <span className="text-sm text-gray-500">Read-only</span>
         }
       >
         {weeks.length === 0 ? (
-          <LmsEmptyState title="No weeks configured" description="Weeks are managed in the admin cohort view." />
+          <LmsEmptyState icon={LmsIcons.calendar} title="No weeks configured" description="Weeks are managed in the admin cohort view." />
         ) : (
           <ul className="space-y-2">
             {weeks.map((w) => (
               <li key={w.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span className="font-medium text-gray-900">Week {w.week_number}: {w.title}</span>
-                {w.is_locked && <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Locked</span>}
+                {w.is_locked && <LmsBadge variant="warning">Locked</LmsBadge>}
               </li>
             ))}
           </ul>
@@ -127,9 +129,10 @@ export default function FacilitatorCohortPage() {
       <LmsCard
         title="Live classes"
         subtitle={`${liveClasses.length} scheduled`}
+        icon={LmsIcons.video}
       >
         {liveClasses.length === 0 ? (
-          <LmsEmptyState title="No live classes" description="Live classes are scheduled per week in the admin cohort view." />
+          <LmsEmptyState icon={LmsIcons.video} title="No live classes" description="Live classes are scheduled per week in the admin cohort view." />
         ) : (
           <ul className="space-y-2">
             {liveClasses.slice(0, 5).map((lc) => (
@@ -146,9 +149,10 @@ export default function FacilitatorCohortPage() {
       <LmsCard
         title="Students"
         subtitle={`${students.length} enrolled`}
+        icon={LmsIcons.users}
       >
         {students.length === 0 ? (
-          <LmsEmptyState title="No students enrolled" description="Students enroll through the admin or application flow." />
+          <LmsEmptyState icon={LmsIcons.users} title="No students enrolled" description="Students enroll through the admin or application flow." />
         ) : (
           <div className="lms-table-wrapper">
             <table className="lms-table">
@@ -175,9 +179,10 @@ export default function FacilitatorCohortPage() {
       <LmsCard
         title="Assignments"
         subtitle={`${assignments.length} total`}
+        icon={LmsIcons.clipboard}
       >
         {assignments.length === 0 ? (
-          <LmsEmptyState title="No assignments" description="Assignments are created per week in the admin cohort view." />
+          <LmsEmptyState icon={LmsIcons.clipboard} title="No assignments" description="Assignments are created per week in the admin cohort view." />
         ) : (
           <ul className="space-y-2">
             {assignments.slice(0, 5).map((a) => (

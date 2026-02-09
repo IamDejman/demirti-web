@@ -1,8 +1,5 @@
 import './globals.css'
-import { ToastProvider } from './components/ToastProvider'
-import AnalyticsTracker from './components/AnalyticsTracker'
-import ConsentBanner from './components/ConsentBanner'
-import PwaRegister from './components/PwaRegister'
+import ClientAppShell from './components/ClientAppShell'
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
 const origin = baseUrl.replace(/\/$/, '')
@@ -83,12 +80,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <ToastProvider>
-          <AnalyticsTracker />
-          <PwaRegister />
-          {children}
-          <ConsentBanner />
-        </ToastProvider>
+        <ClientAppShell>{children}</ClientAppShell>
       </body>
     </html>
   )

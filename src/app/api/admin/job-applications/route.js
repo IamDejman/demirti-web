@@ -14,20 +14,22 @@ export async function GET(request) {
     const rawLimit = parseInt(searchParams.get('limit') || '200', 10);
     const limit = Number.isNaN(rawLimit) ? 200 : Math.min(Math.max(rawLimit, 1), 500);
 
+    const jobIdParam = jobId || null;
+    const statusParam = status || null;
     const result = await sql`
       SELECT ja.*, j.title AS job_title, u.email AS user_email
       FROM job_applications ja
       JOIN jobs j ON j.id = ja.job_id
       LEFT JOIN users u ON u.id = ja.user_id
-      WHERE 1=1
-        ${jobId ? sql`AND ja.job_id = ${jobId}` : sql``}
-        ${status ? sql`AND ja.status = ${status}` : sql``}
+      WHERE (${jobIdParam}::text IS NULL OR ja.job_id::text = ${jobIdParam})
+        AND (${statusParam}::text IS NULL OR ja.status = ${statusParam})
       ORDER BY ja.created_at DESC
       LIMIT ${limit};
     `;
     return NextResponse.json({ applications: result.rows });
   } catch (e) {
     console.error('GET /api/admin/job-applications:', e);
-    return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
+    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch applications';
+    return NextResponse.json({ error: 'Failed to fetch applications', detail: msg }, { status: 500 });
   }
 }

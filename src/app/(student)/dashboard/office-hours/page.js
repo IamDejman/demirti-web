@@ -54,45 +54,40 @@ export default function StudentOfficeHoursPage() {
       {loading ? (
         <div className="h-64 lms-skeleton rounded-xl" />
       ) : (
-        <LmsCard title="Available slots" subtitle={slots.length === 0 ? undefined : `${slots.length} slot${slots.length !== 1 ? 's' : ''} available`}>
+        <LmsCard title="Available slots" subtitle={slots.length === 0 ? undefined : `${slots.length} slot${slots.length !== 1 ? 's' : ''} available`} icon={LmsIcons.clock}>
           {slots.length === 0 ? (
             <LmsEmptyState icon={LmsIcons.calendar} title="No office hour slots available" description="Check back later or contact your facilitator." />
           ) : (
-            <div className="grid" style={{ gap: 'var(--lms-space-4)' }}>
+            <div className="grid gap-4 sm:grid-cols-2">
               {slots.map((slot) => (
-                <div key={slot.id} className="rounded-lg p-4 transition-colors border" style={{ borderColor: 'var(--neutral-100)' }}>
-                  <div className="flex items-start justify-between" style={{ gap: 'var(--lms-space-4)' }}>
-                    <div>
+                <div key={slot.id} className="rounded-xl p-5 transition-all hover:shadow-md" style={{ border: '1px solid var(--neutral-100)', background: 'white' }}>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>
+                      {LmsIcons.clock}
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold" style={{ color: 'var(--neutral-900)' }}>{slot.title || 'Office hour slot'}</h3>
-                      <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
-                        {new Date(slot.start_time).toLocaleString()} – {new Date(slot.end_time).toLocaleTimeString()}
-                      </p>
-                      <p className="text-xs mt-1" style={{ color: 'var(--neutral-500)' }}>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="lms-badge lms-badge-info">
+                          {new Date(slot.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                        <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>
+                          {new Date(slot.start_time).toLocaleTimeString(undefined, { timeStyle: 'short' })} – {new Date(slot.end_time).toLocaleTimeString(undefined, { timeStyle: 'short' })}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-2" style={{ color: 'var(--neutral-500)' }}>
                         Facilitator: {slot.first_name || ''} {slot.last_name || ''}
                       </p>
-                      {slot.description && <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>{slot.description}</p>}
-                      {slot.meeting_link && (
-                        <a href={slot.meeting_link} className="text-sm text-primary mt-2 inline-block hover:underline">
-                          Join link
-                        </a>
-                      )}
+                      {slot.description && <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--neutral-600)' }}>{slot.description}</p>}
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleBook(slot.id)}
-                        className="px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
-                      >
-                        Book
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCancel(slot.id)}
-                        className="px-3 py-2 border text-sm font-medium rounded-lg transition-colors hover:bg-[var(--neutral-50)]"
-                        style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
-                      >
-                        Cancel
-                      </button>
+                  </div>
+                  <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: '1px solid var(--neutral-100)' }}>
+                    {slot.meeting_link ? (
+                      <a href={slot.meeting_link} className="text-sm font-medium text-primary hover:underline">Join link</a>
+                    ) : <span />}
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => handleBook(slot.id)} className="lms-btn lms-btn-sm lms-btn-primary">Book</button>
+                      <button type="button" onClick={() => handleCancel(slot.id)} className="lms-btn lms-btn-sm lms-btn-secondary">Cancel</button>
                     </div>
                   </div>
                 </div>

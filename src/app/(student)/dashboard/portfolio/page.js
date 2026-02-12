@@ -529,14 +529,14 @@ export default function PortfolioPage() {
                   <button
                     type="button"
                     onClick={() => { setEditingLinkId(link.id); setLinkForm({ platform: link.platform || '', url: link.url || '' }); }}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
+                    className="lms-btn lms-btn-sm lms-btn-secondary"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteLink(link.id)}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-200"
+                    className="lms-btn lms-btn-sm lms-btn-outline" style={{ color: 'var(--red-600, #dc2626)', borderColor: 'var(--red-200, #fecaca)' }}
                   >
                     Delete
                   </button>

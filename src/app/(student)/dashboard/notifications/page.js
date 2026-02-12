@@ -87,14 +87,19 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {notifications.map((n) => (
-              <li key={n.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
+              <li key={n.id} className="flex items-center justify-between py-3 px-3 rounded-lg transition-colors" style={{ backgroundColor: n.is_read ? 'transparent' : 'rgba(0, 82, 163, 0.03)', borderBottom: '1px solid var(--neutral-100)' }}>
+                <div className="flex items-center gap-3">
+                  {!n.is_read && (
+                    <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary-color)' }} />
+                  )}
+                  <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
+                </div>
                 {!n.is_read && (
                   <button
                     type="button"
-                    className="text-xs text-primary hover:underline"
+                    className="lms-btn lms-btn-sm lms-btn-outline"
                     onClick={async () => {
                       await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
                       setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
@@ -110,60 +115,72 @@ export default function NotificationsPage() {
       </LmsCard>
 
       <LmsCard title="Notification preferences">
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm lms-form-label" style={{ color: 'var(--neutral-700)' }}>
-            <input
-              type="checkbox"
-              checked={prefs.in_app_enabled !== false}
-              onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            In-app notifications
-          </label>
-          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
-            <input
-              type="checkbox"
-              checked={prefs.email_enabled !== false}
-              onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            Email notifications (Resend)
-          </label>
-          <div className="mt-4 grid md:grid-cols-3 text-sm" style={{ color: 'var(--neutral-600)', gap: 'var(--lms-space-4)' }}>
-            <div className="rounded-lg border p-4" style={{ borderColor: 'var(--neutral-200)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.bell}</span>
+        <div className="space-y-5">
+          {/* Master toggles */}
+          <div className="flex flex-col gap-3">
+            <label className="lms-toggle">
+              <input
+                type="checkbox"
+                checked={prefs.in_app_enabled !== false}
+                onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
+              />
+              <span className="lms-toggle-track" />
+              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>In-app notifications</span>
+            </label>
+            <label className="lms-toggle">
+              <input
+                type="checkbox"
+                checked={prefs.email_enabled !== false}
+                onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
+              />
+              <span className="lms-toggle-track" />
+              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Email notifications</span>
+            </label>
+          </div>
+
+          {/* Category grids */}
+          <div className="grid md:grid-cols-3 text-sm" style={{ color: 'var(--neutral-600)', gap: 'var(--lms-space-4)' }}>
+            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.bell}</span>
                 <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>In-app</p>
               </div>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_grades !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_grades: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Grades</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_deadlines !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_deadlines: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Deadlines</label>
+              {[['in_app_announcements', 'Announcements'], ['in_app_chat', 'Chat'], ['in_app_assignments', 'Assignments'], ['in_app_grades', 'Grades'], ['in_app_deadlines', 'Deadlines']].map(([key, label]) => (
+                <label key={key} className="lms-toggle mt-2.5">
+                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
+                  <span className="lms-toggle-track" />
+                  <span>{label}</span>
+                </label>
+              ))}
             </div>
-            <div className="rounded-lg border p-4" style={{ borderColor: 'var(--neutral-200)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.megaphone}</span>
+            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.megaphone}</span>
                 <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Email</p>
               </div>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_grades !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_grades: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Grades</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_deadlines !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_deadlines: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Deadlines</label>
+              {[['email_announcements', 'Announcements'], ['email_chat', 'Chat'], ['email_assignments', 'Assignments'], ['email_grades', 'Grades'], ['email_deadlines', 'Deadlines']].map(([key, label]) => (
+                <label key={key} className="lms-toggle mt-2.5">
+                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
+                  <span className="lms-toggle-track" />
+                  <span>{label}</span>
+                </label>
+              ))}
             </div>
-            <div className="rounded-lg border p-4" style={{ borderColor: 'var(--neutral-200)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.chat}</span>
+            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.chat}</span>
                 <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Push</p>
               </div>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_assignments !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_assignments: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Assignments</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_grades !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_grades: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Grades</label>
-              <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_deadlines !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_deadlines: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Deadlines</label>
+              {[['push_announcements', 'Announcements'], ['push_chat', 'Chat'], ['push_assignments', 'Assignments'], ['push_grades', 'Grades'], ['push_deadlines', 'Deadlines']].map(([key, label]) => (
+                <label key={key} className="lms-toggle mt-2.5">
+                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
+                  <span className="lms-toggle-track" />
+                  <span>{label}</span>
+                </label>
+              ))}
             </div>
           </div>
+
           <button
             type="button"
             disabled={savingPrefs}
@@ -194,7 +211,7 @@ export default function NotificationsPage() {
               });
               setSavingPrefs(false);
             }}
-            className="mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            className="lms-btn lms-btn-primary"
           >
             {savingPrefs ? 'Saving...' : 'Save preferences'}
           </button>

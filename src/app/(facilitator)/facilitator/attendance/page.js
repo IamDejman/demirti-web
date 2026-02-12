@@ -115,31 +115,57 @@ export default function FacilitatorAttendancePage() {
       )}
       {selectedClass && attendance.length > 0 && (
         <LmsCard title="Mark attendance">
-          <ul className="space-y-2">
-            {attendance.map((r) => (
-              <li key={r.id} className="flex items-center justify-between py-2 border-b" style={{ borderColor: 'var(--neutral-100)' }}>
-                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{r.first_name} {r.last_name}</span>
-                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{r.join_clicked_at ? 'Joined' : '—'}</span>
-                <select
-                  value={r.status || 'absent'}
-                  onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
-                  className="lms-form-select px-2 py-1 border border-gray-300 rounded text-sm"
-                >
-                  <option value="present">Present</option>
-                  <option value="absent">Absent</option>
-                  <option value="excused">Excused</option>
-                </select>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="mt-6 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
-          >
-            {saving ? 'Saving...' : 'Save attendance'}
-          </button>
+          <div className="lms-table-wrapper">
+            <table className="lms-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Join status</th>
+                  <th>Attendance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendance.map((r) => (
+                  <tr key={r.id}>
+                    <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{r.first_name} {r.last_name}</td>
+                    <td>
+                      {r.join_clicked_at ? (
+                        <span className="lms-badge lms-badge-success">Joined</span>
+                      ) : (
+                        <span className="lms-badge lms-badge-neutral">Not joined</span>
+                      )}
+                    </td>
+                    <td>
+                      <select
+                        value={r.status || 'absent'}
+                        onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
+                        className="lms-form-select px-3 py-1.5 border rounded-lg text-sm"
+                        style={{
+                          borderColor: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : 'var(--neutral-300)',
+                          color: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : r.status === 'absent' ? '#dc2626' : 'var(--neutral-700)',
+                          backgroundColor: r.status === 'present' ? 'rgba(22, 163, 74, 0.05)' : r.status === 'excused' ? 'rgba(217, 119, 6, 0.05)' : r.status === 'absent' ? 'rgba(220, 38, 38, 0.05)' : 'white',
+                        }}
+                      >
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="excused">Excused</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="lms-btn lms-btn-primary"
+            >
+              {saving ? 'Saving...' : 'Save attendance'}
+            </button>
+          </div>
         </LmsCard>
       )}
       {selectedClass && attendance.length === 0 && (

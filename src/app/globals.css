@@ -3268,11 +3268,20 @@ main.admin-with-fixed-nav {
   border-radius: 12px;
   border: 1px solid var(--neutral-200);
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lms-card:hover {
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
+
+/* Card accent variants */
+.lms-card-accent-primary { border-left: 4px solid var(--primary-color); }
+.lms-card-accent-success { border-left: 4px solid #10b981; }
+.lms-card-accent-warning { border-left: 4px solid #f59e0b; }
+.lms-card-accent-danger { border-left: 4px solid #ef4444; }
+.lms-card-accent-info { border-left: 4px solid #3b82f6; }
 
 .lms-empty-state {
   background: transparent;
@@ -3433,9 +3442,10 @@ main.admin-with-fixed-nav {
   border-right: 1px solid var(--neutral-200);
 }
 .lms-sidebar-header {
-  border-bottom-color: var(--neutral-100);
-  padding: var(--lms-space-3) var(--lms-space-4);
+  border-bottom: 1px solid var(--neutral-100);
+  padding: var(--lms-space-4) var(--lms-space-4);
   min-height: 3.5rem;
+  background: linear-gradient(180deg, rgba(0, 82, 163, 0.04) 0%, transparent 100%);
 }
 .lms-sidebar nav {
   padding: var(--lms-space-4) var(--lms-space-2);
@@ -3454,8 +3464,11 @@ main.admin-with-fixed-nav {
   color: var(--neutral-900);
 }
 .lms-sidebar-link.active {
-  background-color: rgba(0, 82, 163, 0.1);
+  background-color: rgba(0, 82, 163, 0.08);
   color: var(--primary-color);
+  border-left: 3px solid var(--primary-color);
+  padding-left: calc(var(--lms-space-3) - 3px);
+  font-weight: 600;
 }
 .lms-sidebar-user {
   border-top: 1px solid var(--neutral-100);
@@ -3464,6 +3477,285 @@ main.admin-with-fixed-nav {
 .lms-sidebar-user button:hover {
   background-color: rgba(220, 53, 69, 0.08);
   color: #b91c1c;
+}
+
+/* LMS stat cards */
+.lms-stat-card {
+  background: var(--background-color);
+  border-radius: 12px;
+  border: 1px solid var(--neutral-200);
+  box-shadow: var(--shadow-sm);
+  padding: var(--lms-space-6);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lms-stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.lms-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color, #00c896));
+  border-radius: 12px 12px 0 0;
+}
+
+.lms-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--neutral-900);
+  line-height: 1.2;
+}
+
+.lms-stat-label {
+  font-size: var(--lms-body-sm);
+  font-weight: 500;
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: var(--lms-space-1);
+}
+
+.lms-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.1));
+  color: var(--primary-color);
+  margin-bottom: var(--lms-space-3);
+}
+
+/* LMS buttons */
+.lms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: var(--lms-body-sm);
+  font-weight: 600;
+  border-radius: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.lms-btn-primary {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.lms-btn-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(0, 82, 163, 0.25);
+  transform: translateY(-1px);
+}
+
+.lms-btn-secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-200);
+}
+
+.lms-btn-secondary:hover {
+  background: var(--neutral-200);
+  color: var(--neutral-900);
+}
+
+.lms-btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.lms-btn-outline:hover {
+  background: rgba(0, 82, 163, 0.06);
+}
+
+.lms-btn-sm {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  min-height: 36px;
+  border-radius: 6px;
+}
+
+.lms-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* LMS status badges */
+.lms-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.lms-badge-success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.lms-badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.lms-badge-danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.lms-badge-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.lms-badge-neutral {
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+}
+
+/* LMS toggle switch */
+.lms-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.75rem;
+}
+
+.lms-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.lms-toggle-track {
+  width: 44px;
+  height: 24px;
+  background: var(--neutral-300);
+  border-radius: 9999px;
+  position: relative;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.lms-toggle input:checked + .lms-toggle-track {
+  background: var(--primary-color);
+}
+
+.lms-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.lms-toggle input:checked + .lms-toggle-track::after {
+  transform: translateX(20px);
+}
+
+.lms-toggle input:focus-visible + .lms-toggle-track {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.lms-toggle-label {
+  font-size: var(--lms-body-sm);
+  font-weight: 500;
+  color: var(--neutral-700);
+}
+
+/* LMS greeting header */
+.lms-greeting {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--neutral-900);
+  line-height: 1.2;
+}
+
+.lms-greeting-sub {
+  font-size: var(--lms-body);
+  color: var(--neutral-500);
+  margin-top: var(--lms-space-1);
+}
+
+/* LMS course outline timeline */
+.lms-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lms-space-3);
+  padding: var(--lms-space-3) var(--lms-space-3);
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+
+.lms-timeline-item:not(.lms-timeline-locked):hover {
+  background-color: var(--neutral-50);
+}
+
+.lms-timeline-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 2px solid var(--neutral-300);
+  color: var(--neutral-400);
+  background: var(--background-color);
+  transition: all 0.2s ease;
+}
+
+.lms-timeline-dot-current {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 82, 163, 0.15);
+}
+
+.lms-timeline-dot-completed {
+  border-color: #10b981;
+  background: #10b981;
+  color: #fff;
+}
+
+.lms-timeline-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Admin full-screen loading overlay */

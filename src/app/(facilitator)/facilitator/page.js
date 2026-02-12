@@ -66,62 +66,76 @@ export default function FacilitatorDashboardPage() {
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Facilitator dashboard" subtitle="Your cohorts and quick actions." />
 
-      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
+      {/* Stat cards row */}
+      <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
         <Link href="/facilitator/grading" className="block">
-          <LmsCard title="Grading queue" icon={LmsIcons.grading}>
-            <p className="text-3xl font-bold text-primary mt-2">{pendingCount}</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>Pending submissions</p>
-          </LmsCard>
+          <div className="lms-stat-card">
+            <div className="lms-stat-icon">{LmsIcons.grading}</div>
+            <div className="lms-stat-value" style={{ color: pendingCount > 0 ? 'var(--primary-color)' : 'var(--neutral-400)' }}>{pendingCount}</div>
+            <div className="lms-stat-label">Pending grades</div>
+          </div>
         </Link>
         <Link href="/facilitator/attendance" className="block">
-          <LmsCard title="Attendance" icon={LmsIcons.users}>
-            <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>Mark attendance for live classes</p>
-          </LmsCard>
+          <div className="lms-stat-card">
+            <div className="lms-stat-icon">{LmsIcons.users}</div>
+            <div className="lms-stat-value">{cohorts.length}</div>
+            <div className="lms-stat-label">Cohorts</div>
+          </div>
         </Link>
+        <div className="lms-stat-card">
+          <div className="lms-stat-icon">{LmsIcons.bell}</div>
+          <div className="lms-stat-value">{notifications.filter(n => !n.is_read).length}</div>
+          <div className="lms-stat-label">Unread</div>
+        </div>
       </div>
 
-      <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`}>
-        {cohorts.length === 0 ? (
-          <LmsEmptyState icon={LmsIcons.inbox} title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
-        ) : (
-          <ul className="space-y-3">
-            {cohorts.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <div>
-                  <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{c.name}</span>
-                  <span className="text-sm ml-2" style={{ color: 'var(--neutral-500)' }}>{c.track_name}</span>
-                </div>
-                <Link href={`/facilitator/cohorts/${c.id}`} className="text-primary text-sm font-medium hover:underline">
-                  View
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </LmsCard>
-
-      {events.length > 0 && (
-        <LmsCard
-          title="Upcoming events"
-          action={
-            <a href="/api/calendar/ics" className="text-sm font-medium text-primary hover:underline">
-              Download .ics
-            </a>
-          }
-        >
-          <ul className="space-y-2">
-            {events.slice(0, 5).map((ev) => (
-              <li key={ev.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{ev.title}</span>
-                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(ev.start)}</span>
-              </li>
-            ))}
-          </ul>
+      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-6)' }}>
+        {/* Cohorts */}
+        <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`} accent="primary">
+          {cohorts.length === 0 ? (
+            <LmsEmptyState icon={LmsIcons.inbox} title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
+          ) : (
+            <ul className="space-y-1">
+              {cohorts.map((c) => (
+                <li key={c.id} className="flex items-center justify-between py-3 px-3 rounded-lg transition-colors hover:bg-gray-50" style={{ borderBottom: '1px solid var(--neutral-100)' }}>
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{c.name}</span>
+                    {c.track_name && <span className="lms-badge lms-badge-info">{c.track_name}</span>}
+                  </div>
+                  <Link href={`/facilitator/cohorts/${c.id}`} className="lms-btn lms-btn-sm lms-btn-outline">
+                    View
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </LmsCard>
-      )}
+
+        {/* Upcoming events */}
+        {events.length > 0 && (
+          <LmsCard
+            title="Upcoming events"
+            accent="info"
+            action={
+              <a href="/api/calendar/ics" className="lms-btn lms-btn-sm lms-btn-outline">
+                Download .ics
+              </a>
+            }
+          >
+            <ul className="space-y-1">
+              {events.slice(0, 5).map((ev) => (
+                <li key={ev.id} className="flex items-center justify-between py-3 px-3 rounded-lg" style={{ borderBottom: '1px solid var(--neutral-100)' }}>
+                  <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{ev.title}</span>
+                  <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(ev.start)}</span>
+                </li>
+              ))}
+            </ul>
+          </LmsCard>
+        )}
+      </div>
 
       {announcements.length > 0 && (
-        <LmsCard title="Announcements">
+        <LmsCard title="Announcements" accent="warning">
           <ul className="space-y-3">
             {announcements.map((a) => (
               <li key={a.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
@@ -138,7 +152,7 @@ export default function FacilitatorDashboardPage() {
         action={
           <button
             type="button"
-            className="text-sm font-medium text-primary hover:underline"
+            className="lms-btn lms-btn-sm lms-btn-outline"
             onClick={async () => {
               await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
               setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
@@ -151,14 +165,17 @@ export default function FacilitatorDashboardPage() {
         {notifications.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {notifications.map((n) => (
-              <li key={n.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
+              <li key={n.id} className="flex items-center justify-between py-3 px-3 rounded-lg transition-colors" style={{ backgroundColor: n.is_read ? 'transparent' : 'rgba(0, 82, 163, 0.03)', borderBottom: '1px solid var(--neutral-100)' }}>
+                <div className="flex items-center gap-3">
+                  {!n.is_read && <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary-color)' }} />}
+                  <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
+                </div>
                 {!n.is_read && (
                   <button
                     type="button"
-                    className="text-xs text-primary hover:underline"
+                    className="lms-btn lms-btn-sm lms-btn-outline"
                     onClick={async () => {
                       await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
                       setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
@@ -174,24 +191,24 @@ export default function FacilitatorDashboardPage() {
       </LmsCard>
 
       <LmsCard title="Notification preferences">
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
+        <div className="space-y-4">
+          <label className="lms-toggle">
             <input
               type="checkbox"
               checked={prefs.in_app_enabled !== false}
               onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
-            In-app notifications
+            <span className="lms-toggle-track" />
+            <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>In-app notifications</span>
           </label>
-          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
+          <label className="lms-toggle">
             <input
               type="checkbox"
               checked={prefs.email_enabled !== false}
               onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
-            Email notifications (Resend)
+            <span className="lms-toggle-track" />
+            <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Email notifications</span>
           </label>
           <button
             type="button"
@@ -208,7 +225,7 @@ export default function FacilitatorDashboardPage() {
               });
               setSavingPrefs(false);
             }}
-            className="mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            className="lms-btn lms-btn-primary"
           >
             {savingPrefs ? 'Saving...' : 'Save preferences'}
           </button>

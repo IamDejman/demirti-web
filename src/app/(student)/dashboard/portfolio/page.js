@@ -309,20 +309,20 @@ export default function PortfolioPage() {
             )}
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="lms-toggle">
             <input
               type="checkbox"
               checked={form.isPublic}
               onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
+            <span className="lms-toggle-track" />
             <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Make portfolio public</span>
           </label>
 
           <div className="pt-4">
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="lms-btn lms-btn-primary"
             >
               Save profile
             </button>
@@ -387,7 +387,7 @@ export default function PortfolioPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="lms-btn lms-btn-primary"
             >
               {editingProjectId ? 'Update project' : 'Add project'}
             </button>
@@ -395,7 +395,7 @@ export default function PortfolioPage() {
               <button
                 type="button"
                 onClick={() => { setEditingProjectId(null); setProjectForm(emptyProjectForm); }}
-                className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+                className="lms-btn lms-btn-secondary"
               >
                 Cancel
               </button>
@@ -448,14 +448,14 @@ export default function PortfolioPage() {
                             orderIndex: project.order_index || 0,
                           });
                         }}
-                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
+                        className="lms-btn lms-btn-sm lms-btn-secondary"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteProject(project.id)}
-                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-200"
+                        className="lms-btn lms-btn-sm lms-btn-outline" style={{ color: 'var(--red-600, #dc2626)', borderColor: 'var(--red-200, #fecaca)' }}
                       >
                         Delete
                       </button>
@@ -491,7 +491,7 @@ export default function PortfolioPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="lms-btn lms-btn-primary"
             >
               {editingLinkId ? 'Update link' : 'Add link'}
             </button>
@@ -499,7 +499,7 @@ export default function PortfolioPage() {
               <button
                 type="button"
                 onClick={() => { setEditingLinkId(null); setLinkForm(emptyLinkForm); }}
-                className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+                className="lms-btn lms-btn-secondary"
               >
                 Cancel
               </button>

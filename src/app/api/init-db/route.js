@@ -5,7 +5,7 @@ import { sql } from '@vercel/postgres';
 import { logger } from '@/lib/logger';
 
 // Initialize database tables (run once). No auth required; visit the URL to run.
-export async function GET(request) {
+export async function GET(_request) {
   try {
     // First, check database connection
     try {

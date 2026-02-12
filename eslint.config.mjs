@@ -69,7 +69,7 @@ export default [
         "warn",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|LmsPageHeader|LmsBadge|AdminStatsGrid|AdminNavigationLoader|ImpersonateContent|AuditPageViewTracker)$",
+          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|LmsPageHeader|LmsBadge|AdminStatsGrid|AdminNavigationLoader|ImpersonateContent|AuditPageViewTracker|StatusBadge|ClientAppShell|CookiePreferencesLink|SocialIcons|FaqItem)$",
           ignoreRestSiblings: true,
         },
       ],

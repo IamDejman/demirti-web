@@ -34,7 +34,7 @@ export default function LmsLayoutShell({ variant = 'student', children, user, pe
   const sidebarWidth = collapsed ? 72 : 260;
 
   return (
-    <div className="lms-app flex min-h-screen bg-gray-50">
+    <div className="lms-app flex min-h-screen">
       <LmsSidebar
         variant={variant}
         collapsed={collapsed}
@@ -46,7 +46,7 @@ export default function LmsLayoutShell({ variant = 'student', children, user, pe
         className="lms-main flex-1 min-w-0 min-h-screen overflow-y-auto transition-[margin] duration-200"
         style={mounted ? { marginLeft: sidebarWidth } : {}}
       >
-        <div className="lms-main-content px-4 py-6 lg:px-8 lg:py-8 max-w-6xl mx-auto">
+        <div className="lms-main-content max-w-6xl mx-auto flex flex-col">
           {children}
         </div>
       </main>

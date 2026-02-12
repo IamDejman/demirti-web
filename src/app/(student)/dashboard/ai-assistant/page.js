@@ -69,11 +69,11 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="AI Study Assistant" subtitle="Get guidance, hints, and structured explanations." icon={LmsIcons.sparkle} />
 
       <LmsCard title="Chat" subtitle="Ask questions about your course content" icon={LmsIcons.sparkle}>
-        <div className="flex items-center gap-3 text-sm text-gray-600">
+        <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--neutral-600)' }}>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -84,9 +84,9 @@ export default function AiAssistantPage() {
             Use current week context
           </label>
         </div>
-        <div className="mt-4 h-[420px] overflow-auto border border-gray-100 rounded-lg p-4 space-y-4 bg-gray-50/50">
+        <div className="mt-4 h-[420px] overflow-auto rounded-lg p-4 space-y-4 border" style={{ borderColor: 'var(--neutral-100)', backgroundColor: 'var(--neutral-50)' }}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--neutral-400)' }}>
               <div className="mb-2">{LmsIcons.sparkle}</div>
               <p className="text-sm">Ask a question to get started.</p>
             </div>

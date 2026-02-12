@@ -98,10 +98,10 @@ export default function StudentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="flex flex-col rounded-lg" style={{ gap: 'var(--lms-space-8)' }}>
         <div className="h-10 w-64 lms-skeleton rounded-lg" />
         <div className="h-32 lms-skeleton rounded-xl" />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
           <div className="h-40 lms-skeleton rounded-xl" />
           <div className="h-40 lms-skeleton rounded-xl" />
         </div>
@@ -110,7 +110,7 @@ export default function StudentDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Dashboard" subtitle="Welcome back. Here&apos;s your learning overview." />
 
       {!currentCohort ? (
@@ -123,15 +123,15 @@ export default function StudentDashboardPage() {
         </LmsCard>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
             <LmsCard title="Current cohort" subtitle={currentCohort.track_name} icon={LmsIcons.graduation}>
               <p className="text-primary font-semibold">{currentCohort.name}</p>
               {currentCohort.start_date && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
                   {formatDate(currentCohort.start_date)} – {formatDate(currentCohort.end_date)}
                 </p>
               )}
-              <p className="text-sm text-gray-600 mt-2">Week {currentCohort.current_week ?? 1} of 12</p>
+              <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>Week {currentCohort.current_week ?? 1} of 12</p>
             </LmsCard>
             <LmsCard title="Course progress" icon={LmsIcons.chart}>
               <div className="mt-2 lms-progress-bar">
@@ -140,7 +140,7 @@ export default function StudentDashboardPage() {
                   style={{ width: `${weekProgressPercent}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-2">{Math.round(weekProgressPercent)}% complete</p>
+              <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>{Math.round(weekProgressPercent)}% complete</p>
             </LmsCard>
             <LmsCard title="Portfolio" subtitle="Build your public profile and showcase projects." icon={LmsIcons.briefcase}>
               <Link
@@ -165,7 +165,7 @@ export default function StudentDashboardPage() {
                 </Link>
               }
             >
-              <p className="font-medium text-gray-900">{currentWeek.title}</p>
+              <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{currentWeek.title}</p>
               <Link
                 href={`/dashboard/week/${currentWeek.id}`}
                 className="inline-flex items-center mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
@@ -182,7 +182,7 @@ export default function StudentDashboardPage() {
                 style={{ width: `${completionPercent}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>
               {progress.completed_items} of {progress.total_items} completed ({completionPercent}%)
             </p>
           </LmsCard>
@@ -199,9 +199,9 @@ export default function StudentDashboardPage() {
             >
               <ul className="space-y-2">
                 {upcomingDeadlines.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <span className="font-medium text-gray-900">{a.title}</span>
-                    <span className="text-sm text-gray-500">{formatDate(a.deadline_at)}</span>
+                  <li key={a.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                    <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</span>
+                    <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(a.deadline_at)}</span>
                   </li>
                 ))}
               </ul>
@@ -220,9 +220,9 @@ export default function StudentDashboardPage() {
             >
               <ul className="space-y-2">
                 {events.slice(0, 5).map((ev) => (
-                  <li key={ev.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <span className="font-medium text-gray-900">{ev.title}</span>
-                    <span className="text-sm text-gray-500">{formatDate(ev.start)}</span>
+                  <li key={ev.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                    <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{ev.title}</span>
+                    <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(ev.start)}</span>
                   </li>
                 ))}
               </ul>
@@ -233,9 +233,9 @@ export default function StudentDashboardPage() {
             <LmsCard title="Announcements" icon={LmsIcons.megaphone}>
               <ul className="space-y-3">
                 {announcements.map((a) => (
-                  <li key={a.id} className="border-b border-gray-100 pb-3 last:border-0">
-                    <p className="font-medium text-gray-900">{a.title}</p>
-                    <p className="text-sm text-gray-500 mt-1">{a.body}</p>
+                  <li key={a.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                    <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>{a.body}</p>
                   </li>
                 ))}
               </ul>
@@ -246,8 +246,8 @@ export default function StudentDashboardPage() {
             <LmsCard title="Certificates" icon={LmsIcons.trophy}>
               <ul className="space-y-2">
                 {certificates.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <span className="text-sm text-gray-900">{c.track_name || 'CVERSE Academy'}</span>
+                  <li key={c.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                    <span className="text-sm" style={{ color: 'var(--neutral-900)' }}>{c.track_name || 'CVERSE Academy'}</span>
                     <a href={`/api/certificates/${c.id}/pdf`} className="text-xs text-primary hover:underline">
                       Download PDF
                     </a>
@@ -274,12 +274,12 @@ export default function StudentDashboardPage() {
             }
           >
             {notifications.length === 0 ? (
-              <p className="text-sm text-gray-500">No notifications yet.</p>
+              <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
             ) : (
               <ul className="space-y-2">
                 {notifications.map((n) => (
-                  <li key={n.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <span className={`text-sm ${n.is_read ? 'text-gray-500' : 'text-gray-900 font-medium'}`}>{n.title}</span>
+                  <li key={n.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                    <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
                     {!n.is_read && (
                       <button
                         type="button"
@@ -300,7 +300,7 @@ export default function StudentDashboardPage() {
 
           <LmsCard title="Notification preferences">
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm lms-form-label" style={{ color: 'var(--neutral-700)' }}>
                 <input
                   type="checkbox"
                   checked={prefs.in_app_enabled !== false}
@@ -309,7 +309,7 @@ export default function StudentDashboardPage() {
                 />
                 In-app notifications
               </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
                 <input
                   type="checkbox"
                   checked={prefs.email_enabled !== false}
@@ -318,11 +318,11 @@ export default function StudentDashboardPage() {
                 />
                 Email notifications (Resend)
               </label>
-              <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm text-gray-600">
+              <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm" style={{ color: 'var(--neutral-600)' }}>
                 <div className="rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.bell}</span>
-                    <p className="font-semibold text-gray-900 text-sm">In-app</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>In-app</p>
                   </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.in_app_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, in_app_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
@@ -333,7 +333,7 @@ export default function StudentDashboardPage() {
                 <div className="rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.megaphone}</span>
-                    <p className="font-semibold text-gray-900 text-sm">Email</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Email</p>
                   </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.email_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, email_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>
@@ -344,7 +344,7 @@ export default function StudentDashboardPage() {
                 <div className="rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="w-6 h-6 bg-primary/10 text-primary rounded flex items-center justify-center">{LmsIcons.chat}</span>
-                    <p className="font-semibold text-gray-900 text-sm">Push</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Push</p>
                   </div>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_announcements !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_announcements: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Announcements</label>
                   <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={prefs.push_chat !== false} onChange={(e) => setPrefs((p) => ({ ...p, push_chat: e.target.checked }))} className="rounded border-gray-300 text-primary focus:ring-primary" /> Chat</label>

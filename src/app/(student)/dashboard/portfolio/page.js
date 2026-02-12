@@ -159,7 +159,7 @@ export default function PortfolioPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -170,7 +170,7 @@ export default function PortfolioPage() {
   const domainStatus = portfolio?.domain_verified_at ? 'Verified' : portfolio?.custom_domain ? 'Pending verification' : null;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Portfolio" subtitle="Build a public profile for recruiters and showcase your projects." icon={LmsIcons.briefcase}>
         {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
         {publicUrl && portfolio?.is_public && (

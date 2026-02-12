@@ -1,17 +1,25 @@
 'use client';
 
-export default function LmsCard({ title, subtitle, icon, action, children, className = '', hoverable = true }) {
+export default function LmsCard({ title, subtitle, icon, action, children, className = '', hoverable = true, accent }) {
+  const accentClass = accent ? `lms-card-accent-${accent}` : '';
+
   return (
     <div
-      className={`lms-card rounded-xl transition-all duration-200 ${
-        hoverable ? 'hover:shadow-md hover:border-gray-200' : ''
+      className={`lms-card rounded-xl ${accentClass} ${
+        hoverable ? '' : 'hover:transform-none hover:shadow-sm'
       } ${className}`}
     >
       {(title || action) && (
         <div className="flex items-start justify-between" style={{ gap: 'var(--lms-space-4)', padding: 'var(--lms-space-6) var(--lms-space-6) 0' }}>
-          <div className="flex items-center" style={{ gap: 'var(--lms-space-2)' }}>
+          <div className="flex items-center" style={{ gap: 'var(--lms-space-3)' }}>
             {icon && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
+              <div
+                className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))',
+                  color: 'var(--primary-color)',
+                }}
+              >
                 {icon}
               </div>
             )}
@@ -23,7 +31,7 @@ export default function LmsCard({ title, subtitle, icon, action, children, class
           {action && <div className="flex-shrink-0">{action}</div>}
         </div>
       )}
-      <div className="p-6" style={{ padding: 'var(--lms-space-6)' }}>{children}</div>
+      <div style={{ padding: 'var(--lms-space-6)' }}>{children}</div>
     </div>
   );
 }

@@ -93,10 +93,10 @@ export default function FacilitatorGradingPage() {
               />
             </div>
             <div className="flex gap-3">
-              <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors">
+              <button type="submit" disabled={saving} className="lms-btn lms-btn-primary">
                 {saving ? 'Saving...' : 'Submit grade'}
               </button>
-              <button type="button" onClick={() => { setGrading(null); setScore(''); setFeedback(''); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors" style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}>
+              <button type="button" onClick={() => { setGrading(null); setScore(''); setFeedback(''); }} className="lms-btn lms-btn-secondary">
                 Cancel
               </button>
             </div>
@@ -128,7 +128,7 @@ export default function FacilitatorGradingPage() {
                     <button
                       type="button"
                       onClick={() => { setGrading(s); setScore(''); setFeedback(''); }}
-                      className="text-primary font-medium hover:underline"
+                      className="lms-btn lms-btn-sm lms-btn-primary"
                     >
                       Grade
                     </button>

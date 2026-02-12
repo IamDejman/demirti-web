@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ICONS = {
   dashboard: (
@@ -158,8 +159,11 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
         {/* Header */}
         <div className="lms-sidebar-header flex items-center justify-between flex-shrink-0">
           {!collapsed && (
-            <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="text-lg font-bold truncate" style={{ color: 'var(--primary-color)' }}>
-              {brandName}
+            <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="flex items-center gap-2 truncate">
+              <Image src="/logo.png" alt="CVERSE" width={100} height={28} style={{ height: '22px', width: 'auto' }} priority />
+              {variant === 'facilitator' && (
+                <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>Facilitator</span>
+              )}
             </Link>
           )}
           <button

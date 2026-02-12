@@ -7,17 +7,51 @@ import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function deadlineColor(date) {
+  if (!date) return 'neutral';
+  const diff = new Date(date) - new Date();
+  const days = diff / (1000 * 60 * 60 * 24);
+  if (days < 0) return 'danger';
+  if (days < 2) return 'danger';
+  if (days < 5) return 'warning';
+  return 'success';
+}
+
+function deadlineLabel(date) {
+  if (!date) return '';
+  const diff = new Date(date) - new Date();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (days < 0) return 'Overdue';
+  if (days === 0) return 'Due today';
+  if (days === 1) return 'Due tomorrow';
+  return `${days} days left`;
+}
+
 export default function StudentDashboardPage() {
   const [cohorts, setCohorts] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [progress, setProgress] = useState({ total_items: 0, completed_items: 0 });
   const [events, setEvents] = useState([]);
+  const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
+        const [meRes] = await Promise.all([
+          fetch('/api/auth/me', { headers: getLmsAuthHeaders() }),
+        ]);
+        const meData = await meRes.json();
+        if (meRes.ok && meData.user) setUserName(meData.user.firstName || '');
+
         const res = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.cohorts?.length) {
@@ -72,8 +106,13 @@ export default function StudentDashboardPage() {
     return (
       <div className="flex flex-col rounded-lg" style={{ gap: 'var(--lms-space-8)' }}>
         <div className="h-10 w-64 lms-skeleton rounded-lg" />
-        <div className="h-32 lms-skeleton rounded-xl" />
-        <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="h-28 lms-skeleton rounded-xl" />
+          <div className="h-28 lms-skeleton rounded-xl" />
+          <div className="h-28 lms-skeleton rounded-xl" />
+        </div>
+        <div className="h-48 lms-skeleton rounded-xl" />
+        <div className="grid md:grid-cols-2 gap-4">
           <div className="h-40 lms-skeleton rounded-xl" />
           <div className="h-40 lms-skeleton rounded-xl" />
         </div>
@@ -83,7 +122,11 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
-      <LmsPageHeader title="Dashboard" subtitle="Welcome back. Here&apos;s your learning overview." />
+      {/* Greeting */}
+      <div>
+        <h1 className="lms-greeting">{getGreeting()}{userName ? `, ${userName}` : ''} 👋</h1>
+        <p className="lms-greeting-sub">Here&apos;s your learning overview.</p>
+      </div>
 
       {!currentCohort ? (
         <LmsCard hoverable={false}>
@@ -95,33 +138,48 @@ export default function StudentDashboardPage() {
         </LmsCard>
       ) : (
         <>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
-            <LmsCard title="Current cohort" subtitle={currentCohort.track_name} icon={LmsIcons.graduation}>
+          {/* Stat cards row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
+            <div className="lms-stat-card">
+              <div className="lms-stat-icon">{LmsIcons.calendar}</div>
+              <div className="lms-stat-value">Week {currentCohort.current_week ?? 1}</div>
+              <div className="lms-stat-label">of 12 weeks</div>
+            </div>
+            <div className="lms-stat-card">
+              <div className="lms-stat-icon">{LmsIcons.checkCircle}</div>
+              <div className="lms-stat-value">{completionPercent}%</div>
+              <div className="lms-stat-label">Checklist done</div>
+              <div className="mt-2 lms-progress-bar">
+                <div className="lms-progress-bar-fill" style={{ width: `${completionPercent}%` }} />
+              </div>
+            </div>
+            <div className="lms-stat-card">
+              <div className="lms-stat-icon">{LmsIcons.bell}</div>
+              <div className="lms-stat-value">{upcomingDeadlines.length}</div>
+              <div className="lms-stat-label">Upcoming deadlines</div>
+            </div>
+          </div>
+
+          {/* Current cohort + portfolio row */}
+          <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
+            <LmsCard title="Current cohort" subtitle={currentCohort.track_name} icon={LmsIcons.graduation} accent="primary">
               <p className="text-primary font-semibold">{currentCohort.name}</p>
               {currentCohort.start_date && (
                 <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
                   {formatDate(currentCohort.start_date)} – {formatDate(currentCohort.end_date)}
                 </p>
               )}
-              <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>Week {currentCohort.current_week ?? 1} of 12</p>
-            </LmsCard>
-            <LmsCard title="Course progress" icon={LmsIcons.chart}>
-              <div className="mt-2 lms-progress-bar">
-                <div
-                  className="lms-progress-bar-fill"
-                  style={{ width: `${weekProgressPercent}%` }}
-                />
+              <div className="mt-3 lms-progress-bar">
+                <div className="lms-progress-bar-fill" style={{ width: `${weekProgressPercent}%` }} />
               </div>
-              <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>{Math.round(weekProgressPercent)}% complete</p>
+              <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>{Math.round(weekProgressPercent)}% course progress</p>
             </LmsCard>
-            <LmsCard title="Portfolio" subtitle="Build your public profile and showcase projects." icon={LmsIcons.briefcase}>
-              <p className="text-sm mt-1 mb-4" style={{ color: 'var(--neutral-600)' }}>
+
+            <LmsCard title="Portfolio" subtitle="Build your public profile." icon={LmsIcons.briefcase}>
+              <p className="text-sm mb-4" style={{ color: 'var(--neutral-600)' }}>
                 Edit your public profile, projects, and links.
               </p>
-              <Link
-                href="/dashboard/portfolio"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
+              <Link href="/dashboard/portfolio" className="lms-btn lms-btn-primary lms-btn-sm">
                 {LmsIcons.briefcase}
                 Edit portfolio
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -131,50 +189,22 @@ export default function StudentDashboardPage() {
             </LmsCard>
           </div>
 
-          {weeks.length > 0 && (
-            <LmsCard title="Course outline" subtitle="All weeks in your cohort." icon={LmsIcons.book}>
-              <ul className="space-y-1 mt-2">
-                {weeks.map((w) => {
-                  const isCurrent = currentWeek?.id === w.id;
-                  const isLocked = w.is_locked;
-                  return (
-                    <li key={w.id}>
-                      <Link
-                        href={isLocked ? '#' : `/dashboard/week/${w.id}`}
-                        className={`flex items-center justify-between py-2 px-2 rounded-lg text-sm ${isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                        onClick={(e) => isLocked && e.preventDefault()}
-                      >
-                        <span style={{ color: 'var(--neutral-900)' }}>
-                          Week {w.week_number}: {w.title}
-                        </span>
-                        {isCurrent && (
-                          <span className="text-xs font-medium text-primary">Current</span>
-                        )}
-                        {isLocked && !isCurrent && (
-                          <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>Locked</span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </LmsCard>
-          )}
-
+          {/* Next live class */}
           {nextLiveClass && (
             <LmsCard
               title="Next class"
               subtitle={formatDateTime(nextLiveClass.start)}
               icon={LmsIcons.video}
+              accent="info"
             >
               <p className="font-medium mt-1" style={{ color: 'var(--neutral-900)' }}>{nextLiveClass.title}</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--neutral-600)' }}>How to join: use the button below to open the meeting link.</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--neutral-600)' }}>Use the button below to open the meeting link.</p>
               {nextLiveClass.url ? (
                 <a
                   href={nextLiveClass.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
+                  className="lms-btn lms-btn-primary lms-btn-sm mt-4"
                   onClick={async () => {
                     try {
                       const liveClassId = nextLiveClass.id.replace(/^live-/, '');
@@ -194,15 +224,13 @@ export default function StudentDashboardPage() {
             </LmsCard>
           )}
 
+          {/* Current week */}
           {currentWeek && (
             <LmsCard
               title="Current week"
               subtitle={currentWeek.description ? currentWeek.description.slice(0, 80) + (currentWeek.description.length > 80 ? '...' : '') : ''}
               action={
-                <Link
-                  href={`/dashboard/week/${currentWeek.id}`}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
+                <Link href={`/dashboard/week/${currentWeek.id}`} className="lms-btn lms-btn-outline lms-btn-sm">
                   View
                 </Link>
               }
@@ -210,31 +238,57 @@ export default function StudentDashboardPage() {
               <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{currentWeek.title}</p>
               <Link
                 href={`/dashboard/week/${currentWeek.id}`}
-                className="inline-flex items-center mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
+                className="lms-btn lms-btn-primary lms-btn-sm mt-4"
               >
                 Go to week content
               </Link>
             </LmsCard>
           )}
 
-          <LmsCard title="Checklist progress" icon={LmsIcons.checkCircle}>
-            <div className="mt-2 lms-progress-bar">
-              <div
-                className="lms-progress-bar-fill"
-                style={{ width: `${completionPercent}%` }}
-              />
-            </div>
-            <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>
-              {progress.completed_items} of {progress.total_items} completed ({completionPercent}%)
-            </p>
-          </LmsCard>
+          {/* Course outline with timeline */}
+          {weeks.length > 0 && (
+            <LmsCard title="Course outline" subtitle="All weeks in your cohort." icon={LmsIcons.book}>
+              <div className="space-y-1 mt-2">
+                {weeks.map((w) => {
+                  const isCurrent = currentWeek?.id === w.id;
+                  const isLocked = w.is_locked;
+                  const isCompleted = !isLocked && !isCurrent && weeks.indexOf(w) < weeks.indexOf(currentWeek);
+                  return (
+                    <Link
+                      key={w.id}
+                      href={isLocked ? '#' : `/dashboard/week/${w.id}`}
+                      className={`lms-timeline-item ${isLocked ? 'lms-timeline-locked' : ''}`}
+                      onClick={(e) => isLocked && e.preventDefault()}
+                    >
+                      <div className={`lms-timeline-dot ${isCurrent ? 'lms-timeline-dot-current' : ''} ${isCompleted ? 'lms-timeline-dot-completed' : ''}`}>
+                        {isCompleted ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                        ) : (
+                          w.week_number
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium" style={{ color: isLocked ? 'var(--neutral-400)' : 'var(--neutral-900)' }}>
+                          {w.title}
+                        </span>
+                      </div>
+                      {isCurrent && <span className="lms-badge lms-badge-info">Current</span>}
+                      {isLocked && !isCurrent && <span className="lms-badge lms-badge-neutral">Locked</span>}
+                      {isCompleted && <span className="lms-badge lms-badge-success">Done</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </LmsCard>
+          )}
 
+          {/* Assignments with deadline badges */}
           <LmsCard
             title="Assignments"
             subtitle="Upcoming due dates."
             icon={LmsIcons.bell}
             action={
-              <Link href="/dashboard/assignments" className="text-sm font-medium text-primary hover:underline">
+              <Link href="/dashboard/assignments" className="lms-btn lms-btn-outline lms-btn-sm">
                 View all
               </Link>
             }
@@ -248,20 +302,26 @@ export default function StudentDashboardPage() {
                     <Link href={`/dashboard/assignments/${a.id}`} className="font-medium hover:underline" style={{ color: 'var(--neutral-900)' }}>
                       {a.title}
                     </Link>
-                    <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(a.deadline_at)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`lms-badge lms-badge-${deadlineColor(a.deadline_at)}`}>
+                        {deadlineLabel(a.deadline_at)}
+                      </span>
+                      <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(a.deadline_at)}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
           </LmsCard>
 
+          {/* Due soon calendar */}
           {dueSoon.length > 0 && (
             <LmsCard
               title="Due soon"
               subtitle="Assignments, classes, and office hours."
               icon={LmsIcons.calendar}
               action={
-                <a href="/api/calendar/ics" className="text-sm font-medium text-primary hover:underline">
+                <a href="/api/calendar/ics" className="lms-btn lms-btn-outline lms-btn-sm">
                   Download .ics
                 </a>
               }
@@ -269,18 +329,19 @@ export default function StudentDashboardPage() {
               <ul className="space-y-2">
                 {dueSoon.map((ev) => {
                   const typeLabel = ev.type === 'live_class' ? 'Live class' : ev.type === 'assignment' ? 'Assignment due' : 'Office hours';
+                  const typeBadge = ev.type === 'live_class' ? 'info' : ev.type === 'assignment' ? 'warning' : 'neutral';
                   const assignmentId = ev.type === 'assignment' ? ev.id.replace(/^assignment-/, '') : null;
                   const liveClassId = ev.type === 'live_class' ? ev.id.replace(/^live-/, '') : null;
                   return (
                     <li key={ev.id} className="flex flex-wrap items-center justify-between gap-2 py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                       <div className="min-w-0">
-                        <span className="text-xs font-medium" style={{ color: 'var(--neutral-500)' }}>{typeLabel}</span>
+                        <span className={`lms-badge lms-badge-${typeBadge} mb-1`}>{typeLabel}</span>
                         <p className="font-medium truncate" style={{ color: 'var(--neutral-900)' }}>{ev.title}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDateTime(ev.start)}</span>
                         {ev.type === 'assignment' && assignmentId && (
-                          <Link href={`/dashboard/assignments/${assignmentId}`} className="text-sm font-medium text-primary hover:underline">
+                          <Link href={`/dashboard/assignments/${assignmentId}`} className="lms-btn lms-btn-outline lms-btn-sm">
                             View
                           </Link>
                         )}
@@ -289,7 +350,7 @@ export default function StudentDashboardPage() {
                             href={ev.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm font-medium text-primary hover:underline"
+                            className="lms-btn lms-btn-primary lms-btn-sm"
                             onClick={async () => {
                               try {
                                 await fetch(`/api/live-classes/${liveClassId}/join-click`, {
@@ -304,7 +365,7 @@ export default function StudentDashboardPage() {
                           </a>
                         )}
                         {ev.type === 'office_hours' && ev.url && (
-                          <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">
+                          <a href={ev.url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-outline lms-btn-sm">
                             Join
                           </a>
                         )}

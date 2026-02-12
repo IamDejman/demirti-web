@@ -207,11 +207,12 @@ export default function ProfilePage() {
         )}
         <form onSubmit={handleSave} className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-6">
-            <div className="flex flex-col items-start gap-2">
-              <label className="text-sm font-medium text-gray-700">Profile photo</label>
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-3">
+              <label className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Profile photo</label>
+              <div className="flex items-center gap-5">
                 <div
-                  className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-semibold overflow-hidden bg-primary/10 text-primary"
+                  className="w-24 h-24 rounded-2xl flex items-center justify-center text-2xl font-semibold overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)', border: '3px solid var(--neutral-100)' }}
                 >
                   {form.profilePictureUrl ? (
                     <img src={form.profilePictureUrl} alt="" className="w-full h-full object-cover" />
@@ -234,11 +235,11 @@ export default function ProfilePage() {
                     type="button"
                     disabled={uploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="lms-btn lms-btn-secondary lms-btn-sm"
                   >
                     {uploading ? 'Uploading...' : 'Upload photo'}
                   </button>
-                  <p className="text-xs text-gray-500">JPG, PNG or WebP. Max {PROFILE_IMAGE_MAX_MB}MB.</p>
+                  <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>JPG, PNG or WebP. Max {PROFILE_IMAGE_MAX_MB}MB.</p>
                 </div>
               </div>
             </div>
@@ -315,7 +316,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            className="lms-btn lms-btn-primary"
           >
             {saving ? 'Saving...' : 'Save profile'}
           </button>
@@ -384,7 +385,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={passwordSaving}
-            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            className="lms-btn lms-btn-primary"
           >
             {passwordSaving ? 'Updating...' : 'Update password'}
           </button>

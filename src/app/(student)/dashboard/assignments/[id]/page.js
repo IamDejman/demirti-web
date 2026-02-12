@@ -193,9 +193,22 @@ export default function AssignmentDetailPage() {
           {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
           {submission.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{submission.text_content}</p>}
           {submission.status === 'graded' && (
-            <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--neutral-50)' }}>
-              <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>Score: {submission.score} / {assignment.max_score ?? 100}</p>
-              {submission.feedback && <p className="mt-2" style={{ color: 'var(--neutral-600)' }}>{submission.feedback}</p>}
+            <div className="mt-4 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.04), rgba(0, 166, 126, 0.04))', border: '1px solid var(--neutral-100)' }}>
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary-color), #00a67e)', color: 'white' }}>
+                  <span className="text-xl font-bold">{submission.score}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--neutral-500)' }}>Your score</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--neutral-900)' }}>{submission.score} / {assignment.max_score ?? 100}</p>
+                </div>
+              </div>
+              {submission.feedback && (
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--neutral-200)' }}>
+                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--neutral-700)' }}>Facilitator feedback</p>
+                  <p className="text-sm" style={{ color: 'var(--neutral-600)' }}>{submission.feedback}</p>
+                </div>
+              )}
             </div>
           )}
         </LmsCard>
@@ -243,9 +256,9 @@ export default function AssignmentDetailPage() {
             <button
               type="submit"
               disabled={submitting || !canSubmit}
-                className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+              className="lms-btn lms-btn-primary"
             >
-              {submitting ? 'Submitting...' : 'Submit'}
+              {submitting ? 'Submitting...' : 'Submit assignment'}
             </button>
           </form>
         </LmsCard>

@@ -190,31 +190,26 @@ export default function PortfolioPage() {
 
       {(message || publicUrl || portfolio?.custom_domain) && (
         <div
-          className="rounded-xl p-4 flex flex-col gap-3"
+          className="rounded-xl p-4 flex flex-col gap-3 text-sm"
           style={{ backgroundColor: 'var(--neutral-50)', border: '1px solid var(--neutral-200)' }}
         >
           {message && (
-            <p className={`text-sm font-medium ${message.includes('Failed') ? '' : ''}`} style={{ color: message.includes('Failed') ? 'var(--red-600, #dc2626)' : 'var(--primary-color)' }}>
+            <p className="font-medium" style={{ color: message.includes('Failed') ? 'var(--red-600, #dc2626)' : 'var(--primary-color)' }}>
               {message}
             </p>
           )}
           {publicUrl && portfolio?.is_public && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm" style={{ color: 'var(--neutral-600)' }}>Public profile:</span>
-              <Link
-                href={publicUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-primary hover:underline"
-              >
+            <div className={message ? 'pt-1 border-t border-gray-200' : ''}>
+              <span style={{ color: 'var(--neutral-600)' }}>Public profile: </span>
+              <Link href={publicUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
                 View portfolio
               </Link>
             </div>
           )}
           {portfolio?.custom_domain && portfolio?.domain_verified_at && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm" style={{ color: 'var(--neutral-600)' }}>Custom domain:</span>
-              <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
+            <div className={message || (publicUrl && portfolio?.is_public) ? 'pt-1 border-t border-gray-200' : ''}>
+              <span style={{ color: 'var(--neutral-600)' }}>Custom domain: </span>
+              <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
                 {portfolio.custom_domain}
               </a>
             </div>
@@ -324,11 +319,10 @@ export default function PortfolioPage() {
             <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Make portfolio public</span>
           </label>
 
-          <div className="pt-2">
+          <div className="pt-4">
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-lg font-medium text-white transition-colors hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{ backgroundColor: 'var(--primary-color)' }}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               Save profile
             </button>
@@ -393,8 +387,7 @@ export default function PortfolioPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-lg font-medium text-white"
-              style={{ backgroundColor: 'var(--primary-color)' }}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               {editingProjectId ? 'Update project' : 'Add project'}
             </button>
@@ -402,8 +395,7 @@ export default function PortfolioPage() {
               <button
                 type="button"
                 onClick={() => { setEditingProjectId(null); setProjectForm(emptyProjectForm); }}
-                className="px-4 py-2.5 rounded-lg font-medium border"
-                style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
+                className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
               >
                 Cancel
               </button>
@@ -456,16 +448,14 @@ export default function PortfolioPage() {
                             orderIndex: project.order_index || 0,
                           });
                         }}
-                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-gray-50"
-                        style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
+                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteProject(project.id)}
-                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-red-50"
-                        style={{ borderColor: 'var(--neutral-300)', color: 'var(--red-600, #dc2626)' }}
+                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-200"
                       >
                         Delete
                       </button>
@@ -501,8 +491,7 @@ export default function PortfolioPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-lg font-medium text-white"
-              style={{ backgroundColor: 'var(--primary-color)' }}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               {editingLinkId ? 'Update link' : 'Add link'}
             </button>
@@ -510,8 +499,7 @@ export default function PortfolioPage() {
               <button
                 type="button"
                 onClick={() => { setEditingLinkId(null); setLinkForm(emptyLinkForm); }}
-                className="px-4 py-2.5 rounded-lg font-medium border"
-                style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
+                className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
               >
                 Cancel
               </button>
@@ -541,16 +529,14 @@ export default function PortfolioPage() {
                   <button
                     type="button"
                     onClick={() => { setEditingLinkId(link.id); setLinkForm({ platform: link.platform || '', url: link.url || '' }); }}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-gray-50"
-                    style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-200"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteLink(link.id)}
-                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-red-50"
-                    style={{ borderColor: 'var(--neutral-300)', color: 'var(--red-600, #dc2626)' }}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-200"
                   >
                     Delete
                   </button>

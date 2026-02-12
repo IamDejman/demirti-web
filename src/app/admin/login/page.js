@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
 
 export default function AdminLogin() {
@@ -10,7 +10,9 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const sessionMessage = searchParams.get('message');
 
   useEffect(() => {
     // Check if already logged in
@@ -94,6 +96,24 @@ export default function AdminLogin() {
             }}>
               Enter your credentials to access the admin dashboard
             </p>
+            {sessionMessage && (
+              <p
+                role="alert"
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem 1rem',
+                  backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                  color: '#b02a37',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: 500
+                }}
+              >
+                {sessionMessage === 'Session timed out'
+                  ? 'Your session timed out. Please log in again.'
+                  : decodeURIComponent(sessionMessage)}
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit}>

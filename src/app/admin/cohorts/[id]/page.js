@@ -77,7 +77,7 @@ export default function AdminCohortDetailPage() {
         const [cohortRes, studentsRes, appsRes, facRes, weeksRes, liveRes] = await Promise.all([
           fetch(`/api/cohorts/${id}`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/students`, { headers: getAuthHeaders() }),
-          fetch('/api/admin/applications?status=paid', { headers: getAuthHeaders() }),
+          fetch('/api/admin/applications', { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/facilitators`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/weeks`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/live-classes`, { headers: getAuthHeaders() }),
@@ -467,7 +467,7 @@ export default function AdminCohortDetailPage() {
 
   const enrolledEmails = new Set(students.map((s) => s.email));
   const sameTrack = (a) => !cohort?.track_name || (a.track_name && String(a.track_name).toLowerCase() === String(cohort.track_name).toLowerCase());
-  const paidNotEnrolled = applications.filter((a) => a.status === 'paid' && !enrolledEmails.has(a.email) && sameTrack(a));
+  const applicationsNotEnrolled = applications.filter((a) => !enrolledEmails.has(a.email) && sameTrack(a));
 
   return (
     <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">
@@ -527,17 +527,22 @@ export default function AdminCohortDetailPage() {
           {enrollMessage && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: enrollMessage.includes('success') ? '#059669' : 'inherit' }}>{enrollMessage}</p>}
         </div>
 
-        {paidNotEnrolled.length > 0 && (
+        {applicationsNotEnrolled.length > 0 && (
           <div className="admin-card">
-            <h2 className="admin-card-title">Enroll from paid applications</h2>
-            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Paid applicants for this track not yet in this cohort. Click Enroll to add them as a student user and enroll in the cohort:</p>
+            <h2 className="admin-card-title">Enroll from applications</h2>
+            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Applicants for this track not yet in this cohort (paid or unpaid). Click Enroll to add them as a student user and enroll in the cohort:</p>
             <ul className="admin-cohort-app-list">
-              {paidNotEnrolled.slice(0, 20).map((app) => (
+              {applicationsNotEnrolled.slice(0, 20).map((app) => (
                 <li key={app.id} className="admin-cohort-app-card">
                   <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                     <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{app.first_name} {app.last_name}</span>
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>{app.email}</span>
                     {app.track_name && <span style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{app.track_name}</span>}
+                    {app.status && (
+                      <span style={{ display: 'inline-block', fontSize: '0.7rem', fontWeight: 600, marginTop: 4, padding: '2px 6px', borderRadius: 4, background: app.status === 'paid' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(107, 114, 128, 0.2)', color: app.status === 'paid' ? '#059669' : '#6b7280' }}>
+                        {app.status}
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -550,7 +555,7 @@ export default function AdminCohortDetailPage() {
                 </li>
               ))}
             </ul>
-            {paidNotEnrolled.length > 20 && <p className="admin-form-hint" style={{ marginTop: '1rem' }}>Showing first 20. Use email field above for others.</p>}
+            {applicationsNotEnrolled.length > 20 && <p className="admin-form-hint" style={{ marginTop: '1rem' }}>Showing first 20. Use email field above for others.</p>}
           </div>
         )}
 

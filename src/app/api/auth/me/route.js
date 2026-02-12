@@ -14,6 +14,10 @@ export async function GET(request) {
       firstName: user.first_name,
       lastName: user.last_name,
       profilePictureUrl: user.profile_picture_url,
+      phone: user.phone ?? null,
+      address: user.address ?? null,
+      yearsExperience: user.years_experience != null ? user.years_experience : null,
+      mustChangePassword: !!user.must_change_password,
     },
   });
 }

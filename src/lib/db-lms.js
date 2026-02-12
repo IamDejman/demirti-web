@@ -60,6 +60,9 @@ export async function ensureLmsSchema() {
       if (existing.has('users')) {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_until TIMESTAMP;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_shadowbanned BOOLEAN DEFAULT false;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience SMALLINT;`.catch(() => {});
       }
       lmsInitialized = true;
     } catch (e) {

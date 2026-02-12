@@ -50,7 +50,7 @@ export default function FacilitatorCohortPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -71,7 +71,7 @@ export default function FacilitatorCohortPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title={cohort.name}
         subtitle={cohort.track_name}
@@ -79,13 +79,13 @@ export default function FacilitatorCohortPage() {
         breadcrumb={{ href: '/facilitator', label: 'Dashboard' }}
       >
         {cohort.start_date && (
-          <p className="text-sm text-white/80 mt-2">
+          <p className="text-sm mt-2 opacity-80">
             {formatDate(cohort.start_date)} – {formatDate(cohort.end_date)}
           </p>
         )}
       </LmsPageHeader>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
         <LmsCard title="Quick actions" hoverable={false}>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -96,7 +96,8 @@ export default function FacilitatorCohortPage() {
             </Link>
             <Link
               href="/facilitator/attendance"
-              className="inline-flex items-center px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+              className="inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg hover:bg-gray-50"
+              style={{ borderColor: 'var(--neutral-200)', color: 'var(--neutral-700)' }}
             >
               Attendance
             </Link>
@@ -109,7 +110,7 @@ export default function FacilitatorCohortPage() {
         icon={LmsIcons.calendar}
         subtitle={`${weeks.length} weeks in curriculum`}
         action={
-          <span className="text-sm text-gray-500">Read-only</span>
+          <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>Read-only</span>
         }
       >
         {weeks.length === 0 ? (
@@ -117,8 +118,8 @@ export default function FacilitatorCohortPage() {
         ) : (
           <ul className="space-y-2">
             {weeks.map((w) => (
-              <li key={w.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="font-medium text-gray-900">Week {w.week_number}: {w.title}</span>
+              <li key={w.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>Week {w.week_number}: {w.title}</span>
                 {w.is_locked && <LmsBadge variant="warning">Locked</LmsBadge>}
               </li>
             ))}
@@ -136,12 +137,12 @@ export default function FacilitatorCohortPage() {
         ) : (
           <ul className="space-y-2">
             {liveClasses.slice(0, 5).map((lc) => (
-              <li key={lc.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="font-medium text-gray-900">{lc.week_title || 'Week'}</span>
-                <span className="text-sm text-gray-500">{formatDate(lc.scheduled_at)}</span>
+              <li key={lc.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{lc.week_title || 'Week'}</span>
+                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(lc.scheduled_at)}</span>
               </li>
             ))}
-            {liveClasses.length > 5 && <p className="text-sm text-gray-500 mt-2">+{liveClasses.length - 5} more</p>}
+            {liveClasses.length > 5 && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>+{liveClasses.length - 5} more</p>}
           </ul>
         )}
       </LmsCard>
@@ -165,13 +166,13 @@ export default function FacilitatorCohortPage() {
               <tbody>
                 {students.slice(0, 20).map((s) => (
                   <tr key={s.id}>
-                    <td className="font-medium text-gray-900">{s.first_name} {s.last_name}</td>
-                    <td className="text-gray-600">{s.email}</td>
+                    <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{s.first_name} {s.last_name}</td>
+                    <td style={{ color: 'var(--neutral-600)' }}>{s.email}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {students.length > 20 && <p className="text-sm text-gray-500 mt-2">+{students.length - 20} more</p>}
+            {students.length > 20 && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>+{students.length - 20} more</p>}
           </div>
         )}
       </LmsCard>
@@ -186,12 +187,12 @@ export default function FacilitatorCohortPage() {
         ) : (
           <ul className="space-y-2">
             {assignments.slice(0, 5).map((a) => (
-              <li key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="font-medium text-gray-900">{a.title}</span>
-                <span className="text-sm text-gray-500">Week {a.week_title ?? a.week_number}</span>
+              <li key={a.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</span>
+                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>Week {a.week_title ?? a.week_number}</span>
               </li>
             ))}
-            {assignments.length > 5 && <p className="text-sm text-gray-500 mt-2">+{assignments.length - 5} more</p>}
+            {assignments.length > 5 && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>+{assignments.length - 5} more</p>}
           </ul>
         )}
       </LmsCard>

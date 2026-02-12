@@ -52,7 +52,8 @@ export async function getUserByEmail(email) {
   const normalizedEmail = email.toLowerCase().trim();
   const result = await sql`
     SELECT id, email, password_hash, role, first_name, last_name, profile_picture_url, bio, phone,
-           timezone, language_preference, is_active, referral_code, referred_by_user_id, created_at, last_login_at
+           timezone, language_preference, is_active, referral_code, referred_by_user_id, created_at, last_login_at,
+           must_change_password
     FROM users
     WHERE LOWER(email) = ${normalizedEmail}
     LIMIT 1;
@@ -87,7 +88,7 @@ export async function getUserByToken(token) {
   if (!token || typeof token !== 'string') return null;
   await ensureLmsSchema();
   const result = await sql`
-    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.is_active, u.suspended_until
+    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.phone, u.address, u.years_experience, u.is_active, u.suspended_until, u.must_change_password
     FROM users u
     JOIN user_sessions s ON s.user_id = u.id
     WHERE s.token = ${token}
@@ -118,6 +119,7 @@ export async function verifyUserCredentials(email, password) {
     role: user.role,
     firstName: user.first_name,
     lastName: user.last_name,
+    mustChangePassword: !!user.must_change_password,
   };
 }
 
@@ -161,7 +163,7 @@ export async function deleteUserPasswordReset(email) {
 export async function updateUserPassword(userId, newPassword) {
   await ensureLmsSchema();
   const passwordHash = await hashPassword(newPassword);
-  await sql`UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}`;
+  await sql`UPDATE users SET password_hash = ${passwordHash}, must_change_password = false WHERE id = ${userId}`;
 }
 
 /** Get current user from request: Authorization Bearer or cookie lms_token */

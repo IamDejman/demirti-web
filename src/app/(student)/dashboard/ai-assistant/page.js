@@ -105,7 +105,8 @@ export default function AiAssistantPage() {
             placeholder="Ask a question..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="lms-form-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="lms-form-input flex-1 px-3 py-2 border rounded-lg text-sm"
+            style={{ borderColor: 'var(--neutral-300)' }}
           />
           <button type="submit" disabled={loading} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors">
             {loading ? 'Thinking...' : 'Send'}

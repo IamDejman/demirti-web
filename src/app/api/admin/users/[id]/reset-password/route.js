@@ -20,7 +20,7 @@ export async function POST(request, { params }) {
 
     await sql`
       UPDATE users
-      SET password_hash = ${hash}
+      SET password_hash = ${hash}, must_change_password = true
       WHERE id = ${userId};
     `;
 

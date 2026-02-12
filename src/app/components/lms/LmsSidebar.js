@@ -61,6 +61,29 @@ const ICONS = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
+  profile: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  megaphone: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 4l-6 3H5a1 1 0 00-1 1v2a1 1 0 001 1h5l6 3V4z" />
+      <path d="M16 4a3 3 0 010 10" />
+    </svg>
+  ),
+  trophy: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3h8v5a4 4 0 01-8 0V3zM3 3h3M14 3h3M3 3v3a3 3 0 003 3M17 3v3a3 3 0 01-3 3M8 14h4M10 12v5M7 17h6" />
+    </svg>
+  ),
+  bell: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13 21a1 1 0 0 1-2 0" />
+    </svg>
+  ),
   chevronLeft: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="15 18 9 12 15 6" />
@@ -75,7 +98,11 @@ const ICONS = {
 
 const STUDENT_NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/dashboard/profile', label: 'Profile', icon: 'profile' },
   { href: '/dashboard/assignments', label: 'Assignments', icon: 'assignments' },
+  { href: '/dashboard/announcements', label: 'Announcements', icon: 'megaphone' },
+  { href: '/dashboard/certificates', label: 'Certificates', icon: 'trophy' },
+  { href: '/dashboard/notifications', label: 'Notifications', icon: 'bell' },
   { href: '/dashboard/office-hours', label: 'Office Hours', icon: 'officeHours' },
   { href: '/dashboard/chat', label: 'Chat', icon: 'chat' },
   { href: '/dashboard/portfolio', label: 'Portfolio', icon: 'portfolio' },
@@ -192,15 +219,22 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
         {/* User section */}
         <div className="lms-sidebar-user flex-shrink-0">
           {user && !collapsed && (
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
-                {(user.firstName || user.email || 'U').charAt(0).toUpperCase()}
+            <Link
+              href={variant === 'facilitator' ? '/facilitator' : '/dashboard/profile'}
+              className="flex items-center gap-3 mb-3 rounded-lg p-1 -m-1 hover:opacity-90 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 overflow-hidden" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
+                {user.profilePictureUrl ? (
+                  <img src={user.profilePictureUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  (user.firstName || user.email || 'U').charAt(0).toUpperCase()
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate" style={{ color: 'var(--neutral-900)' }}>{user.firstName || user.email}</p>
                 <p className="text-xs truncate" style={{ color: 'var(--neutral-500)' }}>{user.email}</p>
               </div>
-            </div>
+            </Link>
           )}
           <button
             type="button"

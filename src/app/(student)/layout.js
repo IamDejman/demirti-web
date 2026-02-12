@@ -24,6 +24,10 @@ export default function StudentLayout({ children }) {
           router.push('/login');
           return;
         }
+        if (data.user?.mustChangePassword) {
+          router.push('/change-password');
+          return;
+        }
         const role = data.user?.role;
         if (role !== 'student' && role !== 'alumni') {
           if (role === 'admin') router.push('/admin');

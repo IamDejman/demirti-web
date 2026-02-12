@@ -172,15 +172,15 @@ export default function PortfolioPage() {
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Portfolio" subtitle="Build a public profile for recruiters and showcase your projects." icon={LmsIcons.briefcase}>
-        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
+        {message && <p className="text-sm mt-2 opacity-80">{message}</p>}
         {publicUrl && portfolio?.is_public && (
-          <p className="text-sm text-white/90 mt-2">
-            Public profile: <Link href={publicUrl} className="underline text-white">{publicUrl}</Link>
+          <p className="text-sm mt-2 opacity-90">
+            Public profile: <Link href={publicUrl} className="underline">{publicUrl}</Link>
           </p>
         )}
         {portfolio?.custom_domain && portfolio?.domain_verified_at && (
-          <p className="text-sm text-white/90 mt-1">
-            Custom domain: <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="underline text-white">{portfolio.custom_domain}</a>
+          <p className="text-sm mt-1 opacity-90">
+            Custom domain: <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="underline">{portfolio.custom_domain}</a>
           </p>
         )}
       </LmsPageHeader>
@@ -227,7 +227,7 @@ export default function PortfolioPage() {
               className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--neutral-600)' }}>
             <input
               type="file"
               accept=".pdf,.doc,.docx"
@@ -240,8 +240,8 @@ export default function PortfolioPage() {
               })}
               className="text-xs"
             />
-            {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
-            {uploadMessage && <span className="text-xs text-gray-500">{uploadMessage}</span>}
+            {uploading && <span className="text-xs" style={{ color: 'var(--neutral-400)' }}>Uploading...</span>}
+            {uploadMessage && <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>{uploadMessage}</span>}
           </div>
           <div>
             <label className="lms-form-label">Custom domain</label>
@@ -254,17 +254,17 @@ export default function PortfolioPage() {
             />
           </div>
           {domainStatus && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>
               Domain status: {domainStatus}
             </p>
           )}
           {portfolio?.domain_verification_token && form.customDomain && (
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs space-y-1" style={{ color: 'var(--neutral-500)' }}>
               <p>Verify by pointing the domain to this site, then visit:</p>
               <p className="break-all">https://{form.customDomain}/api/portfolio/verify-domain?token={portfolio.domain_verification_token}</p>
             </div>
           )}
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm lms-form-label" style={{ color: 'var(--neutral-700)' }}>
             <input
               type="checkbox"
               checked={form.isPublic}
@@ -312,7 +312,7 @@ export default function PortfolioPage() {
               className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--neutral-600)' }}>
             <input
               type="file"
               accept="image/*"
@@ -325,7 +325,7 @@ export default function PortfolioPage() {
               })}
               className="text-xs"
             />
-            {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
+            {uploading && <span className="text-xs" style={{ color: 'var(--neutral-400)' }}>Uploading...</span>}
           </div>
           <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
             {editingProjectId ? 'Update project' : 'Add project'}
@@ -337,7 +337,8 @@ export default function PortfolioPage() {
                 setEditingProjectId(null);
                 setProjectForm(emptyProjectForm);
               }}
-              className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              className="ml-2 px-4 py-2 border rounded-lg text-sm"
+              style={{ borderColor: 'var(--neutral-300)' }}
             >
               Cancel
             </button>
@@ -345,14 +346,14 @@ export default function PortfolioPage() {
         </form>
         <div className="mt-6 space-y-3">
           {projects.length === 0 ? (
-            <p className="text-sm text-gray-500">No projects added yet.</p>
+            <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No projects added yet.</p>
           ) : (
             projects.map((project) => (
-              <div key={project.id} className="border-b border-gray-100 pb-3 last:border-0">
+              <div key={project.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{project.title}</p>
-                    {project.description && <p className="text-sm text-gray-500 mt-1">{project.description}</p>}
+                    <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{project.title}</p>
+                    {project.description && <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>{project.description}</p>}
                   </div>
                   <div className="flex gap-3">
                     <button
@@ -416,7 +417,8 @@ export default function PortfolioPage() {
                 setEditingLinkId(null);
                 setLinkForm(emptyLinkForm);
               }}
-              className="ml-2 px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              className="ml-2 px-4 py-2 border rounded-lg text-sm"
+              style={{ borderColor: 'var(--neutral-300)' }}
             >
               Cancel
             </button>
@@ -424,12 +426,12 @@ export default function PortfolioPage() {
         </form>
         <div className="mt-6 space-y-3">
           {links.length === 0 ? (
-            <p className="text-sm text-gray-500">No social links added.</p>
+            <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No social links added.</p>
           ) : (
             links.map((link) => (
-              <div key={link.id} className="border-b border-gray-100 pb-3 last:border-0">
+              <div key={link.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900">{link.platform}</p>
+                  <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{link.platform}</p>
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -450,7 +452,7 @@ export default function PortfolioPage() {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{link.url}</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>{link.url}</p>
               </div>
             ))
           )}

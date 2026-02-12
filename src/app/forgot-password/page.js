@@ -1,17 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useToast } from '@/app/components/ToastProvider';
 
 const STEPS = { email: 1, otp: 2, password: 3 };
+const RESEND_COOLDOWN_SECONDS = 3 * 60; // 3 minutes
 const STEP_LABELS = {
   [STEPS.email]: 'Enter your email to receive a reset code.',
   [STEPS.otp]: 'Enter the 6-digit code we sent to your email.',
   [STEPS.password]: 'Choose a new password. Must be at least 8 characters.',
 };
+
+function formatCountdown(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(STEPS.email);
@@ -21,31 +28,68 @@ export default function ForgotPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
   const [devOtp, setDevOtp] = useState('');
   const router = useRouter();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    if (step !== STEPS.otp || resendCooldown <= 0) return;
+    const t = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [step, resendCooldown]);
+
+  const requestOtp = async () => {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim() }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (data.devOtp) setDevOtp(data.devOtp);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      return { success: true };
+    }
+    return { success: false, error: data.error || 'Something went wrong.' };
+  };
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        if (data.devOtp) setDevOtp(data.devOtp);
+      const result = await requestOtp();
+      if (result.success) {
         showToast({ type: 'success', message: 'Check your email for the code.' });
         setStep(STEPS.otp);
       } else {
-        showToast({ type: 'error', message: data.error || 'Something went wrong.' });
+        showToast({ type: 'error', message: result.error });
       }
     } catch {
       showToast({ type: 'error', message: 'Something went wrong. Try again.' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendOtp = async (e) => {
+    e.preventDefault();
+    if (resendCooldown > 0 || isResending) return;
+    setIsResending(true);
+    try {
+      const result = await requestOtp();
+      if (result.success) {
+        showToast({ type: 'success', message: 'A new code was sent to your email.' });
+      } else {
+        showToast({ type: 'error', message: result.error });
+      }
+    } catch {
+      showToast({ type: 'error', message: 'Something went wrong. Try again.' });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -182,6 +226,17 @@ export default function ForgotPasswordPage() {
             <button type="submit" disabled={isSubmitting} className="auth-btn">
               {isSubmitting ? 'Verifying...' : 'Continue'}
             </button>
+            <div className="auth-link-wrap" style={{ marginTop: '1rem' }}>
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={resendCooldown > 0 || isResending}
+                className="auth-link"
+                style={{ background: 'none', border: 'none', cursor: resendCooldown > 0 || isResending ? 'not-allowed' : 'pointer', padding: 0, font: 'inherit' }}
+              >
+                {isResending ? 'Sending...' : resendCooldown > 0 ? `Resend code in ${formatCountdown(resendCooldown)}` : 'Resend code'}
+              </button>
+            </div>
           </form>
         )}
 

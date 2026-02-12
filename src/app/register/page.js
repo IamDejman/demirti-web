@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
@@ -102,13 +103,24 @@ export default function RegisterPage() {
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 pr-14 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                disabled={loading}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
             <p className="text-xs text-gray-500 mt-1">Optional; you can set it later.</p>
           </div>
           <button

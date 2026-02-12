@@ -32,6 +32,10 @@ export default function LoginPage() {
       if (data.token) {
         localStorage.setItem('lms_token', data.token);
       }
+      if (data.mustChangePassword) {
+        router.push('/change-password');
+        return;
+      }
       const role = data.user?.role;
       if (role === 'admin') router.push('/admin');
       else if (role === 'facilitator') router.push('/facilitator');

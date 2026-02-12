@@ -50,7 +50,7 @@ export default function FacilitatorGradingPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -58,20 +58,20 @@ export default function FacilitatorGradingPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Grading queue" subtitle="Review and grade student submissions." icon={LmsIcons.grading} />
 
       {grading ? (
         <LmsCard title="Grade submission" subtitle={`${grading.assignment_title} · ${grading.first_name} ${grading.last_name}`}>
-          <p className="text-sm text-gray-500">Submitted {formatDate(grading.submitted_at)}</p>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>Submitted {formatDate(grading.submitted_at)}</p>
+          <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--neutral-50)' }}>
             {grading.link_url && <p><a href={grading.link_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open submission link</a></p>}
-            {grading.text_content && <p className="text-gray-700 mt-2">{grading.text_content}</p>}
+            {grading.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{grading.text_content}</p>}
             {grading.file_url && <p><a href={grading.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
           </div>
           <form onSubmit={handleGrade} className="mt-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Score (0–{grading.max_score ?? 100})</label>
+              <label className="lms-form-label block">Score (0–{grading.max_score ?? 100})</label>
               <input
                 type="number"
                 min={0}
@@ -83,7 +83,7 @@ export default function FacilitatorGradingPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Feedback</label>
+              <label className="lms-form-label block">Feedback</label>
               <textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
@@ -96,7 +96,7 @@ export default function FacilitatorGradingPage() {
               <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors">
                 {saving ? 'Saving...' : 'Submit grade'}
               </button>
-              <button type="button" onClick={() => { setGrading(null); setScore(''); setFeedback(''); }} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+              <button type="button" onClick={() => { setGrading(null); setScore(''); setFeedback(''); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors" style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}>
                 Cancel
               </button>
             </div>
@@ -121,9 +121,9 @@ export default function FacilitatorGradingPage() {
             <tbody>
               {submissions.map((s) => (
                 <tr key={s.id}>
-                  <td className="font-medium text-gray-900">{s.assignment_title}</td>
-                  <td className="text-gray-600">{s.first_name} {s.last_name}</td>
-                  <td className="text-gray-600">{formatDate(s.submitted_at)}</td>
+                  <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{s.assignment_title}</td>
+                  <td style={{ color: 'var(--neutral-600)' }}>{s.first_name} {s.last_name}</td>
+                  <td style={{ color: 'var(--neutral-600)' }}>{formatDate(s.submitted_at)}</td>
                   <td>
                     <button
                       type="button"

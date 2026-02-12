@@ -42,6 +42,7 @@ export default function AdminUsersPage() {
   const initialLoadDone = useRef(false);
   const [createEmail, setCreateEmail] = useState('');
   const [createPassword, setCreatePassword] = useState('');
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [createFirstName, setCreateFirstName] = useState('');
   const [createLastName, setCreateLastName] = useState('');
   const [createRole, setCreateRole] = useState('student');
@@ -233,13 +234,37 @@ export default function AdminUsersPage() {
             </AdminFormField>
             <AdminFormField>
               <label className="admin-form-label">Password (optional)</label>
-              <input
-                type="password"
-                value={createPassword}
-                onChange={(e) => setCreatePassword(e.target.value)}
-                placeholder="Leave blank for no login"
-                className={inputClass}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showCreatePassword ? 'text' : 'password'}
+                  value={createPassword}
+                  onChange={(e) => setCreatePassword(e.target.value)}
+                  placeholder="Leave blank for no login"
+                  className={inputClass}
+                  style={{ paddingRight: '3rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePassword((s) => !s)}
+                  disabled={creating}
+                  aria-label={showCreatePassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: creating ? 'not-allowed' : 'pointer',
+                    color: '#6b7280',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    padding: '0.25rem 0.5rem',
+                  }}
+                >
+                  {showCreatePassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </AdminFormField>
             <AdminFormField>
               <label className="admin-form-label">First name</label>

@@ -75,7 +75,7 @@ export default function FacilitatorAttendancePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -83,10 +83,10 @@ export default function FacilitatorAttendancePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Attendance" subtitle="Mark attendance for live classes." icon={LmsIcons.users} />
       <LmsCard title="Select cohort">
-        <label className="block text-sm font-medium text-gray-700">Cohort</label>
+        <label className="lms-form-label block">Cohort</label>
         <select
           value={selectedCohort || ''}
           onChange={(e) => { setSelectedCohort(e.target.value || null); setSelectedClass(null); }}
@@ -100,7 +100,7 @@ export default function FacilitatorAttendancePage() {
       </LmsCard>
       {liveClasses.length > 0 && (
         <LmsCard title="Select live class">
-          <label className="block text-sm font-medium text-gray-700">Live class</label>
+          <label className="lms-form-label block">Live class</label>
           <select
             value={selectedClass || ''}
             onChange={(e) => setSelectedClass(e.target.value || null)}
@@ -117,9 +117,9 @@ export default function FacilitatorAttendancePage() {
         <LmsCard title="Mark attendance">
           <ul className="space-y-2">
             {attendance.map((r) => (
-              <li key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="font-medium text-gray-900">{r.first_name} {r.last_name}</span>
-                <span className="text-sm text-gray-500">{r.join_clicked_at ? 'Joined' : '—'}</span>
+              <li key={r.id} className="flex items-center justify-between py-2 border-b" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{r.first_name} {r.last_name}</span>
+                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{r.join_clicked_at ? 'Joined' : '—'}</span>
                 <select
                   value={r.status || 'absent'}
                   onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
@@ -143,7 +143,7 @@ export default function FacilitatorAttendancePage() {
         </LmsCard>
       )}
       {selectedClass && attendance.length === 0 && (
-        <p className="text-gray-500">No attendance records for this class yet. Students will appear after they click &quot;Join class&quot; or you can add them from the cohort roster.</p>
+        <p style={{ color: 'var(--neutral-500)' }}>No attendance records for this class yet. Students will appear after they click &quot;Join class&quot; or you can add them from the cohort roster.</p>
       )}
     </div>
   );

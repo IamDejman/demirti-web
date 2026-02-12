@@ -25,6 +25,10 @@ export default function FacilitatorLayout({ children }) {
           router.push('/login');
           return;
         }
+        if (data.user?.mustChangePassword) {
+          router.push('/change-password');
+          return;
+        }
         if (data.user?.role !== 'facilitator') {
           if (data.user?.role === 'admin') router.push('/admin');
           else if (data.user?.role === 'student' || data.user?.role === 'alumni') router.push('/dashboard');

@@ -88,8 +88,8 @@ export default function StudentOfficeHoursPage() {
                       <button
                         type="button"
                         onClick={() => handleCancel(slot.id)}
-                        className="px-3 py-2 border text-sm font-medium rounded-lg transition-colors hover:bg-gray-50"
-                        style={{ borderColor: 'var(--neutral-300)' }}
+                        className="px-3 py-2 border text-sm font-medium rounded-lg transition-colors hover:bg-[var(--neutral-50)]"
+                        style={{ borderColor: 'var(--neutral-300)', color: 'var(--neutral-700)' }}
                       >
                         Cancel
                       </button>

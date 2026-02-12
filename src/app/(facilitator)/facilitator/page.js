@@ -51,10 +51,10 @@ export default function FacilitatorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
         <div className="h-10 w-64 lms-skeleton rounded-lg" />
         <div className="h-32 lms-skeleton rounded-xl" />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
           <div className="h-40 lms-skeleton rounded-xl" />
           <div className="h-40 lms-skeleton rounded-xl" />
         </div>
@@ -63,19 +63,19 @@ export default function FacilitatorDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Facilitator dashboard" subtitle="Your cohorts and quick actions." />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
         <Link href="/facilitator/grading" className="block">
           <LmsCard title="Grading queue" icon={LmsIcons.grading}>
             <p className="text-3xl font-bold text-primary mt-2">{pendingCount}</p>
-            <p className="text-sm text-gray-500 mt-1">Pending submissions</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>Pending submissions</p>
           </LmsCard>
         </Link>
         <Link href="/facilitator/attendance" className="block">
           <LmsCard title="Attendance" icon={LmsIcons.users}>
-            <p className="text-sm text-gray-600 mt-2">Mark attendance for live classes</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>Mark attendance for live classes</p>
           </LmsCard>
         </Link>
       </div>
@@ -86,10 +86,10 @@ export default function FacilitatorDashboardPage() {
         ) : (
           <ul className="space-y-3">
             {cohorts.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <li key={c.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                 <div>
-                  <span className="font-medium text-gray-900">{c.name}</span>
-                  <span className="text-sm text-gray-500 ml-2">{c.track_name}</span>
+                  <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{c.name}</span>
+                  <span className="text-sm ml-2" style={{ color: 'var(--neutral-500)' }}>{c.track_name}</span>
                 </div>
                 <Link href={`/facilitator/cohorts/${c.id}`} className="text-primary text-sm font-medium hover:underline">
                   View
@@ -111,9 +111,9 @@ export default function FacilitatorDashboardPage() {
         >
           <ul className="space-y-2">
             {events.slice(0, 5).map((ev) => (
-              <li key={ev.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="font-medium text-gray-900">{ev.title}</span>
-                <span className="text-sm text-gray-500">{formatDate(ev.start)}</span>
+              <li key={ev.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{ev.title}</span>
+                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatDate(ev.start)}</span>
               </li>
             ))}
           </ul>
@@ -124,9 +124,9 @@ export default function FacilitatorDashboardPage() {
         <LmsCard title="Announcements">
           <ul className="space-y-3">
             {announcements.map((a) => (
-              <li key={a.id} className="border-b border-gray-100 pb-3 last:border-0">
-                <p className="font-medium text-gray-900">{a.title}</p>
-                <p className="text-sm text-gray-500 mt-1">{a.body}</p>
+              <li key={a.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>{a.body}</p>
               </li>
             ))}
           </ul>
@@ -149,12 +149,12 @@ export default function FacilitatorDashboardPage() {
         }
       >
         {notifications.length === 0 ? (
-          <p className="text-sm text-gray-500">No notifications yet.</p>
+          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
         ) : (
           <ul className="space-y-2">
             {notifications.map((n) => (
-              <li key={n.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className={`text-sm ${n.is_read ? 'text-gray-500' : 'text-gray-900 font-medium'}`}>{n.title}</span>
+              <li key={n.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+                <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
                 {!n.is_read && (
                   <button
                     type="button"
@@ -175,7 +175,7 @@ export default function FacilitatorDashboardPage() {
 
       <LmsCard title="Notification preferences">
         <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
             <input
               type="checkbox"
               checked={prefs.in_app_enabled !== false}
@@ -184,7 +184,7 @@ export default function FacilitatorDashboardPage() {
             />
             In-app notifications
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
             <input
               type="checkbox"
               checked={prefs.email_enabled !== false}

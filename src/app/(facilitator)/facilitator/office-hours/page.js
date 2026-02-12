@@ -72,9 +72,9 @@ export default function FacilitatorOfficeHoursPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Office Hours" subtitle="Create slots and manage bookings." icon={LmsIcons.clock}>
-        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
+        {message && <p className="text-sm mt-2 opacity-80">{message}</p>}
       </LmsPageHeader>
 
       <LmsCard title="Create slot" icon={LmsIcons.clock}>
@@ -166,14 +166,14 @@ export default function FacilitatorOfficeHoursPage() {
         ) : (
           <ul className="space-y-3">
             {slots.map((slot) => (
-              <li key={slot.id} className="border-b border-gray-100 pb-3 last:border-0">
+              <li key={slot.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{slot.title || 'Office hour slot'}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{slot.title || 'Office hour slot'}</p>
+                    <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>
                       {new Date(slot.start_time).toLocaleString()} - {new Date(slot.end_time).toLocaleTimeString()}
                     </p>
-                    {slot.cohort_name && <p className="text-xs text-gray-500">Cohort: {slot.cohort_name}</p>}
+                    {slot.cohort_name && <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>Cohort: {slot.cohort_name}</p>}
                   </div>
                   <div className="flex gap-3">
                     <button
@@ -193,7 +193,7 @@ export default function FacilitatorOfficeHoursPage() {
                   </div>
                 </div>
                 {bookingsBySlot[slot.id]?.length > 0 && (
-                  <ul className="mt-2 text-xs text-gray-500 space-y-1">
+                  <ul className="mt-2 text-xs space-y-1" style={{ color: 'var(--neutral-500)' }}>
                     {bookingsBySlot[slot.id].map((b) => (
                       <li key={b.id}>{b.first_name || ''} {b.last_name || ''} · {b.email}</li>
                     ))}

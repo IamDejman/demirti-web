@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import AdminNavigationLoader from './AdminNavigationLoader';
 import AuditPageViewTracker from './AuditPageViewTracker';
+import { installAdmin401Interceptor } from '@/lib/authClient';
 
 const AUTH_PATHS = ['/admin/login', '/admin/forgot-password'];
 const STORAGE_KEY = 'admin_sidebar_collapsed';
@@ -48,6 +49,12 @@ export default function AdminLayoutShell({ children }) {
       // ignore
     }
   }, []);
+
+  useEffect(() => {
+    if (isAuthPage) return;
+    const uninstall = installAdmin401Interceptor();
+    return uninstall;
+  }, [isAuthPage]);
 
   useEffect(() => {
     if (isAuthPage) return;

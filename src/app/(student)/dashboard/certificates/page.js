@@ -49,18 +49,37 @@ export default function CertificatesPage() {
           />
         </LmsCard>
       ) : (
-        <LmsCard title="Certificates" icon={LmsIcons.trophy}>
-          <ul className="space-y-2">
-            {certificates.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <span className="text-sm" style={{ color: 'var(--neutral-900)' }}>{c.track_name || 'CVERSE Academy'}</span>
-                <a href={`/api/certificates/${c.id}/pdf`} className="text-xs text-primary hover:underline">
+        <div className="grid gap-6 sm:grid-cols-2">
+          {certificates.map((c) => (
+            <div key={c.id} className="lms-card rounded-xl overflow-hidden" style={{ border: '1px solid var(--neutral-100)' }}>
+              {/* Certificate header with gradient */}
+              <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, var(--primary-color) 0%, #0066cc 50%, #00a67e 100%)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}>
+                    <span style={{ color: 'white' }}>{LmsIcons.trophy}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">{c.track_name || 'CVERSE Academy'}</h3>
+                    <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.8)' }}>Certificate of Completion</p>
+                  </div>
+                </div>
+              </div>
+              {/* Certificate body */}
+              <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: 'white' }}>
+                <div>
+                  {c.issued_at && (
+                    <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>
+                      Issued {new Date(c.issued_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                    </p>
+                  )}
+                </div>
+                <a href={`/api/certificates/${c.id}/pdf`} className="lms-btn lms-btn-sm lms-btn-primary">
                   Download PDF
                 </a>
-              </li>
-            ))}
-          </ul>
-        </LmsCard>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

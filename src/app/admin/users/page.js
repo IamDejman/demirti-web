@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -16,6 +16,12 @@ import {
 import { getAuthHeaders } from '@/lib/authClient';
 
 const ROLE_OPTIONS = ['student', 'facilitator', 'alumni', 'admin', 'guest'];
+
+function formatRoleLabel(role) {
+  if (!role) return '';
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+}
+
 const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm';
 
 export default function AdminUsersPage() {
@@ -33,6 +39,15 @@ export default function AdminUsersPage() {
   const [bulkRole, setBulkRole] = useState('student');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
+  const initialLoadDone = useRef(false);
+  const [createEmail, setCreateEmail] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [createFirstName, setCreateFirstName] = useState('');
+  const [createLastName, setCreateLastName] = useState('');
+  const [createRole, setCreateRole] = useState('student');
+  const [creating, setCreating] = useState(false);
+  const [createMessage, setCreateMessage] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const loadUsers = async (resetOffset = false, overrideOffset = null) => {
     const nextOffset = overrideOffset !== null ? overrideOffset : (resetOffset ? 0 : offset);
@@ -61,6 +76,9 @@ export default function AdminUsersPage() {
       router.push('/admin/login');
       return;
     }
+    // Avoid duplicate initial load (e.g. from React Strict Mode double-mount in dev)
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
     loadUsers(true);
   }, [router]);
 
@@ -79,6 +97,43 @@ export default function AdminUsersPage() {
   };
 
   const selectedIds = Object.keys(selected).filter((id) => selected[id]);
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!createEmail?.trim()) return;
+    setCreating(true);
+    setCreateMessage('');
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          email: createEmail.trim(),
+          password: createPassword.trim() || undefined,
+          firstName: createFirstName.trim() || undefined,
+          lastName: createLastName.trim() || undefined,
+          role: createRole,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setCreateMessage(`User created: ${data.user.email} (${formatRoleLabel(data.user.role)})`);
+        setCreateEmail('');
+        setCreatePassword('');
+        setCreateFirstName('');
+        setCreateLastName('');
+        setCreateRole('student');
+        await loadUsers(true);
+        setShowCreateForm(false);
+      } else {
+        setCreateMessage(data.error || 'Create failed');
+      }
+    } catch {
+      setCreateMessage('Something went wrong');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleBulk = async () => {
     if (!bulkAction || selectedIds.length === 0) return;
@@ -132,7 +187,7 @@ export default function AdminUsersPage() {
         </div>
       ),
     },
-    { key: 'role', label: 'Role', render: (u) => u.role },
+    { key: 'role', label: 'Role', render: (u) => formatRoleLabel(u.role) },
     { key: 'status', label: 'Status', render: (u) => (u.is_active ? 'Active' : 'Inactive') },
     { key: 'created', label: 'Created', render: (u) => new Date(u.created_at).toLocaleDateString() },
   ];
@@ -141,10 +196,93 @@ export default function AdminUsersPage() {
     <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <AdminPageHeader
         title="Users"
-        description="Search, filter, and manage user accounts. Use bulk actions to update multiple users."
+        description="Search, filter, and manage user accounts. Create students and facilitators here; assign them to cohorts from the cohort detail page."
       />
 
       {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+
+      {!showCreateForm ? (
+        <AdminCard>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <p className="admin-form-hint" style={{ margin: 0 }}>Create a new student or facilitator, then assign them to a cohort from Admin → Cohorts → [cohort].</p>
+            <AdminButton variant="primary" onClick={() => setShowCreateForm(true)}>
+              Create user
+            </AdminButton>
+          </div>
+        </AdminCard>
+      ) : (
+        <AdminCard>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem 1rem', marginBottom: '1rem' }}>
+            <h2 className="admin-card-title" style={{ margin: 0 }}>Create user</h2>
+            <AdminButton variant="secondary" onClick={() => { setShowCreateForm(false); setCreateMessage(''); }} aria-label="Close form">
+              Cancel
+            </AdminButton>
+          </div>
+          <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>After creating, assign them to a cohort from Admin → Cohorts → [cohort] → Enroll student / Add facilitator.</p>
+          <form onSubmit={handleCreateUser} className="admin-filters-grid" style={{ alignItems: 'end', gap: '0.75rem 1rem' }}>
+            <AdminFormField>
+              <label className="admin-form-label">Email *</label>
+              <input
+                type="email"
+                value={createEmail}
+                onChange={(e) => setCreateEmail(e.target.value)}
+                placeholder="user@example.com"
+                className={inputClass}
+                required
+              />
+            </AdminFormField>
+            <AdminFormField>
+              <label className="admin-form-label">Password (optional)</label>
+              <input
+                type="password"
+                value={createPassword}
+                onChange={(e) => setCreatePassword(e.target.value)}
+                placeholder="Leave blank for no login"
+                className={inputClass}
+              />
+            </AdminFormField>
+            <AdminFormField>
+              <label className="admin-form-label">First name</label>
+              <input
+                type="text"
+                value={createFirstName}
+                onChange={(e) => setCreateFirstName(e.target.value)}
+                placeholder="First name"
+                className={inputClass}
+              />
+            </AdminFormField>
+            <AdminFormField>
+              <label className="admin-form-label">Last name</label>
+              <input
+                type="text"
+                value={createLastName}
+                onChange={(e) => setCreateLastName(e.target.value)}
+                placeholder="Last name"
+                className={inputClass}
+              />
+            </AdminFormField>
+            <AdminFormField>
+              <label className="admin-form-label">Role</label>
+              <select
+                value={createRole}
+                onChange={(e) => setCreateRole(e.target.value)}
+                className={inputClass}
+                aria-label="Role"
+              >
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r} value={r}>{formatRoleLabel(r)}</option>
+                ))}
+              </select>
+            </AdminFormField>
+            <AdminFormField style={{ marginBottom: 0 }}>
+              <AdminButton type="submit" variant="primary" disabled={creating}>
+                {creating ? 'Creating...' : 'Create user'}
+              </AdminButton>
+            </AdminFormField>
+          </form>
+          {createMessage && <p className="admin-form-hint" style={{ marginTop: '0.75rem', color: createMessage.startsWith('User created') ? '#059669' : 'inherit' }}>{createMessage}</p>}
+        </AdminCard>
+      )}
 
       <AdminCard>
         <div className="admin-filters-grid">
@@ -154,25 +292,27 @@ export default function AdminUsersPage() {
               placeholder="Search name or email"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && loadUsers(true)}
               className={inputClass}
             />
           </AdminFormField>
           <AdminFormField>
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => { setRoleFilter(e.target.value); loadUsers(true); }}
               className={inputClass}
+              aria-label="Filter by role"
             >
               <option value="">All roles</option>
               {ROLE_OPTIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r} value={r}>{formatRoleLabel(r)}</option>
               ))}
             </select>
           </AdminFormField>
           <AdminFormField>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); loadUsers(true); }}
               className={inputClass}
             >
               <option value="">All statuses</option>
@@ -180,9 +320,6 @@ export default function AdminUsersPage() {
               <option value="inactive">Inactive</option>
             </select>
           </AdminFormField>
-          <AdminButton variant="primary" onClick={() => loadUsers(true)}>
-            Search
-          </AdminButton>
         </div>
         <div className="admin-action-group" style={{ marginTop: '1rem' }}>
           <select
@@ -202,9 +339,10 @@ export default function AdminUsersPage() {
               onChange={(e) => setBulkRole(e.target.value)}
               className={inputClass}
               style={{ width: 'auto', minWidth: '120px' }}
+              aria-label="Select role"
             >
               {ROLE_OPTIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r} value={r}>{formatRoleLabel(r)}</option>
               ))}
             </select>
           )}

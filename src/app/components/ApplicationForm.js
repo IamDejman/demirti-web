@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from './ToastProvider';
-import { trackEvent } from '@/lib/tracker';
 
 export default function ApplicationForm({ 
   trackName, 
@@ -38,11 +37,6 @@ export default function ApplicationForm({
     setScholarshipLimit(initialScholarshipLimit);
     setScholarshipAvailable(initialScholarshipAvailable);
   }, [initialCoursePrice, initialDiscountPercentage, initialScholarshipLimit, initialScholarshipAvailable]);
-
-  // Track application form view (per track)
-  useEffect(() => {
-    trackEvent('application_form_viewed', { track: trackName });
-  }, [trackName]);
 
   // Load Paystack script on demand (only when needed for payment)
   const loadPaystackScript = () => {
@@ -151,7 +145,6 @@ export default function ApplicationForm({
     }
     
     setIsSubmitting(true);
-    trackEvent('application_started', { track: trackName });
 
     try {
       // Re-check scholarship status at submission time to ensure accuracy (per track)

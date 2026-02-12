@@ -4,7 +4,6 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
-import { trackEvent } from '@/lib/tracker';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -28,7 +27,6 @@ function PaymentSuccessContent() {
           setVerifying(false);
           if (data.success) {
             setVerified(true);
-            trackEvent('payment_success', { reference });
           }
         })
         .catch(() => {

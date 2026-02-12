@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import CookiePreferencesLink from '../components/CookiePreferencesLink';
+import SocialIcons from '../components/SocialIcons';
 import Link from 'next/link';
-import Image from 'next/image';
 
 const FAQ_ITEMS = [
   {
@@ -445,25 +445,11 @@ export default function DataScienceSIFaqPage() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <Image src="/logo.svg" alt="CVERSE Logo" className="footer-logo" width={150} height={50} />
               <p>Empowering the next generation of digital professionals through world-class education and practical training.</p>
             </div>
             <div className="footer-section">
               <h3>Follow Us</h3>
-              <div className="social-links">
-                <a href="https://www.linkedin.com/company/cverse-academy/" className="social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-linkedin"></i>
-                </a>
-                <a href="https://x.com/CVerse_Academy" className="social-link" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-x-twitter"></i>
-                </a>
-                <a href="https://www.instagram.com/cversedemirti/" className="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.tiktok.com/@cverse_academy" className="social-link" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-tiktok"></i>
-                </a>
-              </div>
+              <SocialIcons />
             </div>
           </div>
           <div className="footer-bottom">

@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Navbar from '../components/Navbar';
 import CookiePreferencesLink from '../components/CookiePreferencesLink';
+import SocialIcons from '../components/SocialIcons';
 import Link from 'next/link';
 import Image from 'next/image';
-import ApplicationForm from '../components/ApplicationForm';
+
+const ApplicationForm = dynamic(
+  () => import('../components/ApplicationForm'),
+  { ssr: false, loading: () => <div className="form-loading-placeholder" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-light)' }}>Loading form...</div> }
+);
 
 export default function ProjectManagementPage() {
   const [showForm, setShowForm] = useState(false);
@@ -61,41 +67,19 @@ export default function ProjectManagementPage() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="track-hero" style={{ 
-        padding: '10rem 0 6rem', 
-        background: 'linear-gradient(135deg, #00c896 0%, #00a578 100%)',
-        color: 'white',
-        textAlign: 'center',
-        position: 'relative'
-      }}>
+      <section className="track-hero track-hero-secondary">
         <div className="container">
-          <h1 style={{ fontSize: '3.5rem', fontWeight: '800', marginBottom: '1rem' }}>
-            Project Management Track
-          </h1>
-          <p style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto 2rem', opacity: 0.95 }}>
-            Bridge the gap between business and technology. Learn how to lead cross-functional teams, translate user needs into product strategy, and drive technical innovation from idea to launch.
-          </p>
-          <a 
-            href="#apply-section" 
-            className="cta-button" 
+          <h1>Project Management Track</h1>
+          <p>Bridge the gap between business and technology. Learn how to lead cross-functional teams, translate user needs into product strategy, and drive technical innovation from idea to launch.</p>
+          <a
+            href="#apply-section"
+            className="cta-button"
             onClick={(e) => {
               e.preventDefault();
               const element = document.getElementById('apply-section');
               if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
-            }}
-            style={{
-              display: 'inline-block',
-              backgroundColor: 'white',
-              color: '#00c896',
-              padding: '1rem 2.5rem',
-              borderRadius: '50px',
-              fontWeight: '600',
-              fontSize: '1.05rem',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-              cursor: 'pointer'
             }}
           >
             Apply Now
@@ -104,31 +88,15 @@ export default function ProjectManagementPage() {
       </section>
 
       {/* Track Image Section */}
-      <section style={{ 
-        padding: '4rem 0', 
-        backgroundColor: '#f8f9fa',
-        position: 'relative'
-      }}>
+      <section className="track-image-section">
         <div className="container">
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-            backgroundColor: 'white'
-          }}>
+          <div className="track-image-wrap track-image-wrap-narrow">
             <Image
               src="/CVerse_ProjectMgt.jpg"
               alt="Project Management Track"
               width={1200}
               height={675}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                objectFit: 'cover'
-              }}
+              style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
               priority
             />
           </div>
@@ -136,17 +104,11 @@ export default function ProjectManagementPage() {
       </section>
 
       {/* Course Overview */}
-      <section style={{ padding: '5rem 0', backgroundColor: '#ffffff' }}>
+      <section className="track-section">
         <div className="container">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <h2 className="section-title">Course Overview</h2>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-              gap: '2rem',
-              marginTop: '3rem'
-            }}>
+            <div className="track-overview-grid">
               <div style={{
                 backgroundColor: '#f8f9fa',
                 padding: '2rem',
@@ -204,7 +166,7 @@ export default function ProjectManagementPage() {
       </section>
 
       {/* Curriculum */}
-      <section style={{ padding: '5rem 0', backgroundColor: '#f8f9fa' }}>
+      <section className="track-section-alt">
         <div className="container">
           <h2 className="section-title">Course Curriculum</h2>
           
@@ -931,25 +893,11 @@ export default function ProjectManagementPage() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <Image src="/logo.svg" alt="CVERSE Logo" className="footer-logo" width={150} height={50} />
               <p>Empowering the next generation of digital professionals through world-class education and practical training.</p>
             </div>
             <div className="footer-section">
               <h3>Follow Us</h3>
-              <div className="social-links">
-                <a href="https://www.linkedin.com/company/cverse-academy/" className="social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-linkedin"></i>
-                </a>
-                <a href="https://x.com/CVerse_Academy" className="social-link" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-x-twitter"></i>
-                </a>
-                <a href="https://www.instagram.com/cversedemirti/" className="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.tiktok.com/@cverse_academy" className="social-link" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-tiktok"></i>
-                </a>
-              </div>
+              <SocialIcons />
             </div>
           </div>
           <div className="footer-bottom">

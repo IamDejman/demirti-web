@@ -466,7 +466,8 @@ export default function AdminCohortDetailPage() {
   }
 
   const enrolledEmails = new Set(students.map((s) => s.email));
-  const paidNotEnrolled = applications.filter((a) => a.status === 'paid' && !enrolledEmails.has(a.email));
+  const sameTrack = (a) => !cohort?.track_name || (a.track_name && String(a.track_name).toLowerCase() === String(cohort.track_name).toLowerCase());
+  const paidNotEnrolled = applications.filter((a) => a.status === 'paid' && !enrolledEmails.has(a.email) && sameTrack(a));
 
   return (
     <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">
@@ -529,7 +530,7 @@ export default function AdminCohortDetailPage() {
         {paidNotEnrolled.length > 0 && (
           <div className="admin-card">
             <h2 className="admin-card-title">Enroll from paid applications</h2>
-            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Paid applicants not yet in this cohort:</p>
+            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Paid applicants for this track not yet in this cohort. Click Enroll to add them as a student user and enroll in the cohort:</p>
             <ul className="admin-cohort-app-list">
               {paidNotEnrolled.slice(0, 20).map((app) => (
                 <li key={app.id} className="admin-cohort-app-card">

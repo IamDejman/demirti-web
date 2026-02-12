@@ -1,8 +1,10 @@
+import dynamic from 'next/dynamic';
 import Navbar from './components/Navbar';
-import ContactForm from './components/ContactForm';
 import CookiePreferencesLink from './components/CookiePreferencesLink';
+import SocialIcons from './components/SocialIcons';
 import Link from 'next/link';
-import Image from 'next/image';
+
+const ContactForm = dynamic(() => import('./components/ContactForm'), { ssr: true });
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
 
@@ -29,11 +31,20 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="hero" id="home">
+        <div className="hero-bg-shapes">
+          <div className="hero-shape hero-shape-1"></div>
+          <div className="hero-shape hero-shape-2"></div>
+          <div className="hero-shape hero-shape-3"></div>
+        </div>
         <div className="container">
           <div className="hero-content">
+            <div className="hero-badge">Welcome to CVERSE</div>
             <h1>Build Skills. Boost Confidence. Transform Your Career.</h1>
             <p>CVERSE is Demirti&apos;s premier digital training initiative, designed to equip you with the skills needed to excel in today&apos;s technology-driven world.</p>
-            <a href="#tracks" className="cta-button">Explore Our Courses</a>
+            <div className="hero-cta-group">
+              <a href="#tracks" className="cta-button cta-primary">Explore Our Courses</a>
+              <a href="#about" className="cta-button cta-secondary">Learn More</a>
+            </div>
           </div>
         </div>
       </section>
@@ -99,25 +110,11 @@ export default function Home() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <Image src="/logo.svg" alt="CVERSE Logo" className="footer-logo" width={150} height={50} />
               <p>Empowering the next generation of digital professionals through world-class education and practical training.</p>
             </div>
             <div className="footer-section">
               <h3>Follow Us</h3>
-              <div className="social-links">
-                <a href="https://www.linkedin.com/company/cverse-academy/" className="social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-linkedin"></i>
-                </a>
-                <a href="https://x.com/CVerse_Academy" className="social-link" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-x-twitter"></i>
-                </a>
-                <a href="https://www.instagram.com/cversedemirti/" className="social-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.tiktok.com/@cverse_academy" className="social-link" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-tiktok"></i>
-                </a>
-              </div>
+              <SocialIcons />
             </div>
           </div>
           <div className="footer-bottom">

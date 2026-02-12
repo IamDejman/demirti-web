@@ -8,6 +8,7 @@ export default function Navbar() {
   const [activeLink, setActiveLink] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isTracksDropdownOpen, setIsTracksDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,14 +17,15 @@ export default function Navbar() {
 
       sections.forEach(section => {
         const rect = section.getBoundingClientRect();
-        const offset = 200; // Adjust for header height + buffer
+        const offset = 100; // Header offset + buffer
 
         if (rect.top <= offset && rect.bottom > offset) {
           currentActive = section.id;
         }
       });
-      
+
       setActiveLink(currentActive);
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -36,7 +38,7 @@ export default function Navbar() {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 160; // Header height + padding
+      const headerOffset = 96; // Match --header-offset
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -55,7 +57,7 @@ export default function Navbar() {
   };
 
   return (
-    <header>
+    <header className={isScrolled ? 'scrolled' : ''}>
       <div className="container header-container">
         <Image src="/logo.png" alt="CVERSE Logo" className="logo" width={150} height={50} style={{ width: 'auto', height: 'auto' }} priority />
         <nav>
@@ -136,12 +138,14 @@ export default function Navbar() {
               </Link>
             </li>
           </ul>
-          <button 
-            className="mobile-menu-btn"
+          <button
+            className={`mobile-menu-btn ${isMobileMenuOpen ? 'open' : ''}`}
             onClick={toggleMobileMenu}
             aria-label="Toggle mobile menu"
           >
-            {isMobileMenuOpen ? '✕' : '☰'}
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
           </button>
         </nav>
       </div>

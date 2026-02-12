@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+
+const FLYOUT_CLOSE_DELAY_MS = 150;
 
 const ICONS = {
   dashboard: (
@@ -85,9 +88,6 @@ const NAV_ITEMS = [
     { href: '/admin/sample-projects', label: 'Projects' },
   ]},
   { id: 'analytics', label: 'Analytics', icon: 'analytics', items: [
-    { href: '/admin/analytics', label: 'Overview' },
-    { href: '/admin/goals', label: 'Goals' },
-    { href: '/admin/funnels', label: 'Funnels' },
     { href: '/admin/audit-logs', label: 'Audit Logs' },
     { href: '/admin/exports', label: 'Exports' },
   ]},
@@ -121,8 +121,26 @@ function getSectionWithActiveRoute(pathname) {
 export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flyoutSection, setFlyoutSection] = useState(null);
+  const [flyoutAnchorRect, setFlyoutAnchorRect] = useState(null);
+  const [collapsedTooltip, setCollapsedTooltip] = useState(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState(null);
+  const flyoutCloseTimeoutRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  const showCollapsedTooltip = (label, el) => {
+    setCollapsedTooltip(label);
+    if (el && typeof el.getBoundingClientRect === 'function') {
+      const rect = el.getBoundingClientRect();
+      setTooltipAnchor({ top: rect.top + rect.height / 2 });
+    } else {
+      setTooltipAnchor(null);
+    }
+  };
+  const hideCollapsedTooltip = () => {
+    setCollapsedTooltip(null);
+    setTooltipAnchor(null);
+  };
 
   const [expandedSections, setExpandedSections] = useState(() => {
     const activeSection = getSectionWithActiveRoute(pathname);
@@ -149,11 +167,53 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
     }
   };
 
-  const openFlyoutOnHover = (id) => {
-    if (collapsed) setFlyoutSection(id);
+  const openFlyoutOnHover = (id, anchorEl) => {
+    if (collapsed) {
+      if (flyoutCloseTimeoutRef.current) {
+        clearTimeout(flyoutCloseTimeoutRef.current);
+        flyoutCloseTimeoutRef.current = null;
+      }
+      if (anchorEl && typeof anchorEl.getBoundingClientRect === 'function') {
+        const rect = anchorEl.getBoundingClientRect();
+        setFlyoutAnchorRect({ top: rect.top, left: rect.right + 4, height: rect.height });
+      } else {
+        setFlyoutAnchorRect(null);
+      }
+      setFlyoutSection(id);
+    }
   };
 
-  const closeFlyout = () => setFlyoutSection(null);
+  const scheduleCloseFlyout = () => {
+    if (!collapsed) return;
+    if (flyoutCloseTimeoutRef.current) clearTimeout(flyoutCloseTimeoutRef.current);
+    flyoutCloseTimeoutRef.current = setTimeout(() => {
+      flyoutCloseTimeoutRef.current = null;
+      setFlyoutSection(null);
+      setFlyoutAnchorRect(null);
+    }, FLYOUT_CLOSE_DELAY_MS);
+  };
+
+  const cancelCloseFlyout = () => {
+    if (flyoutCloseTimeoutRef.current) {
+      clearTimeout(flyoutCloseTimeoutRef.current);
+      flyoutCloseTimeoutRef.current = null;
+    }
+  };
+
+  const closeFlyout = () => {
+    if (flyoutCloseTimeoutRef.current) {
+      clearTimeout(flyoutCloseTimeoutRef.current);
+      flyoutCloseTimeoutRef.current = null;
+    }
+    setFlyoutSection(null);
+    setFlyoutAnchorRect(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (flyoutCloseTimeoutRef.current) clearTimeout(flyoutCloseTimeoutRef.current);
+    };
+  }, []);
 
   const isActive = (path) => pathname === path || (path !== '/admin' && pathname.startsWith(path));
 
@@ -224,7 +284,12 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
             {NAV_ITEMS.map((item) => {
               if (item.href) {
                 return (
-                  <div key={item.href} className="admin-sidebar-parent">
+                  <div
+                    key={item.href}
+                    className="admin-sidebar-parent"
+                    onMouseEnter={(e) => collapsed && showCollapsedTooltip(item.label, e.currentTarget)}
+                    onMouseLeave={() => collapsed && hideCollapsedTooltip()}
+                  >
                     <div
                       className={`admin-sidebar-parent-btn admin-sidebar-dashboard-link ${isActive(item.href) ? 'active' : ''}`}
                       title={collapsed ? item.label : undefined}
@@ -249,7 +314,12 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
               const flyoutOpen = flyoutSection === item.id;
               const listId = `admin-sidebar-${item.id}`;
               return (
-                <div key={item.id} className="admin-sidebar-parent admin-sidebar-parent-with-flyout" onMouseEnter={() => collapsed && openFlyoutOnHover(item.id)}>
+                <div
+                  key={item.id}
+                  className="admin-sidebar-parent admin-sidebar-parent-with-flyout"
+                  onMouseEnter={(e) => collapsed && (openFlyoutOnHover(item.id, e.currentTarget), showCollapsedTooltip(item.label, e.currentTarget))}
+                  onMouseLeave={() => collapsed && (scheduleCloseFlyout(), hideCollapsedTooltip())}
+                >
                   <button
                     type="button"
                     className={`admin-sidebar-parent-btn ${isExpanded ? 'expanded' : ''} ${getSectionWithActiveRoute(pathname) === item.id ? 'has-active' : ''} ${flyoutOpen ? 'flyout-open' : ''}`}
@@ -280,26 +350,6 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                       </svg>
                     )}
                   </button>
-                  {collapsed && flyoutOpen && (
-                    <div
-                      id={listId}
-                      className="admin-sidebar-flyout"
-                      role="region"
-                      onMouseLeave={closeFlyout}
-                    >
-                      <div className="admin-sidebar-flyout-header">{item.label}</div>
-                      {item.items.map(({ href, label }) => (
-                        <Link
-                          key={href}
-                          href={href}
-                          onClick={() => { setMobileOpen(false); closeFlyout(); }}
-                          className={`admin-sidebar-link ${isActive(href) ? 'active' : ''}`}
-                        >
-                          {label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
                   {!collapsed && isExpanded && (
                     <div id={listId} className="admin-sidebar-children" role="region">
                       {item.items.map(({ href, label }) => (
@@ -325,6 +375,8 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
             className="admin-sidebar-logout"
             aria-label="Logout"
             title={collapsed ? 'Logout' : undefined}
+            onMouseEnter={(e) => collapsed && showCollapsedTooltip('Logout', e.currentTarget)}
+            onMouseLeave={() => collapsed && hideCollapsedTooltip()}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -337,6 +389,68 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
       </aside>
       {mobileOpen && (
         <div className="admin-sidebar-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
+      {typeof document !== 'undefined' &&
+        collapsed &&
+        flyoutSection &&
+        flyoutAnchorRect &&
+        (() => {
+          const item = NAV_ITEMS.find((n) => n.items && n.id === flyoutSection);
+          if (!item) return null;
+          return createPortal(
+            <div
+              className="admin-sidebar-flyout-portal"
+              role="region"
+              aria-label={item.label}
+              style={{
+                position: 'fixed',
+                left: flyoutAnchorRect.left,
+                top: flyoutAnchorRect.top,
+                zIndex: 1200,
+                minWidth: 220,
+                maxWidth: 280,
+                padding: '0.75rem',
+                background: '#fff',
+                borderRadius: 10,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+                border: '1px solid #e8ecf0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+                whiteSpace: 'normal',
+                pointerEvents: 'auto',
+              }}
+              onMouseEnter={cancelCloseFlyout}
+              onMouseLeave={closeFlyout}
+            >
+              <style dangerouslySetInnerHTML={{ __html: '.admin-sidebar-flyout-portal a { display: flex; align-items: center; width: 100%; padding: 0.625rem 0.875rem; font-size: 0.875rem; font-weight: 500; color: #4b5563; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; } .admin-sidebar-flyout-portal a:hover { color: #0066cc; background: rgba(0, 102, 204, 0.08); } .admin-sidebar-flyout-portal a.active { color: #0066cc; background: rgba(0, 102, 204, 0.12); font-weight: 600; } .admin-sidebar-flyout-portal .admin-sidebar-flyout-header { font-size: 0.8rem; font-weight: 600; color: #6b7280; padding: 0.5rem 0.75rem; margin-bottom: 0.25rem; border-bottom: 1px solid #e5e7eb; }' }} />
+              <div className="admin-sidebar-flyout-header">
+                {item.label}
+              </div>
+              {item.items.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => { setMobileOpen(false); closeFlyout(); }}
+                  className={isActive(href) ? 'active' : ''}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>,
+            document.body
+          );
+        })()}
+
+      {collapsed && collapsedTooltip && (
+        <div
+          className="admin-sidebar-collapsed-tooltip"
+          role="tooltip"
+          style={tooltipAnchor ? { top: tooltipAnchor.top, transform: 'translateY(-50%)' } : undefined}
+        >
+          {collapsedTooltip}
+        </div>
       )}
 
       <style jsx>{`
@@ -360,6 +474,26 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
         }
         .admin-sidebar-toggle:hover {
           box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .admin-sidebar-collapsed-tooltip {
+          position: fixed;
+          left: 80px;
+          top: 50%;
+          z-index: 1001;
+          padding: 0.5rem 0.75rem;
+          background: #1f2937;
+          color: #fff;
+          font-size: 0.875rem;
+          font-weight: 500;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          white-space: nowrap;
+          pointer-events: none;
+          animation: admin-sidebar-tooltip-in 0.15s ease;
+        }
+        @keyframes admin-sidebar-tooltip-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         .admin-sidebar-backdrop {
           position: fixed;
@@ -448,6 +582,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
         }
         .admin-sidebar.collapsed .admin-sidebar-nav {
           padding: 1rem 0.5rem;
+          overflow-x: visible;
         }
         .admin-sidebar-parent {
           display: flex;
@@ -585,7 +720,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           border-radius: 10px;
           box-shadow: 0 4px 24px rgba(0,0,0,0.15);
           border: 1px solid #e8ecf0;
-          z-index: 1100;
+          z-index: 1200;
           display: flex;
           flex-direction: column;
           gap: 0.25rem;

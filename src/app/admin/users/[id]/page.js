@@ -1,14 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { AdminPageHeader } from '../../../components/admin';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminButton,
+  AdminMessage,
+  AdminEmptyState,
+} from '../../../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
 
-export default function AdminUserDetailPage({ params }) {
+function formatRole(r) {
+  if (!r) return '';
+  return String(r).charAt(0).toUpperCase() + String(r).slice(1).toLowerCase();
+}
+
+export default function AdminUserDetailPage() {
   const router = useRouter();
+  const params = useParams();
   const userId = params?.id;
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -18,6 +30,7 @@ export default function AdminUserDetailPage({ params }) {
   const [moderationActions, setModerationActions] = useState([]);
   const [submissions, setSubmissions] = useState(0);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
   const [tempPassword, setTempPassword] = useState('');
 
   const loadUser = async () => {
@@ -56,8 +69,10 @@ export default function AdminUserDetailPage({ params }) {
     const data = await res.json();
     if (res.ok) {
       setTempPassword(data.tempPassword);
+      setMessageType('success');
       setMessage('Temporary password generated.');
     } else {
+      setMessageType('error');
       setMessage(data.error || 'Failed to reset password.');
     }
   };
@@ -66,139 +81,198 @@ export default function AdminUserDetailPage({ params }) {
     return null;
   }
 
+  const displayName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User'
+    : 'User Details';
+  const initials = user
+    ? [user.first_name, user.last_name]
+        .filter(Boolean)
+        .map((n) => n.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || user?.email?.slice(0, 2).toUpperCase() || '?'
+    : '…';
+
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <AdminPageHeader
-          breadcrumb={<Link href="/admin/users">← Users</Link>}
-          title={user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User' : 'User Details'}
-          description={user?.email}
-        />
-        {message && <p className="text-sm text-gray-600 mb-4">{message}</p>}
+    <div className="admin-dashboard admin-dashboard-content admin-user-detail">
+      <AdminPageHeader
+        breadcrumb={
+          <Link href="/admin/users" className="admin-link admin-link-primary">
+            ← Users
+          </Link>
+        }
+        title={displayName}
+        description={user?.email}
+      />
 
-        {loading ? (
-          <p className="text-gray-500 mt-4">Loading user...</p>
-        ) : !user ? (
-          <p className="text-gray-500 mt-4">User not found.</p>
-        ) : (
-          <>
-            <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {user.first_name || ''} {user.last_name || ''}
-                  </h2>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <p className="text-xs text-gray-500 mt-1">Role: {user.role} · Status: {user.is_active ? 'Active' : 'Inactive'}</p>
-                  {user.suspended_until && (
-                    <p className="text-xs text-red-600 mt-1">Suspended until: {new Date(user.suspended_until).toLocaleString()}</p>
-                  )}
-                  {user.is_shadowbanned && (
-                    <p className="text-xs text-orange-600 mt-1">Shadowbanned</p>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-2 text-xs text-gray-500">
-                  <span>Created: {new Date(user.created_at).toLocaleDateString()}</span>
-                  {user.last_login_at && <span>Last login: {new Date(user.last_login_at).toLocaleDateString()}</span>}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={handleResetPassword}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+      {message && (
+        <AdminMessage type={messageType}>{message}</AdminMessage>
+      )}
+
+      {loading ? (
+        <div className="admin-user-detail-loading">
+          <div className="admin-user-detail-loading-spinner" aria-hidden />
+          <p className="admin-form-hint">Loading user...</p>
+        </div>
+      ) : !user ? (
+        <AdminCard>
+          <AdminEmptyState
+            message="User not found"
+            description="This user may have been deleted or the link is incorrect."
+            action={
+              <AdminButton variant="secondary" onClick={() => router.push('/admin/users')}>
+                Back to users
+              </AdminButton>
+            }
+          />
+        </AdminCard>
+      ) : (
+        <>
+          {/* Profile header */}
+          <div className="admin-user-detail-profile">
+            <div className="admin-user-detail-avatar" aria-hidden>
+              {initials}
+            </div>
+            <div className="admin-user-detail-profile-main">
+              <h1 className="admin-user-detail-name">{displayName}</h1>
+              <p className="admin-user-detail-email">{user.email}</p>
+              <div className="admin-user-detail-badges">
+                <span
+                  className={`admin-user-detail-badge admin-user-detail-badge-role ${
+                    user.role === 'admin' ? 'admin-user-detail-badge-admin' : ''
+                  }`}
                 >
-                  Reset password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push('/admin/impersonation')}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  {formatRole(user.role)}
+                </span>
+                <span
+                  className={`admin-user-detail-badge ${
+                    user.is_active ? 'admin-user-detail-badge-active' : 'admin-user-detail-badge-inactive'
+                  }`}
                 >
-                  Impersonate
-                </button>
-              </div>
-              {tempPassword && (
-                <p className="text-sm text-gray-700 mt-3">Temp password: <span className="font-mono">{tempPassword}</span></p>
-              )}
-            </div>
-
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Enrollments</h3>
-                {enrollments.length === 0 ? (
-                  <p className="text-sm text-gray-500 mt-2">No enrollments.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {enrollments.map((e) => (
-                      <li key={e.id} className="border-b border-gray-100 pb-2">
-                        <p className="font-medium text-gray-900">{e.cohort_name}</p>
-                        <p className="text-xs text-gray-500">Track: {e.track_name || '—'} · Status: {e.status}</p>
-                      </li>
-                    ))}
-                  </ul>
+                  {user.is_active ? 'Active' : 'Inactive'}
+                </span>
+                {user.suspended_until && (
+                  <span className="admin-user-detail-badge admin-user-detail-badge-warn">
+                Suspended until {new Date(user.suspended_until).toLocaleDateString()}
+              </span>
+                )}
+                {user.is_shadowbanned && (
+                  <span className="admin-user-detail-badge admin-user-detail-badge-warn">Shadowbanned</span>
                 )}
               </div>
-
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Assignments</h3>
-                <p className="text-sm text-gray-600 mt-2">Total submissions: {submissions}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Certificates</h3>
-                {certificates.length === 0 ? (
-                  <p className="text-sm text-gray-500 mt-2">No certificates issued.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {certificates.map((c) => (
-                      <li key={c.id} className="border-b border-gray-100 pb-2">
-                        <p className="font-medium text-gray-900">{c.certificate_number}</p>
-                        <p className="text-xs text-gray-500">Issued: {new Date(c.issued_at).toLocaleDateString()}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Impersonation history</h3>
-                {impersonations.length === 0 ? (
-                  <p className="text-sm text-gray-500 mt-2">No impersonations.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {impersonations.map((imp) => (
-                      <li key={imp.id} className="border-b border-gray-100 pb-2">
-                        <p className="text-gray-700">Started: {new Date(imp.started_at).toLocaleString()}</p>
-                        {imp.ended_at && <p className="text-xs text-gray-500">Ended: {new Date(imp.ended_at).toLocaleString()}</p>}
-                      </li>
-                    ))}
-                  </ul>
+              <div className="admin-user-detail-meta">
+                <span>Created {new Date(user.created_at).toLocaleDateString()}</span>
+                {user.last_login_at && (
+                  <span>Last login {new Date(user.last_login_at).toLocaleDateString()}</span>
                 )}
               </div>
             </div>
+            <div className="admin-user-detail-actions">
+              <AdminButton variant="primary" onClick={handleResetPassword}>
+                Reset password
+              </AdminButton>
+              <AdminButton
+                variant="secondary"
+                onClick={() => router.push('/admin/impersonation')}
+              >
+                Impersonate
+              </AdminButton>
+            </div>
+          </div>
 
-            <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Moderation actions</h3>
-              {moderationActions.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-2">No moderation actions.</p>
+          {tempPassword && (
+            <div className="admin-user-detail-temp-password">
+              <span className="admin-form-label">Temporary password:</span>
+              <code className="admin-user-detail-temp-code">{tempPassword}</code>
+            </div>
+          )}
+
+          {/* Content grid */}
+          <div className="admin-user-detail-grid">
+            <AdminCard title="Enrollments">
+              {enrollments.length === 0 ? (
+                <AdminEmptyState message="No enrollments" description="User is not enrolled in any cohort." />
               ) : (
-                <ul className="mt-3 space-y-2 text-sm">
-                  {moderationActions.map((action) => (
-                    <li key={action.id} className="border-b border-gray-100 pb-2">
-                      <p className="font-medium text-gray-900">{action.action}</p>
-                      {action.reason && <p className="text-xs text-gray-500">Reason: {action.reason}</p>}
-                      <p className="text-xs text-gray-500">
-                        {action.actor_email || 'Admin'} · {new Date(action.created_at).toLocaleString()}
+                <ul className="admin-list">
+                  {enrollments.map((e) => (
+                    <li key={e.id} className="admin-list-item">
+                      <p className="admin-list-item-title">{e.cohort_name}</p>
+                      <p className="admin-list-item-meta">
+                        Track: {e.track_name || '—'} · Status: {formatRole(e.status)}
                       </p>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
-          </>
-        )}
-      </div>
+            </AdminCard>
+
+            <AdminCard title="Assignments">
+              <div className="admin-user-detail-stat">
+                <span className="admin-user-detail-stat-value">{submissions}</span>
+                <span className="admin-list-item-meta">Total submissions</span>
+              </div>
+            </AdminCard>
+
+            <AdminCard title="Certificates">
+              {certificates.length === 0 ? (
+                <AdminEmptyState message="No certificates" description="No certificates issued yet." />
+              ) : (
+                <ul className="admin-list">
+                  {certificates.map((c) => (
+                    <li key={c.id} className="admin-list-item">
+                      <p className="admin-list-item-title">{c.certificate_number}</p>
+                      <p className="admin-list-item-meta">
+                        Issued {new Date(c.issued_at).toLocaleDateString()}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </AdminCard>
+
+            <AdminCard title="Impersonation history">
+              {impersonations.length === 0 ? (
+                <AdminEmptyState message="None" description="No admin impersonations recorded." />
+              ) : (
+                <ul className="admin-list">
+                  {impersonations.map((imp) => (
+                    <li key={imp.id} className="admin-list-item">
+                      <p className="admin-list-item-title">
+                        Started {new Date(imp.started_at).toLocaleString()}
+                      </p>
+                      {imp.ended_at && (
+                        <p className="admin-list-item-meta">
+                          Ended {new Date(imp.ended_at).toLocaleString()}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </AdminCard>
+          </div>
+
+          <AdminCard title="Moderation actions">
+            {moderationActions.length === 0 ? (
+              <AdminEmptyState message="No moderation actions" description="No actions recorded for this user." />
+            ) : (
+              <ul className="admin-list">
+                {moderationActions.map((action) => (
+                  <li key={action.id} className="admin-list-item">
+                    <p className="admin-list-item-title">{formatRole(action.action)}</p>
+                    {action.reason && (
+                      <p className="admin-list-item-body">Reason: {action.reason}</p>
+                    )}
+                    <p className="admin-list-item-meta">
+                      {action.actor_email || 'Admin'} · {new Date(action.created_at).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </AdminCard>
+        </>
+      )}
+    </div>
   );
 }

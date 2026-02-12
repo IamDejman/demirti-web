@@ -1,7 +1,7 @@
 /**
  * Read replica connection for scaling read operations.
  * Uses POSTGRES_URL_READ_REPLICA when set; falls back to POSTGRES_URL for local dev.
- * Use sqlRead for read-only queries (public catalogs, analytics, etc.).
+ * Use sqlRead for read-only queries (public catalogs, etc.).
  * Use sql from db.js for writes and init.
  */
 

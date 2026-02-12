@@ -94,15 +94,9 @@ export default function JobsPage() {
             placeholder="Search roles or companies"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && loadJobs()}
             className="flex-1 min-w-[240px] px-3 py-2 border border-gray-300 rounded-lg"
           />
-          <button
-            type="button"
-            onClick={loadJobs}
-            className="px-4 py-2 bg-primary text-white rounded-lg"
-          >
-            Search
-          </button>
         </div>
       </section>
       <section className="container" style={{ paddingBottom: '4rem' }}>

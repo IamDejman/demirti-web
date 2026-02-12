@@ -56,6 +56,11 @@ export async function ensureLmsSchema() {
       if (!hasAll) {
         await initializeLmsSchema();
       }
+      // Migrations: add columns to users if missing (e.g. DB created before these were in schema)
+      if (existing.has('users')) {
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_until TIMESTAMP;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_shadowbanned BOOLEAN DEFAULT false;`.catch(() => {});
+      }
       lmsInitialized = true;
     } catch (e) {
       console.error('LMS schema init error:', e);

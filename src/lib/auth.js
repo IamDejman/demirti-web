@@ -160,6 +160,13 @@ export async function deleteUserPasswordReset(email) {
   await sql`DELETE FROM user_password_resets WHERE LOWER(email) = ${normalizedEmail}`;
 }
 
+/** Get password hash for a user (for verification only). Returns null if user has no password. */
+export async function getPasswordHashByUserId(userId) {
+  await ensureLmsSchema();
+  const result = await sql`SELECT password_hash FROM users WHERE id = ${userId} LIMIT 1`;
+  return result.rows[0]?.password_hash ?? null;
+}
+
 export async function updateUserPassword(userId, newPassword) {
   await ensureLmsSchema();
   const passwordHash = await hashPassword(newPassword);

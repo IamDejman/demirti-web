@@ -43,7 +43,7 @@ function isAppApiRequest(url) {
 export function installAdmin401Interceptor() {
   if (typeof window === 'undefined') return () => {};
   const originalFetch = window.fetch;
-  window.fetch = function fetchWith401Handler(input, init) {
+  window.fetch = function fetchWith401Handler(input, _init) {
     const url = typeof input === 'string' ? input : input?.url;
     return originalFetch.apply(this, arguments).then((response) => {
       if (response.status === 401 && isAppApiRequest(url)) {

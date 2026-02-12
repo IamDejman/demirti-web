@@ -124,21 +124,22 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
       )}
 
       <aside
-        className={`lms-sidebar fixed left-0 top-0 z-50 h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-200 ${
+        className={`lms-sidebar fixed left-0 top-0 z-50 h-full flex flex-col transition-all duration-200 ${
           collapsed ? 'lms-sidebar-collapsed w-[72px]' : 'w-[260px]'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Header */}
-        <div className="lms-sidebar-header flex items-center justify-between h-14 px-4 border-b border-gray-100 flex-shrink-0">
+        <div className="lms-sidebar-header flex items-center justify-between flex-shrink-0">
           {!collapsed && (
-            <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="text-lg font-bold text-primary truncate">
+            <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="text-lg font-bold truncate" style={{ color: 'var(--primary-color)' }}>
               {brandName}
             </Link>
           )}
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 hidden lg:flex"
+            className="p-2 rounded-lg hidden lg:flex min-h-[44px] min-w-[44px] items-center justify-center"
+            style={{ color: 'var(--neutral-500)' }}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? ICONS.chevronRight : ICONS.chevronLeft}
@@ -146,7 +147,8 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
+            className="p-2 rounded-lg lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center"
+            style={{ color: 'var(--neutral-500)' }}
             aria-label="Close menu"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -166,9 +168,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`lms-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      active ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
+                    className={`lms-sidebar-link flex items-center gap-3 ${active ? 'active' : ''}`}
                     onClick={() => setMobileOpen(false)}
                   >
                     <span className="flex-shrink-0 text-current">{ICONS[item.icon]}</span>
@@ -176,7 +176,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
                       <>
                         <span className="flex-1 truncate">{item.label}</span>
                         {badge != null && (
-                          <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center text-xs font-semibold rounded-full bg-primary text-white">
+                          <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center text-xs font-semibold rounded-full text-white" style={{ backgroundColor: 'var(--primary-color)' }}>
                             {badge}
                           </span>
                         )}
@@ -190,22 +190,23 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
         </nav>
 
         {/* User section */}
-        <div className="lms-sidebar-user border-t border-gray-100 p-4 flex-shrink-0">
+        <div className="lms-sidebar-user flex-shrink-0">
           {user && !collapsed && (
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
                 {(user.firstName || user.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">{user.firstName || user.email}</p>
-                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--neutral-900)' }}>{user.firstName || user.email}</p>
+                <p className="text-xs truncate" style={{ color: 'var(--neutral-500)' }}>{user.email}</p>
               </div>
             </div>
           )}
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm min-h-[44px] transition-colors"
+            style={{ color: 'var(--neutral-600)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -221,7 +222,8 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className={`lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-white border border-gray-200 shadow-sm text-gray-600 hover:bg-gray-50 ${mobileOpen ? 'hidden' : ''}`}
+        className={`lg:hidden fixed z-30 p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center ${mobileOpen ? 'hidden' : ''}`}
+        style={{ top: 'var(--lms-space-4)', left: 'var(--lms-space-4)', backgroundColor: 'var(--background-color)', border: '1px solid var(--neutral-200)', boxShadow: 'var(--shadow-sm)', color: 'var(--neutral-600)' }}
         aria-label="Open menu"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

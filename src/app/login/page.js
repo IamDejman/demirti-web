@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -72,16 +73,42 @@ export default function LoginPage() {
           </div>
           <div className="auth-field auth-field-tight">
             <label htmlFor="password" className="auth-label">Password</label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input"
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="auth-input"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                style={{ paddingRight: '4rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                disabled={loading}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  color: 'var(--text-muted, #6b7280)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  padding: '0.5rem 0.5rem',
+                  minWidth: '56px',
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

@@ -47,9 +47,9 @@ export default function StudentOfficeHoursPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Office Hours" subtitle="Book time with facilitators for extra support." icon={LmsIcons.clock}>
-        {message && <p className="text-sm text-white/80 mt-2">{message}</p>}
+        {message && <p className="text-sm mt-2 opacity-80">{message}</p>}
       </LmsPageHeader>
       {loading ? (
         <div className="h-64 lms-skeleton rounded-xl" />
@@ -58,19 +58,19 @@ export default function StudentOfficeHoursPage() {
           {slots.length === 0 ? (
             <LmsEmptyState icon={LmsIcons.calendar} title="No office hour slots available" description="Check back later or contact your facilitator." />
           ) : (
-            <div className="grid gap-4">
+            <div className="grid" style={{ gap: 'var(--lms-space-4)' }}>
               {slots.map((slot) => (
-                <div key={slot.id} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
+                <div key={slot.id} className="rounded-lg p-4 transition-colors border" style={{ borderColor: 'var(--neutral-100)' }}>
+                  <div className="flex items-start justify-between" style={{ gap: 'var(--lms-space-4)' }}>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{slot.title || 'Office hour slot'}</h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <h3 className="font-semibold" style={{ color: 'var(--neutral-900)' }}>{slot.title || 'Office hour slot'}</h3>
+                      <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
                         {new Date(slot.start_time).toLocaleString()} – {new Date(slot.end_time).toLocaleTimeString()}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs mt-1" style={{ color: 'var(--neutral-500)' }}>
                         Facilitator: {slot.first_name || ''} {slot.last_name || ''}
                       </p>
-                      {slot.description && <p className="text-sm text-gray-600 mt-2">{slot.description}</p>}
+                      {slot.description && <p className="text-sm mt-2" style={{ color: 'var(--neutral-600)' }}>{slot.description}</p>}
                       {slot.meeting_link && (
                         <a href={slot.meeting_link} className="text-sm text-primary mt-2 inline-block hover:underline">
                           Join link
@@ -88,7 +88,8 @@ export default function StudentOfficeHoursPage() {
                       <button
                         type="button"
                         onClick={() => handleCancel(slot.id)}
-                        className="px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-3 py-2 border text-sm font-medium rounded-lg transition-colors hover:bg-gray-50"
+                        style={{ borderColor: 'var(--neutral-300)' }}
                       >
                         Cancel
                       </button>

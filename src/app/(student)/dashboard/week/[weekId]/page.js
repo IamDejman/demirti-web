@@ -61,7 +61,7 @@ export default function WeekPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -85,7 +85,7 @@ export default function WeekPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title={week.title}
         subtitle={week.description}
@@ -133,13 +133,14 @@ export default function WeekPage() {
                   type="button"
                   onClick={() => handleCompleteChecklist(item.id)}
                   className={`h-5 w-5 rounded border flex items-center justify-center ${
-                    item.completed_at ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'
+                    item.completed_at ? 'bg-primary border-primary text-white' : ''
                   }`}
+                  style={!item.completed_at ? { borderColor: 'var(--neutral-300)', color: 'var(--neutral-400)' } : undefined}
                   aria-label="Toggle checklist item"
                 >
                   {item.completed_at ? '✓' : ''}
                 </button>
-                <span className={`${item.completed_at ? 'line-through text-gray-500' : 'text-gray-900'}`}>{item.title}</span>
+                <span className={item.completed_at ? 'line-through' : ''} style={{ color: item.completed_at ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{item.title}</span>
               </li>
             ))}
           </ul>
@@ -148,10 +149,10 @@ export default function WeekPage() {
 
       {contentItems.length > 0 && (
         <LmsCard title="Content" icon={LmsIcons.book}>
-          <ul className="mt-4 space-y-3">
-            {contentItems.map((item) => (
-              <li key={item.id}>
-                <span className="font-medium text-gray-900">{item.title}</span>
+            <ul className="mt-4 space-y-3">
+              {contentItems.map((item) => (
+                <li key={item.id}>
+                  <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{item.title}</span>
                 {item.file_url && (
                   <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm ml-2">Open</a>
                 )}
@@ -166,10 +167,10 @@ export default function WeekPage() {
 
       {materials.length > 0 && (
         <LmsCard title="Materials" icon={LmsIcons.briefcase}>
-          <ul className="mt-4 space-y-2">
+            <ul className="mt-4 space-y-2">
             {materials.map((m) => (
               <li key={m.id}>
-                <span className="font-medium text-gray-900">{m.title}</span>
+                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{m.title}</span>
                 {(m.url || m.file_url) && (
                   <a href={m.url || m.file_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm ml-2">Open</a>
                 )}
@@ -183,11 +184,11 @@ export default function WeekPage() {
         <LmsCard title="Assignments" icon={LmsIcons.clipboard}>
           <ul className="mt-4 space-y-3">
             {assignments.map((a) => (
-              <li key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <li key={a.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
                 <Link href={`/dashboard/assignments/${a.id}`} className="font-medium text-primary hover:underline">
                   {a.title}
                 </Link>
-                <span className="text-sm text-gray-500">Due {formatDate(a.deadline_at)}</span>
+                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>Due {formatDate(a.deadline_at)}</span>
               </li>
             ))}
           </ul>

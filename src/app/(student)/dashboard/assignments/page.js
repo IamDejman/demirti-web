@@ -33,7 +33,7 @@ export default function StudentAssignmentsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -41,7 +41,7 @@ export default function StudentAssignmentsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Assignments" subtitle="View and submit your cohort assignments." icon={LmsIcons.clipboard} />
       <LmsCard title="Assignments" icon={LmsIcons.clipboard} hoverable={false}>
         {assignments.length === 0 ? (
@@ -61,10 +61,10 @@ export default function StudentAssignmentsPage() {
               <tbody>
                 {assignments.map((a) => (
                   <tr key={a.id}>
-                    <td className="font-medium text-gray-900">{a.title}</td>
-                    <td className="text-gray-600">{a.week_title ?? a.week_number}</td>
-                    <td className="text-gray-600">{formatDate(a.deadline_at)}</td>
-                    <td className="text-gray-600">{a.max_score ?? 100}</td>
+                    <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</td>
+                    <td style={{ color: 'var(--neutral-600)' }}>{a.week_title ?? a.week_number}</td>
+                    <td style={{ color: 'var(--neutral-600)' }}>{formatDate(a.deadline_at)}</td>
+                    <td style={{ color: 'var(--neutral-600)' }}>{a.max_score ?? 100}</td>
                     <td>
                       <Link href={`/dashboard/assignments/${a.id}`} className="text-primary font-medium hover:underline">
                         View / Submit

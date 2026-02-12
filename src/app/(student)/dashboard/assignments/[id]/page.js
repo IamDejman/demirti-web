@@ -146,7 +146,7 @@ export default function AssignmentDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -166,7 +166,7 @@ export default function AssignmentDetailPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title={assignment.title}
         subtitle={`Due ${formatDate(assignment.deadline_at)} · Max score: ${assignment.max_score ?? 100}`}
@@ -175,9 +175,9 @@ export default function AssignmentDetailPage() {
       />
       <LmsCard title="Details" hoverable={false}>
         {assignment.description && (
-          <div className="text-gray-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(assignment.description, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'code', 'pre'] }) }} />
+          <div className="prose prose-sm max-w-none" style={{ color: 'var(--neutral-600)' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(assignment.description, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'code', 'pre'] }) }} />
         )}
-        <p className="mt-4 text-sm text-gray-500">Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
+        <p className="mt-4 text-sm" style={{ color: 'var(--neutral-500)' }}>Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
       </LmsCard>
 
       {submission ? (
@@ -191,11 +191,11 @@ export default function AssignmentDetailPage() {
           </div>
           {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open link</a></p>}
           {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
-          {submission.text_content && <p className="mt-2 text-gray-700">{submission.text_content}</p>}
+          {submission.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{submission.text_content}</p>}
           {submission.status === 'graded' && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="font-medium text-gray-900">Score: {submission.score} / {assignment.max_score ?? 100}</p>
-              {submission.feedback && <p className="mt-2 text-gray-600">{submission.feedback}</p>}
+            <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--neutral-50)' }}>
+              <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>Score: {submission.score} / {assignment.max_score ?? 100}</p>
+              {submission.feedback && <p className="mt-2" style={{ color: 'var(--neutral-600)' }}>{submission.feedback}</p>}
             </div>
           )}
         </LmsCard>
@@ -205,7 +205,7 @@ export default function AssignmentDetailPage() {
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {(assignment.submission_type === 'link' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Link</label>
+                <label className="lms-form-label block">Link</label>
                 <input
                   type="url"
                   value={linkUrl}
@@ -217,7 +217,7 @@ export default function AssignmentDetailPage() {
             )}
             {(assignment.submission_type === 'text' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Text</label>
+                <label className="lms-form-label block">Text</label>
                 <textarea
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
@@ -229,13 +229,13 @@ export default function AssignmentDetailPage() {
             )}
             {(assignment.submission_type === 'file_upload' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">File upload</label>
+                <label className="lms-form-label block">File upload</label>
                 <input
                   type="file"
                   onChange={handleFileChange}
                   className="mt-1 block w-full"
                 />
-                {uploading && <p className="text-sm text-gray-500 mt-2">Uploading...</p>}
+                {uploading && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>Uploading...</p>}
                 {uploadedFileUrl && !uploading && <p className="text-sm text-green-600 mt-2">File uploaded.</p>}
                 {uploadError && <p className="text-sm text-red-600 mt-2">{uploadError}</p>}
               </div>
@@ -255,7 +255,7 @@ export default function AssignmentDetailPage() {
         <LmsCard hoverable={false}>
           <div className="flex items-center gap-2">
             <LmsBadge variant="danger">Deadline passed</LmsBadge>
-            <span className="text-sm text-gray-500">The deadline for this assignment has passed.</span>
+            <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>The deadline for this assignment has passed.</span>
           </div>
         </LmsCard>
       )}

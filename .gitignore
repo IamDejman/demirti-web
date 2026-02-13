@@ -8,3 +8,6 @@ node_modules/
 data/demirti-web@0.1.0
 eslint
 demirti-web@0.1.0
+
+# One-off migration script (contains DB URLs)
+scripts/migrate-db-once.sh

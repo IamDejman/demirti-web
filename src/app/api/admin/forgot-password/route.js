@@ -59,8 +59,14 @@ export async function POST(request) {
     return NextResponse.json(payload);
   } catch (error) {
     console.error('Forgot password error:', error);
+    const isConnectionError = error?.message?.includes('connection') || error?.code === 'missing_connection_string';
     return NextResponse.json(
-      { error: 'Something went wrong. Try again later.' },
+      {
+        error: 'Something went wrong. Try again later.',
+        ...(process.env.NODE_ENV === 'development' || isConnectionError
+          ? { details: error?.message, hint: isConnectionError ? 'Set POSTGRES_URL or NEW_POSTGRES_URL in your environment.' : undefined }
+          : {}),
+      },
       { status: 500 }
     );
   }

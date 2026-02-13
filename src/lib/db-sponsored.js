@@ -3,6 +3,7 @@
  * Extracted from db.js for maintainability.
  */
 
+import './env-db';
 import { sql } from '@vercel/postgres';
 import { ensureDatabaseInitialized } from './db';
 import { DEFAULT_SPONSORED_COHORT } from './config';

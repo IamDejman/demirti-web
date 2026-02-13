@@ -1,3 +1,4 @@
+import './env-db';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from './db-lms';
 

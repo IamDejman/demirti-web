@@ -2,7 +2,7 @@
  * LMS schema and queries for CVERSE Academy.
  * Uses raw SQL with @vercel/postgres; run initializeLmsSchema() once to create tables.
  */
-
+import './env-db';
 import { sql } from '@vercel/postgres';
 import { ensureDatabaseInitialized } from './db';
 

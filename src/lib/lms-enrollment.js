@@ -1,3 +1,4 @@
+import './env-db';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema, enrollStudentInCohort } from '@/lib/db-lms';
 import { getUserByEmail, createUser } from '@/lib/auth';

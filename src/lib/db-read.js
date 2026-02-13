@@ -4,7 +4,7 @@
  * Use sqlRead for read-only queries (public catalogs, etc.).
  * Use sql from db.js for writes and init.
  */
-
+import './env-db';
 import { createPool } from '@vercel/postgres';
 
 const readConnectionString =

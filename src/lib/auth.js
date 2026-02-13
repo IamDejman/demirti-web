@@ -2,6 +2,7 @@
  * LMS user authentication: users table + user_sessions.
  * Use for student, facilitator, and admin (when migrated to users table).
  */
+import './env-db';
 import { sql } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';

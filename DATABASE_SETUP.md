@@ -141,6 +141,48 @@ You can verify the database is working by:
 - `count` - Current number of paid learners
 - `last_updated` - Last update timestamp
 
+## Production migration (old DB → new DB)
+
+To move production from one Neon DB to another **without any code changes**:
+
+1. **New DB schema**  
+   The app creates tables on whichever DB is in `POSTGRES_URL` when the request runs. To create tables on the **new** DB only:
+   - **Locally:** In `.env.local`, set `POSTGRES_URL` to the **actual new DB connection string** (copy the value from your `NEW_POSTGRES_URL` in Vercel—do not set it to the literal text `NEW_POSTGRES_URL`). Restart the dev server (`npm run dev`), then open **http://localhost:3000/api/init-db** in the browser. The local process uses your local env, so tables are created in the new DB.
+   - **Not production:** If you call your production URL (e.g. `https://your-domain.com/api/init-db`), the server uses Production env, where `POSTGRES_URL` is still the old DB—so tables would be created in the old DB, not the new one.
+
+2. **Copy data**  
+   From a machine that can reach both DBs (e.g. your laptop), use `pg_dump` and `pg_restore`. You need the **old** DB URL (current `POSTGRES_URL`) as source and the **new** DB URL (`NEW_POSTGRES_URL`) as destination. Load them into your shell (e.g. `export POSTGRES_URL="..."` and `export NEW_POSTGRES_URL="..."` from Vercel → Project → Settings → Environment Variables, or from a file).
+
+   **Option A – New DB is still empty (you did not run step 1 yet)**  
+   Dump schema and data from the old DB, then restore everything into the new DB:
+
+   1. Dump from the **old** DB (source):  
+      `pg_dump "$POSTGRES_URL" --no-owner --no-acl -F c -f old.dump`
+   2. Restore into the **new** DB (destination):  
+      `pg_restore --no-owner --no-acl -d "$NEW_POSTGRES_URL" old.dump`
+
+   **Option B – New DB already has an empty schema from step 1**  
+   Dump only data from the old DB, then load that data into the new DB so you don’t duplicate or conflict on table/enum creation:
+
+   1. Dump **data only** from the **old** DB (source):  
+      `pg_dump "$POSTGRES_URL" --no-owner --no-acl -F c --data-only -f old-data.dump`
+   2. Restore that data into the **new** DB (destination):  
+      `pg_restore --no-owner --no-acl -d "$NEW_POSTGRES_URL" old-data.dump`
+
+   **Tips:**  
+   - Double-check which URL is which: `POSTGRES_URL` = old (source), `NEW_POSTGRES_URL` = new (destination). Restoring into the wrong URL will write to the wrong database.  
+   - If you see connection or SSL errors, try the non-pooling URLs (`POSTGRES_URL_NON_POOLING` and `NEW_POSTGRES_URL_NON_POOLING`) for both dump and restore.  
+   - Keep the dump file (e.g. `old.dump` or `old-data.dump`) until you’ve verified the new DB; then you can delete it.
+
+3. **Verify**  
+   Compare row counts and spot-check important tables on old vs new.
+
+4. **Cutover**  
+   In Vercel → Project → Settings → Environment Variables (Production), set `POSTGRES_URL` (and `POSTGRES_URL_NON_POOLING`, `POSTGRES_URL_READ_REPLICA` if used) to the **new** DB URLs. Redeploy so production uses the new DB. No application code changes are required; the app only reads `POSTGRES_*`.
+
+5. **Cleanup**  
+   Remove the old `POSTGRES_*` and optional `NEW_POSTGRES_*` vars from Vercel, and delete the old Neon project.
+
 ## Migration from JSON Files
 
 If you have existing data in JSON files (`data/applications.json`), you can migrate it by:
@@ -160,6 +202,7 @@ If you have existing data in JSON files (`data/applications.json`), you can migr
 - Run `/api/init-db` endpoint again
 - Check Vercel logs for errors
 - Ensure you have proper database permissions
+- **Init-db writing to the wrong DB:** If you need tables on the new DB, run init-db from **local** with `POSTGRES_URL` in `.env.local` set to the new DB URL, then open `http://localhost:3000/api/init-db`. Calling production’s `/api/init-db` uses production’s `POSTGRES_URL` (the old DB).
 
 ### Data Not Appearing
 - Check Vercel logs for API errors

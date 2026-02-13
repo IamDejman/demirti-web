@@ -8,7 +8,10 @@
 import { createPool } from '@vercel/postgres';
 
 const readConnectionString =
-  process.env.POSTGRES_URL_READ_REPLICA?.trim() || process.env.POSTGRES_URL?.trim();
+  process.env.POSTGRES_URL_READ_REPLICA?.trim() ||
+  process.env.POSTGRES_URL?.trim() ||
+  process.env.NEW_POSTGRES_URL_READ_REPLICA?.trim() ||
+  process.env.NEW_POSTGRES_URL?.trim();
 
 const readPool = createPool({
   connectionString: readConnectionString,

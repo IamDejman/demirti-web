@@ -3,8 +3,6 @@
  * Use env vars where possible; fallbacks for defaults.
  */
 
-const REQUIRED_ENV = ['POSTGRES_URL'];
-
 /** Validate required env vars at runtime. Call early to fail fast. Accepts NEW_POSTGRES_URL if POSTGRES_URL unset (see instrumentation.js). */
 export function validateEnv() {
   if (process.env.NODE_ENV === 'development') return;

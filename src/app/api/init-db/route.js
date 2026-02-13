@@ -4,6 +4,11 @@ import { ensureLmsSchema } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
 import { logger } from '@/lib/logger';
 
+// Ensure POSTGRES_URL is set from NEW_POSTGRES_URL if needed (e.g. Vercel env)
+if (!process.env.POSTGRES_URL?.trim() && process.env.NEW_POSTGRES_URL?.trim()) {
+  process.env.POSTGRES_URL = process.env.NEW_POSTGRES_URL;
+}
+
 // Initialize database tables (run once). No auth required; visit the URL to run.
 export async function GET(_request) {
   try {
@@ -14,10 +19,10 @@ export async function GET(_request) {
     } catch (connError) {
       logger.error('Database connection error', { hint: connError?.message });
       return NextResponse.json(
-        { 
+        {
           error: 'Database connection failed',
           details: process.env.NODE_ENV === 'development' ? connError?.message : undefined,
-          hint: 'Please check your POSTGRES_URL environment variable'
+          hint: 'Set POSTGRES_URL or NEW_POSTGRES_URL in your environment (e.g. Vercel env vars).'
         },
         { status: 500 }
       );

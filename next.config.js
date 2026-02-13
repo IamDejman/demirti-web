@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
+// So build and runtime see POSTGRES_URL when only NEW_POSTGRES_URL is set (e.g. Vercel)
+if (!process.env.POSTGRES_URL?.trim() && process.env.NEW_POSTGRES_URL?.trim()) {
+  process.env.POSTGRES_URL = process.env.NEW_POSTGRES_URL;
+}
+if (!process.env.POSTGRES_URL_READ_REPLICA?.trim() && process.env.NEW_POSTGRES_URL_READ_REPLICA?.trim()) {
+  process.env.POSTGRES_URL_READ_REPLICA = process.env.NEW_POSTGRES_URL_READ_REPLICA;
+}
+
 const nextConfig = {
   async redirects() {
     return [

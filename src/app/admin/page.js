@@ -1,10 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader, AdminStatsGrid, AdminButton } from '../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
+
+function escapeCsvCell(s) {
+  if (s == null) return '';
+  const str = String(s);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function appToCsvRow(app) {
+  const amountNaira = app.amount ? (Number(app.amount) / 100).toFixed(2) : '';
+  return [
+    app.application_id ?? app.id,
+    app.first_name,
+    app.last_name,
+    app.email,
+    app.phone,
+    app.track_name,
+    app.referral_source || '',
+    app.status,
+    amountNaira,
+    app.payment_reference || '',
+    app.discount_code || '',
+    app.created_at ? new Date(app.created_at).toISOString() : '',
+    app.paid_at ? new Date(app.paid_at).toISOString() : ''
+  ].map(escapeCsvCell).join(',');
+}
+
+const APPLICATIONS_CSV_HEADER = 'Application ID,First Name,Last Name,Email,Phone,Track,Referral Source,Status,Amount (₦),Payment Reference,Discount Code,Applied At,Paid At\n';
+
+function downloadCsv(content, filename) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
 
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
@@ -12,7 +51,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
   const router = useRouter();
+
+  const toggleExpanded = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
 
   // Check authentication on mount
   useEffect(() => {
@@ -68,6 +112,14 @@ export default function AdminDashboard() {
     return Array.from(tracks);
   };
 
+  const exportCsv = () => {
+    const rows = applications.map(app => appToCsvRow(app)).join('\n');
+    const trackSuffix = selectedTrack !== 'all' ? `-${selectedTrack.replace(/\s+/g, '-')}` : '';
+    const statusSuffix = selectedStatus !== 'all' ? `-${selectedStatus}` : '';
+    const filename = `applications${trackSuffix}${statusSuffix}-${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCsv(APPLICATIONS_CSV_HEADER + rows, filename);
+  };
+
   return (
     <div className="admin-dashboard admin-dashboard-content">
         <div className="container admin-cohorts-wrap">
@@ -120,6 +172,14 @@ export default function AdminDashboard() {
                 <AdminButton variant="primary" onClick={loadData}>
                   Refresh
                 </AdminButton>
+
+                <AdminButton
+                  variant="secondary"
+                  onClick={exportCsv}
+                  disabled={applications.length === 0}
+                >
+                  Export CSV
+                </AdminButton>
               </div>
 
               <div className="admin-card admin-table-container">
@@ -131,36 +191,59 @@ export default function AdminDashboard() {
                   <table className="admin-table">
                     <thead>
                       <tr className="admin-table-thead-row">
+                        <th className="admin-table-th" style={{ width: '2.5rem' }} aria-label="Expand" />
                         <th className="admin-table-th">Name</th>
                         <th className="admin-table-th">Email</th>
-                        <th className="admin-table-th">Phone</th>
                         <th className="admin-table-th">Track</th>
-                        <th className="admin-table-th">Referral Source</th>
                         <th className="admin-table-th">Status</th>
                         <th className="admin-table-th">Amount</th>
-                        <th className="admin-table-th">Payment Ref</th>
-                        <th className="admin-table-th">Applied</th>
-                        <th className="admin-table-th">Paid</th>
                       </tr>
                     </thead>
                     <tbody>
                       {applications.map((app) => (
-                        <tr key={app.id} className="admin-table-tr">
-                          <td className="admin-table-td">{app.first_name} {app.last_name}</td>
-                          <td className="admin-table-td">{app.email}</td>
-                          <td className="admin-table-td">{app.phone}</td>
-                          <td className="admin-table-td">{app.track_name}</td>
-                          <td className="admin-table-td admin-meta">{app.referral_source || 'N/A'}</td>
-                          <td className="admin-table-td">
-                            <span className={app.status === 'paid' ? 'admin-badge-status-success' : 'admin-badge-status-warning'}>
-                              {app.status === 'paid' ? 'Paid' : '⏳ Pending'}
-                            </span>
-                          </td>
-                          <td className="admin-table-td admin-table-td-strong">{app.amount ? formatCurrency(app.amount) : 'N/A'}</td>
-                          <td className="admin-table-td admin-meta">{app.payment_reference || 'N/A'}</td>
-                          <td className="admin-table-td admin-meta">{formatDate(app.created_at)}</td>
-                          <td className="admin-table-td admin-meta">{app.paid_at ? formatDate(app.paid_at) : 'N/A'}</td>
-                        </tr>
+                        <Fragment key={app.id}>
+                          <tr
+                            className={`admin-table-tr ${expandedId === app.id ? 'admin-table-tr-expanded' : ''}`}
+                            onClick={() => toggleExpanded(app.id)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td className="admin-table-td" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                className="admin-table-expand-btn"
+                                onClick={() => toggleExpanded(app.id)}
+                                aria-expanded={expandedId === app.id}
+                                aria-label={expandedId === app.id ? 'Collapse details' : 'Expand details'}
+                              >
+                                {expandedId === app.id ? '▼' : '▶'}
+                              </button>
+                            </td>
+                            <td className="admin-table-td">{app.first_name} {app.last_name}</td>
+                            <td className="admin-table-td">{app.email}</td>
+                            <td className="admin-table-td">{app.track_name}</td>
+                            <td className="admin-table-td">
+                              <span className={app.status === 'paid' ? 'admin-badge-status-success' : 'admin-badge-status-warning'}>
+                                {app.status === 'paid' ? 'Paid' : '⏳ Pending'}
+                              </span>
+                            </td>
+                            <td className="admin-table-td admin-table-td-strong">{app.amount ? formatCurrency(app.amount) : 'N/A'}</td>
+                          </tr>
+                          {expandedId === app.id && (
+                            <tr className="admin-table-detail-row">
+                              <td colSpan={6} className="admin-table-detail-cell">
+                                <div className="admin-table-detail-grid">
+                                  <div><strong>Phone</strong><span>{app.phone || '—'}</span></div>
+                                  <div><strong>Referral source</strong><span>{app.referral_source || '—'}</span></div>
+                                  <div><strong>Payment reference</strong><span>{app.payment_reference || '—'}</span></div>
+                                  <div><strong>Discount code</strong><span>{app.discount_code || '—'}</span></div>
+                                  <div><strong>Application ID</strong><span>{app.application_id ?? app.id}</span></div>
+                                  <div><strong>Applied</strong><span>{formatDate(app.created_at)}</span></div>
+                                  <div><strong>Paid</strong><span>{app.paid_at ? formatDate(app.paid_at) : '—'}</span></div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>

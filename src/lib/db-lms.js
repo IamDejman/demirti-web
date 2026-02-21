@@ -1340,6 +1340,7 @@ export async function completeChecklistItem(studentId, checklistItemId) {
 }
 
 export async function getStudentChecklistProgress(studentId, weekId) {
+  if (studentId == null || !/^[0-9a-f-]{36}$/i.test(String(studentId))) return [];
   await ensureLmsSchema();
   const result = await sql`
     SELECT wci.id, wci.title, wci.is_required, scp.completed_at
@@ -1663,8 +1664,9 @@ export async function getCohortIdsForUser(userId, role) {
   return [];
 }
 
-/** Check if a user is enrolled as a student in a cohort. */
+/** Check if a user is enrolled as a student in a cohort. student_id is UUID; non-UUID (e.g. legacy admin id) returns false. */
 export async function isStudentInCohort(cohortId, studentId) {
+  if (studentId == null || !/^[0-9a-f-]{36}$/i.test(String(studentId))) return false;
   await ensureLmsSchema();
   const r = await sql`SELECT 1 FROM cohort_students WHERE cohort_id = ${cohortId} AND student_id = ${studentId} LIMIT 1`;
   return r.rows.length > 0;

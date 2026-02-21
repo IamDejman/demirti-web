@@ -7,6 +7,7 @@ import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos, formatTimeLagos } from '@/lib/dateUtils';
+import { formatWeekDescription, stripBullet } from '@/lib/formatWeekDescription';
 import { useFetch } from '@/hooks/useFetch';
 
 function getGreeting() {
@@ -38,6 +39,7 @@ function deadlineLabel(date) {
   if (days === 1) return 'Due tomorrow';
   return `${days} days left`;
 }
+
 
 export default function StudentDashboardPage() {
   const { data: meData, isLoading: meLoading, error: meError } = useFetch('/api/auth/me');
@@ -226,15 +228,33 @@ export default function StudentDashboardPage() {
                 </Link>
               }
             >
-              <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{currentWeek.title}</p>
-              {currentWeek.description && (
-                <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
-                  {currentWeek.description.length > 160 ? currentWeek.description.slice(0, 160) + '...' : currentWeek.description}
-                </p>
-              )}
+              <h3 className="text-base font-semibold" style={{ color: 'var(--neutral-900)', marginBottom: 'var(--lms-space-2)' }}>
+                {currentWeek.title}
+              </h3>
+              {(() => {
+                const formatted = formatWeekDescription(currentWeek.description, 4);
+                if (!formatted) return null;
+                const { displayLines, hasList, truncated } = formatted;
+                return (
+                  <div className="mt-2">
+                    {hasList ? (
+                      <ul className="list-disc list-inside space-y-1.5 text-sm leading-relaxed" style={{ color: 'var(--neutral-600)', paddingLeft: '0.25rem' }}>
+                        {displayLines.map((line, i) => (
+                          <li key={i}>{stripBullet(line)}</li>
+                        ))}
+                        {truncated && <li key="more" style={{ listStyle: 'none', fontStyle: 'italic' }}>…</li>}
+                      </ul>
+                    ) : (
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
+                        {displayLines.join(' ')}{truncated ? '…' : ''}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
               <Link
                 href={`/dashboard/week/${currentWeek.id}`}
-                className="lms-btn lms-btn-primary lms-btn-sm mt-4"
+                className="lms-btn lms-btn-primary lms-btn-sm mt-4 inline-block"
               >
                 Go to week content
               </Link>

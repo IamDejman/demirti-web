@@ -7,6 +7,7 @@ import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatTimeLagos } from '@/lib/dateUtils';
+import { formatWeekDescription, stripBullet } from '@/lib/formatWeekDescription';
 
 export default function WeekPage() {
   const params = useParams();
@@ -93,11 +94,25 @@ export default function WeekPage() {
         breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
       />
 
-      {week.description && (
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
-          {week.description}
-        </p>
-      )}
+      {week.description && (() => {
+        const formatted = formatWeekDescription(week.description);
+        if (!formatted) return null;
+        const { displayLines, hasList, truncated } = formatted;
+        return (
+          <div className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
+            {hasList ? (
+              <ul className="list-disc list-inside space-y-2 pl-1 max-w-2xl" style={{ color: 'var(--neutral-600)' }}>
+                {displayLines.map((line, i) => (
+                  <li key={i}>{stripBullet(line)}</li>
+                ))}
+                {truncated && <li key="more" style={{ listStyle: 'none', fontStyle: 'italic' }}>…</li>}
+              </ul>
+            ) : (
+              <p>{displayLines.join(' ')}{truncated ? '…' : ''}</p>
+            )}
+          </div>
+        );
+      })()}
 
       {week.live_class_datetime && (
         <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)} icon={LmsIcons.video}>

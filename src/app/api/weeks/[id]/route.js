@@ -23,16 +23,20 @@ export async function GET(request, { params }) {
     if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
+    // cohort_students.student_id is UUID; legacy admins have integer id
+    const userIdIsUuid = user.id != null && /^[0-9a-f-]{36}$/i.test(String(user.id));
+    const isStudentPromise = userIdIsUuid ? isStudentInCohort(week.cohort_id, user.id) : Promise.resolve(false);
+    const checklistPromise = (user.role === 'student' || user.role === 'alumni') && userIdIsUuid
+      ? getStudentChecklistProgress(user.id, id)
+      : getChecklistItemsByWeek(id);
     const [cohort, facilitators, isStudent, liveClass, contentItems, materials, checklistItems] = await Promise.all([
       getCohortById(week.cohort_id),
       getCohortFacilitators(week.cohort_id),
-      isStudentInCohort(week.cohort_id, user.id),
+      isStudentPromise,
       getLiveClassByWeekId(id),
       getContentItemsByWeek(id),
       getMaterialsByWeek(id),
-      (user.role === 'student' || user.role === 'alumni')
-        ? getStudentChecklistProgress(user.id, id)
-        : getChecklistItemsByWeek(id),
+      checklistPromise,
     ]);
     const isAdmin = user.role === 'admin';
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);

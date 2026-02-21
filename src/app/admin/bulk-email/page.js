@@ -1,22 +1,65 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
 import { AdminPageHeader } from '@/app/components/admin';
+import { Modal } from '@/app/components/ui';
 import { getAuthHeaders } from '@/lib/authClient';
+
+// Convert plain text to simple HTML (paragraphs and line breaks)
+function plainToHtml(plain) {
+  if (!plain || !plain.trim()) return '';
+  const escaped = plain
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const paragraphs = escaped.trim().split(/\n\n+/);
+  const body = paragraphs
+    .map((p) => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
+    .join('\n');
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:system-ui,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;}</style></head><body>${body}</body></html>`;
+}
+
+// Strip HTML tags to get approximate plain text (for switching to plain mode)
+function htmlToPlain(html) {
+  if (!html || !html.trim()) return '';
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .trim();
+}
 
 export default function BulkEmailPage() {
   const router = useRouter();
   const [recipients, setRecipients] = useState([]);
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
+  const [contentMode, setContentMode] = useState('html'); // 'plain' | 'html'
+  const [plainTextContent, setPlainTextContent] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [pasteEmailsInput, setPasteEmailsInput] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const { showToast } = useToast();
+
+  // Single source of truth for "body" when in plain mode
+  const effectiveHtml = useMemo(() => {
+    if (contentMode === 'plain') return plainToHtml(plainTextContent);
+    return htmlContent;
+  }, [contentMode, plainTextContent, htmlContent]);
+
+  const effectiveSubject = subject.trim();
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
@@ -153,6 +196,18 @@ export default function BulkEmailPage() {
     ? process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '')
     : 'https://demirti.com';
 
+  const switchToPlain = () => {
+    setPlainTextContent(htmlToPlain(htmlContent));
+    setContentMode('plain');
+  };
+
+  const switchToHtml = () => {
+    if (contentMode === 'plain') {
+      setHtmlContent(plainToHtml(plainTextContent));
+    }
+    setContentMode('html');
+  };
+
   const loadTemplate = (templateId) => {
     if (!templateId) return;
     setSelectedTemplateId(templateId);
@@ -258,13 +313,13 @@ export default function BulkEmailPage() {
       return;
     }
 
-    if (!subject.trim()) {
-      showToast({ type: 'error', message: 'Please load a template first (subject comes from the template).' });
+    if (!effectiveSubject) {
+      showToast({ type: 'error', message: 'Please enter a subject.' });
       setIsSubmitting(false);
       return;
     }
 
-    if (!htmlContent.trim()) {
+    if (!effectiveHtml.trim()) {
       showToast({ type: 'error', message: 'Please enter email content.' });
       setIsSubmitting(false);
       return;
@@ -279,8 +334,8 @@ export default function BulkEmailPage() {
         },
         body: JSON.stringify({
           recipients: validRecipients.map(r => ({ name: r.name, email: r.email })),
-          subject: subject.trim(),
-          htmlContent: htmlContent.trim(),
+          subject: effectiveSubject,
+          htmlContent: effectiveHtml.trim(),
           attachments: attachments.length > 0 ? attachments : undefined,
         }),
       });
@@ -295,6 +350,8 @@ export default function BulkEmailPage() {
           setRecipients([]);
           setSubject('');
           setHtmlContent('');
+          setPlainTextContent('');
+          setContentMode('html');
           setSelectedTemplateId('');
           setAttachments([]);
         }
@@ -358,6 +415,18 @@ export default function BulkEmailPage() {
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Subject *</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Email subject line"
+                disabled={isSubmitting}
+                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Template</label>
               <select
                 className="bulk-email-template-select"
@@ -371,9 +440,84 @@ export default function BulkEmailPage() {
                 <option value="default">Default Template</option>
               </select>
               <input type="file" accept=".html,.htm" onChange={handleHTMLFileUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
-              <label style={{ display: 'block', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>HTML Content *</label>
-              <textarea value={htmlContent} onChange={(e) => setHtmlContent(e.target.value)} required placeholder="HTML email content. Use {{name}} for personalization." rows={10}
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'monospace' }} disabled={isSubmitting} />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                <label style={{ fontWeight: '500' }}>Content *</label>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button
+                    type="button"
+                    onClick={switchToPlain}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      border: `1px solid ${contentMode === 'plain' ? '#0066cc' : '#ddd'}`,
+                      borderRadius: '4px',
+                      background: contentMode === 'plain' ? '#e8f2ff' : '#fff',
+                      color: contentMode === 'plain' ? '#0066cc' : '#333',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: contentMode === 'plain' ? 600 : 400,
+                    }}
+                  >
+                    Plain text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={switchToHtml}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      border: `1px solid ${contentMode === 'html' ? '#0066cc' : '#ddd'}`,
+                      borderRadius: '4px',
+                      background: contentMode === 'html' ? '#e8f2ff' : '#fff',
+                      color: contentMode === 'html' ? '#0066cc' : '#333',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: contentMode === 'html' ? 600 : 400,
+                    }}
+                  >
+                    HTML
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(true)}
+                  disabled={isSubmitting}
+                  style={{
+                    marginLeft: 'auto',
+                    padding: '0.35rem 0.75rem',
+                    border: '1px solid #0066cc',
+                    borderRadius: '4px',
+                    background: 'transparent',
+                    color: '#0066cc',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  Preview email
+                </button>
+              </div>
+              {contentMode === 'plain' ? (
+                <textarea
+                  value={plainTextContent}
+                  onChange={(e) => setPlainTextContent(e.target.value)}
+                  placeholder="Type your message in plain text. Line breaks become &lt;br&gt;, blank lines start new paragraphs. Use {{name}} for personalization."
+                  rows={12}
+                  disabled={isSubmitting}
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit' }}
+                />
+              ) : (
+                <textarea
+                  value={htmlContent}
+                  onChange={(e) => setHtmlContent(e.target.value)}
+                  placeholder="HTML email content. Use {{name}} for personalization."
+                  rows={12}
+                  disabled={isSubmitting}
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'monospace' }}
+                />
+              )}
             </div>
 
             <button type="submit" disabled={isSubmitting}
@@ -384,6 +528,26 @@ export default function BulkEmailPage() {
         </div>
       </div>
       </div>
+
+      <Modal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title="Email preview"
+      >
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>Subject:</strong> {effectiveSubject || '(no subject)'}
+          </p>
+          <div style={{ border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden', background: '#fff' }}>
+            <iframe
+              title="Email preview"
+              srcDoc={effectiveHtml || '<p style="padding:1rem;color:#999;">No content yet.</p>'}
+              style={{ width: '100%', minHeight: '400px', height: '70vh', border: 'none', display: 'block' }}
+              sandbox="allow-same-origin"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -81,6 +81,8 @@ export async function PUT(request, { params }) {
       unlockDate: body.unlockDate,
       liveClassDatetime: body.liveClassDatetime,
       googleMeetLink: body.googleMeetLink,
+      weekStartDate: body.weekStartDate,
+      weekEndDate: body.weekEndDate,
       isLocked: body.isLocked,
     });
     return NextResponse.json({ week: updated });

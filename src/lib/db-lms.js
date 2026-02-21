@@ -280,12 +280,16 @@ export async function initializeLmsSchema() {
       unlock_date TIMESTAMP,
       live_class_datetime TIMESTAMP,
       google_meet_link VARCHAR(500),
+      week_start_date DATE,
+      week_end_date DATE,
       is_locked BOOLEAN DEFAULT true,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(cohort_id, week_number)
     );
   `;
+  await sql`ALTER TABLE weeks ADD COLUMN IF NOT EXISTS week_start_date DATE;`.catch(() => {});
+  await sql`ALTER TABLE weeks ADD COLUMN IF NOT EXISTS week_end_date DATE;`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_weeks_cohort_id ON weeks(cohort_id);`.catch(() => {});
 
   // --- weekly_checklist_items ---
@@ -1149,17 +1153,19 @@ export async function getWeekById(id) {
   return result.rows[0] || null;
 }
 
-export async function createWeek({ cohortId, weekNumber, title, description, unlockDate, liveClassDatetime, googleMeetLink, isLocked = true }) {
+export async function createWeek({ cohortId, weekNumber, title, description, unlockDate, liveClassDatetime, googleMeetLink, weekStartDate, weekEndDate, isLocked = true }) {
   await ensureLmsSchema();
   const result = await sql`
-    INSERT INTO weeks (cohort_id, week_number, title, description, unlock_date, live_class_datetime, google_meet_link, is_locked)
-    VALUES (${cohortId}, ${weekNumber}, ${title || null}, ${description || null}, ${unlockDate || null}, ${liveClassDatetime || null}, ${googleMeetLink || null}, ${isLocked ?? true})
+    INSERT INTO weeks (cohort_id, week_number, title, description, unlock_date, live_class_datetime, google_meet_link, week_start_date, week_end_date, is_locked)
+    VALUES (${cohortId}, ${weekNumber}, ${title || null}, ${description || null}, ${unlockDate || null}, ${liveClassDatetime || null}, ${googleMeetLink || null}, ${weekStartDate || null}, ${weekEndDate || null}, ${isLocked ?? true})
     ON CONFLICT (cohort_id, week_number) DO UPDATE SET
       title = EXCLUDED.title,
       description = EXCLUDED.description,
       unlock_date = EXCLUDED.unlock_date,
       live_class_datetime = EXCLUDED.live_class_datetime,
       google_meet_link = EXCLUDED.google_meet_link,
+      week_start_date = EXCLUDED.week_start_date,
+      week_end_date = EXCLUDED.week_end_date,
       is_locked = EXCLUDED.is_locked,
       updated_at = CURRENT_TIMESTAMP
     RETURNING *;
@@ -1169,13 +1175,15 @@ export async function createWeek({ cohortId, weekNumber, title, description, unl
 
 export async function updateWeek(id, updates) {
   await ensureLmsSchema();
-  const { title, description, unlockDate, liveClassDatetime, googleMeetLink, isLocked, weekNumber } = updates;
+  const { title, description, unlockDate, liveClassDatetime, googleMeetLink, weekStartDate, weekEndDate, isLocked, weekNumber } = updates;
   const sets = [];
   if (title !== undefined) sets.push(sql`title = ${title}`);
   if (description !== undefined) sets.push(sql`description = ${description}`);
   if (unlockDate !== undefined) sets.push(sql`unlock_date = ${unlockDate}`);
   if (liveClassDatetime !== undefined) sets.push(sql`live_class_datetime = ${liveClassDatetime}`);
   if (googleMeetLink !== undefined) sets.push(sql`google_meet_link = ${googleMeetLink}`);
+  if (weekStartDate !== undefined) sets.push(sql`week_start_date = ${weekStartDate}`);
+  if (weekEndDate !== undefined) sets.push(sql`week_end_date = ${weekEndDate}`);
   if (isLocked !== undefined) sets.push(sql`is_locked = ${isLocked}`);
   if (weekNumber !== undefined) sets.push(sql`week_number = ${weekNumber}`);
   if (sets.length === 0) return await getWeekById(id);

@@ -220,7 +220,6 @@ export default function StudentDashboardPage() {
           {currentWeek && (
             <LmsCard
               title="Current week"
-              subtitle={currentWeek.description ? currentWeek.description.slice(0, 80) + (currentWeek.description.length > 80 ? '...' : '') : ''}
               action={
                 <Link href={`/dashboard/week/${currentWeek.id}`} className="lms-btn lms-btn-outline lms-btn-sm">
                   View
@@ -228,6 +227,11 @@ export default function StudentDashboardPage() {
               }
             >
               <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{currentWeek.title}</p>
+              {currentWeek.description && (
+                <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
+                  {currentWeek.description.length > 160 ? currentWeek.description.slice(0, 160) + '...' : currentWeek.description}
+                </p>
+              )}
               <Link
                 href={`/dashboard/week/${currentWeek.id}`}
                 className="lms-btn lms-btn-primary lms-btn-sm mt-4"

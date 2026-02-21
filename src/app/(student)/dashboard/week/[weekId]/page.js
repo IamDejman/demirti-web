@@ -89,10 +89,15 @@ export default function WeekPage() {
     <div className="flex flex-col gap-[var(--lms-space-8)]">
       <LmsPageHeader
         title={week.title}
-        subtitle={week.description}
         icon={LmsIcons.book}
         breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
       />
+
+      {week.description && (
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
+          {week.description}
+        </p>
+      )}
 
       {week.live_class_datetime && (
         <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)} icon={LmsIcons.video}>

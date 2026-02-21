@@ -121,9 +121,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="auth-link-wrap">
-          Don&apos;t have an account? <Link href="/register" className="auth-link">Register</Link>
-        </div>
         <div className="auth-link-wrap auth-link-wrap-tight">
           <Link href="/forgot-password" className="auth-link">Forgot password?</Link>
         </div>

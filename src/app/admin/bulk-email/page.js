@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
 import { AdminPageHeader } from '@/app/components/admin';
@@ -94,14 +94,15 @@ export default function BulkEmailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const { showToast } = useToast();
 
-  // Single source of truth for preview and send: apply design when content is plain text
-  const effectiveHtml = useMemo(() => {
-    if (contentMode === 'plain') return plainToHtml(plainTextContent);
-    if (looksLikePlainText(htmlContent)) return plainToHtml(htmlContent);
-    return htmlContent;
-  }, [contentMode, plainTextContent, htmlContent]);
+  // Single source of truth for preview and send: apply design when content is plain text (computed each render to avoid hook-order issues)
+  const effectiveHtml =
+    contentMode === 'plain'
+      ? plainToHtml(plainTextContent ?? '')
+      : looksLikePlainText(htmlContent ?? '')
+        ? plainToHtml(htmlContent ?? '')
+        : (htmlContent ?? '');
 
-  const effectiveSubject = subject.trim();
+  const effectiveSubject = (subject ?? '').trim();
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';

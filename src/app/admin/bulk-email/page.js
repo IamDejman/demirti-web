@@ -7,7 +7,8 @@ import { AdminPageHeader } from '@/app/components/admin';
 import { Modal } from '@/app/components/ui';
 import { getAuthHeaders } from '@/lib/authClient';
 
-// Convert plain text to simple HTML (paragraphs and line breaks)
+// Convert plain text to simple HTML with email-style design. Uses inline styles only
+// so the sent email matches the preview (many clients strip <style> in head).
 function plainToHtml(plain) {
   if (!plain || !plain.trim()) return '';
   const escaped = plain
@@ -15,10 +16,29 @@ function plainToHtml(plain) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
   const paragraphs = escaped.trim().split(/\n\n+/);
-  const body = paragraphs
-    .map((p) => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
+  const bodyContent = paragraphs
+    .map((p) => '<p style="font-size:16px;color:#444;margin:0 0 16px;line-height:1.7;">' + p.replace(/\n/g, '<br>') + '</p>')
     .join('\n');
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:system-ui,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;}</style></head><body>${body}</body></html>`;
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background-color:#f4f4f4;margin:0;padding:0;">
+  <div style="max-width:600px;margin:0 auto;background-color:#fff;">
+    <div style="background-color:#0066cc;color:#fff;padding:28px 24px;text-align:center;">
+      <h1 style="margin:0;font-size:22px;font-weight:700;">CVERSE</h1>
+    </div>
+    <div style="padding:32px 24px;">
+${bodyContent}
+    </div>
+    <div style="background-color:#f8f9fa;padding:24px;text-align:center;color:#666;font-size:14px;border-top:1px solid #e1e4e8;">
+      <p style="margin:0;">CVERSE Academy</p>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 // Strip HTML tags to get approximate plain text (for switching to plain mode)

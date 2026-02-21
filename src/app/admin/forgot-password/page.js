@@ -165,7 +165,7 @@ export default function AdminForgotPassword() {
       const data = await res.json();
       if (res.ok && data.success) {
         localStorage.setItem('admin_authenticated', 'true');
-        localStorage.setItem('admin_token', data.token || 'authenticated');
+        localStorage.setItem('admin_authenticated', 'true');
         showToast({ type: 'success', message: 'Password updated. Redirecting...' });
         router.push('/admin');
       } else {

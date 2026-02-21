@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { markAllNotificationsRead } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request) {
@@ -9,7 +10,7 @@ export async function POST(request) {
     await markAllNotificationsRead(user.id);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/notifications/read-all:', e);
+    reportError(e, { route: 'POST /api/notifications/read-all' });
     return NextResponse.json({ error: 'Failed to mark all read' }, { status: 500 });
   }
 }

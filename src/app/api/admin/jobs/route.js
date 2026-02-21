@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
@@ -20,9 +21,8 @@ export async function GET(request) {
     `;
     return NextResponse.json({ jobs: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/jobs:', e);
-    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch jobs';
-    return NextResponse.json({ error: 'Failed to fetch jobs', detail: msg }, { status: 500 });
+    reportError(e, { route: 'GET /api/admin/jobs' });
+    return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
   }
 }
 
@@ -63,11 +63,11 @@ export async function POST(request) {
         actorEmail: admin.email,
       });
     } catch (auditErr) {
-      console.error('Audit log job.create (non-blocking):', auditErr);
+      reportError(auditErr, { route: 'POST /api/admin/jobs' });
     }
     return NextResponse.json({ job: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/admin/jobs:', e);
+    reportError(e, { route: 'POST /api/admin/jobs' });
     return NextResponse.json({ error: 'Failed to create job' }, { status: 500 });
   }
 }

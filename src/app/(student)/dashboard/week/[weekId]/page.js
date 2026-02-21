@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 export default function WeekPage() {
   const params = useParams();
@@ -57,11 +58,11 @@ export default function WeekPage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+  const formatDate = (d) => formatTimeLagos(d);
 
   if (loading) {
     return (
-      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
+      <div className="flex flex-col gap-[var(--lms-space-6)]">
         <div className="h-8 w-48 lms-skeleton rounded-lg" />
         <div className="h-64 lms-skeleton rounded-xl" />
       </div>
@@ -71,7 +72,7 @@ export default function WeekPage() {
   if (!week) {
     return (
       <LmsCard hoverable={false}>
-        <LmsEmptyState icon={LmsIcons.inbox} title="Week not found" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+        <LmsEmptyState icon={LmsIcons.inbox} title="Week not found" action={<Link href="/dashboard" className="lms-link">Back to dashboard</Link>} />
       </LmsCard>
     );
   }
@@ -79,13 +80,13 @@ export default function WeekPage() {
   if (week.locked) {
     return (
       <LmsCard hoverable={false}>
-        <LmsEmptyState icon={LmsIcons.lock} title="This week is not yet unlocked" action={<Link href="/dashboard" className="text-primary font-medium hover:underline">Back to dashboard</Link>} />
+        <LmsEmptyState icon={LmsIcons.lock} title="This week is not yet unlocked" action={<Link href="/dashboard" className="lms-link">Back to dashboard</Link>} />
       </LmsCard>
     );
   }
 
   return (
-    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+    <div className="flex flex-col gap-[var(--lms-space-8)]">
       <LmsPageHeader
         title={week.title}
         subtitle={week.description}
@@ -100,7 +101,7 @@ export default function WeekPage() {
               href={week.google_meet_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark"
+              className="lms-btn lms-btn-primary mt-4"
               onClick={async () => {
                 try {
                   await fetch(`/api/live-classes/${week.live_class_id}/join-click`, {
@@ -116,7 +117,7 @@ export default function WeekPage() {
           )}
           {week.recording_url && (
             <div className="mt-3">
-              <a href={week.recording_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm font-medium hover:underline">
+              <a href={week.recording_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm">
                 Watch recording
               </a>
             </div>
@@ -132,15 +133,16 @@ export default function WeekPage() {
                 <button
                   type="button"
                   onClick={() => handleCompleteChecklist(item.id)}
-                  className={`h-5 w-5 rounded border flex items-center justify-center ${
-                    item.completed_at ? 'bg-primary border-primary text-white' : ''
+                  className={`h-5 w-5 rounded border flex items-center justify-center shrink-0 ${
+                    item.completed_at
+                      ? 'bg-[var(--primary-color)] border-[var(--primary-color)] text-white'
+                      : 'border-[var(--neutral-300)] text-[var(--neutral-400)]'
                   }`}
-                  style={!item.completed_at ? { borderColor: 'var(--neutral-300)', color: 'var(--neutral-400)' } : undefined}
                   aria-label="Toggle checklist item"
                 >
                   {item.completed_at ? '✓' : ''}
                 </button>
-                <span className={item.completed_at ? 'line-through' : ''} style={{ color: item.completed_at ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{item.title}</span>
+                <span className={item.completed_at ? 'line-through text-[var(--neutral-500)]' : 'text-[var(--neutral-900)]'}>{item.title}</span>
               </li>
             ))}
           </ul>
@@ -151,13 +153,13 @@ export default function WeekPage() {
         <LmsCard title="Content" icon={LmsIcons.book}>
             <ul className="mt-4 space-y-3">
               {contentItems.map((item) => (
-                <li key={item.id}>
-                  <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{item.title}</span>
+                <li key={item.id} className="rounded-lg px-3 py-2 -mx-3 -my-1 transition-colors hover:bg-[var(--neutral-50)]">
+                  <span className="font-medium text-[var(--neutral-900)]">{item.title}</span>
                 {item.file_url && (
-                  <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm ml-2">Open</a>
+                  <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Open</a>
                 )}
                 {item.external_url && (
-                  <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm ml-2">Link</a>
+                  <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Link</a>
                 )}
               </li>
             ))}
@@ -169,10 +171,10 @@ export default function WeekPage() {
         <LmsCard title="Materials" icon={LmsIcons.briefcase}>
             <ul className="mt-4 space-y-2">
             {materials.map((m) => (
-              <li key={m.id}>
-                <span className="font-medium" style={{ color: 'var(--neutral-900)' }}>{m.title}</span>
+              <li key={m.id} className="rounded-lg px-3 py-2 -mx-3 -my-1 transition-colors hover:bg-[var(--neutral-50)]">
+                <span className="font-medium text-[var(--neutral-900)]">{m.title}</span>
                 {(m.url || m.file_url) && (
-                  <a href={m.url || m.file_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm ml-2">Open</a>
+                  <a href={m.url || m.file_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Open</a>
                 )}
               </li>
             ))}
@@ -184,11 +186,11 @@ export default function WeekPage() {
         <LmsCard title="Assignments" icon={LmsIcons.clipboard}>
           <ul className="mt-4 space-y-3">
             {assignments.map((a) => (
-              <li key={a.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
-                <Link href={`/dashboard/assignments/${a.id}`} className="font-medium text-primary hover:underline">
+              <li key={a.id} className="flex items-center justify-between py-2 border-b last:border-0 border-[var(--neutral-100)]">
+                <Link href={`/dashboard/assignments/${a.id}`} className="font-medium lms-link">
                   {a.title}
                 </Link>
-                <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>Due {formatDate(a.deadline_at)}</span>
+                <span className="text-sm text-[var(--neutral-500)]">Due {formatDate(a.deadline_at)}</span>
               </li>
             ))}
           </ul>

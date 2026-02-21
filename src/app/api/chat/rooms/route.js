@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import {
   addChatRoomMember,
   createDmRoom,
@@ -8,6 +9,7 @@ import {
 } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { getUserByEmail } from '@/lib/auth';
+import { validateBody, chatRoomSchema } from '@/lib/schemas';
 
 export async function GET(request) {
   try {
@@ -24,10 +26,12 @@ export async function GET(request) {
         acc[row.id] = row.name;
         return acc;
       }, {});
-      for (const cohort of cohortResult.rows) {
-        const room = await ensureCohortChatRoom(cohort.id, cohort.name, user.id);
-        await addChatRoomMember(room.id, user.id);
-      }
+      await Promise.all(
+        cohortResult.rows.map(async (cohort) => {
+          const room = await ensureCohortChatRoom(cohort.id, cohort.name, user.id);
+          await addChatRoomMember(room.id, user.id);
+        })
+      );
     }
 
     const roomsRes = await sql`
@@ -73,7 +77,7 @@ export async function GET(request) {
 
     return NextResponse.json({ rooms: normalized });
   } catch (e) {
-    console.error('GET /api/chat/rooms:', e);
+    reportError(e, { route: 'GET /api/chat/rooms' });
     return NextResponse.json({ error: 'Failed to fetch rooms' }, { status: 500 });
   }
 }
@@ -82,8 +86,9 @@ export async function POST(request) {
   try {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const body = await request.json();
-    const { type, otherUserId, email } = body;
+    const [data, validationErr] = await validateBody(request, chatRoomSchema);
+    if (validationErr) return validationErr;
+    const { type, otherUserId, email } = data;
     if (type !== 'dm') {
       return NextResponse.json({ error: 'Only dm is supported' }, { status: 400 });
     }
@@ -98,7 +103,7 @@ export async function POST(request) {
     const room = await createDmRoom(user.id, targetId);
     return NextResponse.json({ room });
   } catch (e) {
-    console.error('POST /api/chat/rooms:', e);
+    reportError(e, { route: 'POST /api/chat/rooms' });
     return NextResponse.json({ error: 'Failed to create room' }, { status: 500 });
   }
 }

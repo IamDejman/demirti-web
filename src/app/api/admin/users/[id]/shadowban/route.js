@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { setUserShadowban } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
 
@@ -22,7 +23,7 @@ export async function POST(request, { params }) {
     });
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/admin/users/[id]/shadowban:', e);
+    reportError(e, { route: 'POST /api/admin/users/[id]/shadowban' });
     return NextResponse.json({ error: 'Failed to update shadowban' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { setChatRoomMuted } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -33,7 +34,7 @@ export async function POST(request, { params }) {
     }
     return NextResponse.json({ success: true, isMuted, emailMuted: hasEmailMuted ? emailMuted : undefined });
   } catch (e) {
-    console.error('POST /api/chat/rooms/[id]/mute:', e);
+    reportError(e, { route: 'POST /api/chat/rooms/[id]/mute' });
     return NextResponse.json({ error: 'Failed to update mute' }, { status: 500 });
   }
 }

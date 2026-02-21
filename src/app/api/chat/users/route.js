@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { getCohortIdsForUser } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -31,7 +32,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ users: result.rows });
   } catch (e) {
-    console.error('GET /api/chat/users:', e);
+    reportError(e, { route: 'GET /api/chat/users' });
     return NextResponse.json({ error: 'Failed to search users' }, { status: 500 });
   }
 }

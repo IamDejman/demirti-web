@@ -23,12 +23,6 @@ export async function GET(request) {
     });
   } catch (error) {
     logger.error('LMS init error', { message: error?.message });
-    return NextResponse.json(
-      {
-        error: 'Failed to initialize LMS schema',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to initialize LMS schema' }, { status: 500 });
   }
 }

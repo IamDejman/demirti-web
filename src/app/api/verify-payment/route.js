@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { logger, reportError } from '@/lib/logger';
 import { incrementScholarshipCount } from '@/lib/db';
 import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
 import { enrollPaidApplicant } from '@/lib/lms-enrollment';
@@ -20,7 +21,7 @@ export async function POST(request) {
     // Validate and trim Paystack secret key
     const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
     if (!paystackSecretKey) {
-      console.error('PAYSTACK_SECRET_KEY is not configured in verify-payment');
+      reportError(new Error('PAYSTACK_SECRET_KEY is not configured'), { route: 'POST /api/verify-payment' });
       return NextResponse.json(
         { error: 'Payment service not configured' },
         { status: 500 }
@@ -38,10 +39,10 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Paystack verification error:', {
+      reportError(new Error(data?.message || data?.error || 'Paystack verification failed'), {
+        route: 'POST /api/verify-payment',
         status: response.status,
         reference,
-        data: data
       });
       return NextResponse.json(
         { 
@@ -69,13 +70,7 @@ export async function POST(request) {
     const trackName = customFields.find(f => f.variable_name === 'track')?.value || 
                      metadata.track || '';
 
-    console.log('Manual verification:', {
-      reference,
-      email,
-      trackName,
-      amount,
-      hasMetadata: !!metadata
-    });
+    logger.info('Manual verification', { reference, email, trackName, amount, hasMetadata: !!metadata });
 
     // Try multiple strategies to update the application
     let updated = false;
@@ -99,14 +94,14 @@ export async function POST(request) {
       if (result1.rows.length > 0) {
         updated = true;
         updatedApplication = result1.rows[0];
-        console.log('Updated by email and track:', {
+        logger.info('Updated by email and track', {
           id: updatedApplication.id,
           status: updatedApplication.status,
           email: updatedApplication.email,
-          track: updatedApplication.track_name
+          track: updatedApplication.track_name,
         });
       } else {
-        console.log('No application found to update by email and track:', { email, trackName });
+        logger.info('No application found to update by email and track', { email, trackName });
       }
     }
 
@@ -126,7 +121,7 @@ export async function POST(request) {
       if (result2.rows.length > 0) {
         updated = true;
         updatedApplication = result2.rows[0];
-        console.log('Updated by payment reference');
+        logger.info('Updated by payment reference');
       }
     }
 
@@ -151,26 +146,26 @@ export async function POST(request) {
       if (result3.rows.length > 0) {
         updated = true;
         updatedApplication = result3.rows[0];
-        console.log('Updated most recent pending application');
+        logger.info('Updated most recent pending application');
       }
     }
 
     // Increment scholarship count and send confirmation email if update was successful
     if (updated && updatedApplication) {
-      console.log('Processing successful update:', {
+      logger.info('Processing successful update', {
         updated,
         hasApplication: !!updatedApplication,
         applicationId: updatedApplication?.id,
-        status: updatedApplication?.status
+        status: updatedApplication?.status,
       });
       
       const appTrackName = updatedApplication.track_name || trackName;
       if (appTrackName) {
         try {
           await incrementScholarshipCount(appTrackName);
-          console.log(`Scholarship count incremented for track: ${appTrackName}`);
+          logger.info('Scholarship count incremented for track', { track: appTrackName });
         } catch (error) {
-          console.error('Error updating scholarship count:', error);
+          reportError(error, { route: 'POST /api/verify-payment', context: 'scholarship count' });
           // Don't fail the request if scholarship increment fails
         }
       }
@@ -186,7 +181,7 @@ export async function POST(request) {
           amount,
         });
       } catch (emailError) {
-        console.error('Error sending payment confirmation email from verify-payment:', emailError);
+        reportError(emailError, { route: 'POST /api/verify-payment', context: 'payment confirmation email' });
       }
 
       try {
@@ -198,7 +193,7 @@ export async function POST(request) {
           applicationId: updatedApplication.application_id,
         });
       } catch (enrollError) {
-        console.error('Enrollment error from verify-payment:', enrollError);
+        reportError(enrollError, { route: 'POST /api/verify-payment', context: 'enrollment' });
       }
 
       // Return success response
@@ -226,7 +221,7 @@ export async function POST(request) {
           existingApp = existingResult.rows[0];
           if (existingApp.status === 'paid') {
             // Application already paid - return success (likely updated by webhook)
-            console.log('Application already paid, returning success');
+            logger.info('Application already paid, returning success');
             return NextResponse.json({
               success: true,
               message: 'Payment already verified',
@@ -237,13 +232,13 @@ export async function POST(request) {
       }
 
       // No pending application found
-      console.log('No pending application found to update:', {
+      logger.info('No pending application found to update', {
         updated,
         hasUpdatedApplication: !!updatedApplication,
         email,
         trackName,
         reference,
-        existingAppStatus: existingApp?.status
+        existingAppStatus: existingApp?.status,
       });
       
       return NextResponse.json(
@@ -257,10 +252,7 @@ export async function POST(request) {
       );
     }
   } catch (error) {
-    console.error('Error verifying payment:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify payment', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-      { status: 500 }
-    );
+    reportError(error, { route: 'POST /api/verify-payment' });
+    return NextResponse.json({ error: 'Failed to verify payment' }, { status: 500 });
   }
 }

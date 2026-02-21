@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { reportError } from '@/lib/logger';
 import { rateLimit } from '@/lib/rateLimit';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
@@ -65,11 +66,8 @@ export async function POST(request) {
     });
 
     if (error) {
-      console.error('Resend contact form email failed', error);
-      return NextResponse.json(
-        { error: 'Failed to send email', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-        { status: 500 }
-      );
+      reportError(error, { route: 'POST /api/send-email', context: 'Resend contact form' });
+      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -77,10 +75,7 @@ export async function POST(request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error sending email:', error);
-    return NextResponse.json(
-      { error: 'Failed to send email', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-      { status: 500 }
-    );
+    reportError(error, { route: 'POST /api/send-email' });
+    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
   }
 }

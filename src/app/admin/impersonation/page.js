@@ -37,10 +37,12 @@ export default function AdminImpersonationPage() {
       body: JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
-    if (res.ok && data.token) {
+    if (res.ok && data.user) {
       setMessageType('success');
       setMessage('Impersonation session opened in a new tab.');
-      const url = `/impersonate?token=${encodeURIComponent(data.token)}&redirect=/dashboard`;
+      const params = new URLSearchParams({ redirect: '/dashboard' });
+      if (data.user.email) params.set('email', data.user.email);
+      const url = `/impersonate?${params.toString()}`;
       window.open(url, '_blank');
     } else {
       setMessageType('error');

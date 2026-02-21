@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDiscountByName } from '@/lib/db';
+import { reportError } from '@/lib/logger';
 
 // GET - Validate a discount code by name
 export async function GET(request) {
@@ -31,11 +32,8 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('Error validating discount:', error);
-    return NextResponse.json(
-      { error: 'Failed to validate discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-      { status: 500 }
-    );
+    reportError(error, { route: 'GET /api/validate-discount' });
+    return NextResponse.json({ error: 'Failed to validate discount' }, { status: 500 });
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAiSettings, updateAiSettings } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 export async function GET(request) {
@@ -9,7 +10,7 @@ export async function GET(request) {
     const settings = await getAiSettings();
     return NextResponse.json({ settings });
   } catch (e) {
-    console.error('GET /api/admin/ai-settings:', e);
+    reportError(e, { route: 'GET /api/admin/ai-settings' });
     return NextResponse.json({ error: 'Failed to load AI settings' }, { status: 500 });
   }
 }
@@ -27,7 +28,7 @@ export async function PUT(request) {
     });
     return NextResponse.json({ settings });
   } catch (e) {
-    console.error('PUT /api/admin/ai-settings:', e);
+    reportError(e, { route: 'PUT /api/admin/ai-settings' });
     return NextResponse.json({ error: 'Failed to update AI settings' }, { status: 500 });
   }
 }

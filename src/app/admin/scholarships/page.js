@@ -26,21 +26,16 @@ export default function ScholarshipsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load scholarships
-      const scholarshipsResponse = await fetch('/api/admin/scholarships');
-      const scholarshipsData = await scholarshipsResponse.json();
-      
-      if (scholarshipsData.success) {
-        setScholarships(scholarshipsData.scholarships);
-      }
-
-      // Load scholarship recipients
-      const recipientsResponse = await fetch('/api/admin/scholarship-recipients');
-      const recipientsData = await recipientsResponse.json();
-      
-      if (recipientsData.success) {
-        setScholarshipRecipients(recipientsData.recipientsByTrack);
-      }
+      const [scholarshipsRes, recipientsRes] = await Promise.all([
+        fetch('/api/admin/scholarships'),
+        fetch('/api/admin/scholarship-recipients'),
+      ]);
+      const [scholarshipsData, recipientsData] = await Promise.all([
+        scholarshipsRes.json(),
+        recipientsRes.json(),
+      ]);
+      if (scholarshipsData.success) setScholarships(scholarshipsData.scholarships);
+      if (recipientsData.success) setScholarshipRecipients(recipientsData.recipientsByTrack);
     } catch {
     } finally {
       setLoading(false);

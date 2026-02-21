@@ -1,12 +1,72 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 const FLYOUT_CLOSE_DELAY_MS = 150;
+
+const FLYOUT_PORTAL_BASE_STYLE = {
+  position: 'fixed',
+  zIndex: 1200,
+  minWidth: 220,
+  maxWidth: 280,
+  padding: '0.75rem',
+  background: '#fff',
+  borderRadius: 10,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+  border: '1px solid #e8ecf0',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.25rem',
+  whiteSpace: 'normal',
+  pointerEvents: 'auto',
+};
+
+function useFlyoutKeyboard(flyoutSection, setFlyoutSection, setFlyoutAnchorRect) {
+  const focusedIndex = useRef(-1);
+
+  const handleFlyoutKeyDown = useCallback((e) => {
+    if (!flyoutSection) return;
+    const portal = document.querySelector('.admin-sidebar-flyout-portal');
+    if (!portal) return;
+    const links = Array.from(portal.querySelectorAll('a'));
+    if (!links.length) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setFlyoutSection(null);
+      setFlyoutAnchorRect(null);
+      focusedIndex.current = -1;
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusedIndex.current = Math.min(focusedIndex.current + 1, links.length - 1);
+      links[focusedIndex.current]?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusedIndex.current = Math.max(focusedIndex.current - 1, 0);
+      links[focusedIndex.current]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      focusedIndex.current = 0;
+      links[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      focusedIndex.current = links.length - 1;
+      links[links.length - 1]?.focus();
+    }
+  }, [flyoutSection, setFlyoutSection, setFlyoutAnchorRect]);
+
+  useEffect(() => {
+    focusedIndex.current = -1;
+  }, [flyoutSection]);
+
+  return handleFlyoutKeyDown;
+}
 
 const ICONS = {
   dashboard: (
@@ -215,19 +275,19 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
     };
   }, []);
 
+  const handleFlyoutKeyDown = useFlyoutKeyboard(flyoutSection, setFlyoutSection, setFlyoutAnchorRect);
+
   const isActive = (path) => pathname === path || (path !== '/admin' && pathname.startsWith(path));
 
   const handleLogout = async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
-      localStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
     } catch {
-      localStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
+      // proceed with client-side cleanup
     }
+    localStorage.removeItem('admin_authenticated');
+    localStorage.removeItem('admin_token');
+    router.push('/admin/login');
   };
 
   return (
@@ -241,7 +301,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
       >
         ☰
       </button>
-      <aside className={`admin-sidebar ${mobileOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`admin-sidebar glass-sidebar ${mobileOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <div className="admin-sidebar-inner">
           <div className="admin-sidebar-header">
             <Link
@@ -324,10 +384,18 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                     type="button"
                     className={`admin-sidebar-parent-btn ${isExpanded ? 'expanded' : ''} ${getSectionWithActiveRoute(pathname) === item.id ? 'has-active' : ''} ${flyoutOpen ? 'flyout-open' : ''}`}
                     onClick={() => toggleSection(item.id)}
+                    onKeyDown={(e) => {
+                      if (collapsed && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        openFlyoutOnHover(item.id, e.currentTarget);
+                      }
+                      handleFlyoutKeyDown(e);
+                    }}
                     aria-expanded={collapsed ? flyoutOpen : isExpanded}
                     aria-controls={listId}
+                    aria-haspopup={collapsed ? 'true' : undefined}
                     title={collapsed ? item.label : undefined}
-                    aria-label={collapsed ? `${item.label} (hover for menu)` : undefined}
+                    aria-label={collapsed ? `${item.label} submenu` : undefined}
                   >
                     <span className="admin-sidebar-item-content">
                       <span className="admin-sidebar-icon">{ICONS[item.icon]}</span>
@@ -351,7 +419,21 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                     )}
                   </button>
                   {!collapsed && isExpanded && (
-                    <div id={listId} className="admin-sidebar-children" role="region">
+                    <div
+                      id={listId}
+                      className="admin-sidebar-children"
+                      role="group"
+                      aria-label={`${item.label} links`}
+                      onKeyDown={(e) => {
+                        const links = Array.from(e.currentTarget.querySelectorAll('a'));
+                        const idx = links.indexOf(document.activeElement);
+                        if (e.key === 'ArrowDown' && idx < links.length - 1) {
+                          e.preventDefault(); links[idx + 1]?.focus();
+                        } else if (e.key === 'ArrowUp' && idx > 0) {
+                          e.preventDefault(); links[idx - 1]?.focus();
+                        }
+                      }}
+                    >
                       {item.items.map(({ href, label }) => (
                         <Link
                           key={href}
@@ -401,25 +483,13 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           return createPortal(
             <div
               className="admin-sidebar-flyout-portal"
-              role="region"
+              role="menu"
               aria-label={item.label}
+              onKeyDown={handleFlyoutKeyDown}
               style={{
-                position: 'fixed',
+                ...FLYOUT_PORTAL_BASE_STYLE,
                 left: flyoutAnchorRect.left,
                 top: flyoutAnchorRect.top,
-                zIndex: 1200,
-                minWidth: 220,
-                maxWidth: 280,
-                padding: '0.75rem',
-                background: '#fff',
-                borderRadius: 10,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-                border: '1px solid #e8ecf0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.25rem',
-                whiteSpace: 'normal',
-                pointerEvents: 'auto',
               }}
               onMouseEnter={cancelCloseFlyout}
               onMouseLeave={closeFlyout}
@@ -432,6 +502,8 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
                 <Link
                   key={href}
                   href={href}
+                  role="menuitem"
+                  tabIndex={-1}
                   onClick={() => { setMobileOpen(false); closeFlyout(); }}
                   className={isActive(href) ? 'active' : ''}
                 >

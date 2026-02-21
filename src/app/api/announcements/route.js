@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAnnouncementsForUser } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request) {
@@ -12,7 +13,7 @@ export async function GET(request) {
     const announcements = await getAnnouncementsForUser(user.id, user.role, limit);
     return NextResponse.json({ announcements });
   } catch (e) {
-    console.error('GET /api/announcements:', e);
+    reportError(e, { route: 'GET /api/announcements' });
     return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
   }
 }

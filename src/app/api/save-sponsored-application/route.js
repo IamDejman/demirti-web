@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveSponsoredApplication } from '@/lib/db';
+import { reportError } from '@/lib/logger';
 import { Resend } from 'resend';
 import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 
@@ -54,7 +55,7 @@ async function sendNewSponsoredApplicationEmail(application) {
       html
     });
   } catch (e) {
-    console.error('Failed to send sponsored application admin email:', e);
+    reportError(e, { route: 'POST /api/save-sponsored-application', context: 'admin email' });
   }
 }
 
@@ -171,7 +172,7 @@ export async function POST(request) {
     try {
       await sendNewSponsoredApplicationEmail(saved);
     } catch (emailError) {
-      console.error('Failed to send admin email, but application saved:', emailError);
+      reportError(emailError, { route: 'POST /api/save-sponsored-application', context: 'admin email (application saved)' });
     }
 
     return NextResponse.json({
@@ -180,10 +181,7 @@ export async function POST(request) {
       application: { id: saved.id, application_id: saved.application_id }
     });
   } catch (error) {
-    console.error('Error saving sponsored application:', error);
-    return NextResponse.json(
-      { error: 'Failed to save application', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-      { status: 500 }
-    );
+    reportError(error, { route: 'POST /api/save-sponsored-application' });
+    return NextResponse.json({ error: 'Failed to save application' }, { status: 500 });
   }
 }

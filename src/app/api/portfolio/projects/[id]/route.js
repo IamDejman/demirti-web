@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
+import { isValidUuid } from '@/lib/validation';
+import { stripHtml } from '@/lib/sanitize';
 
 async function ensureOwnership(projectId, userId) {
   const res = await sql`
@@ -19,9 +22,11 @@ export async function PUT(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
     const body = await request.json();
-    const { title, description, linkUrl, imageUrl, orderIndex } = body;
+    const { linkUrl, imageUrl, orderIndex } = body;
+    const title = body.title ? stripHtml(body.title) : '';
+    const description = body.description ? stripHtml(body.description) : null;
     if (!title?.trim()) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 });
     }
@@ -41,7 +46,7 @@ export async function PUT(request, { params }) {
     `;
     return NextResponse.json({ project: result.rows[0] });
   } catch (e) {
-    console.error('PUT /api/portfolio/projects/[id]:', e);
+    reportError(e, { route: 'PUT /api/portfolio/projects/[id]' });
     return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
   }
 }
@@ -51,7 +56,7 @@ export async function DELETE(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
     await ensureLmsSchema();
     if (!(await ensureOwnership(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -59,7 +64,7 @@ export async function DELETE(request, { params }) {
     await sql`DELETE FROM portfolio_projects WHERE id = ${id}`;
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/portfolio/projects/[id]:', e);
+    reportError(e, { route: 'DELETE /api/portfolio/projects/[id]' });
     return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
   }
 }

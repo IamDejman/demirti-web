@@ -102,8 +102,6 @@ const STUDENT_NAV = [
   { href: '/dashboard/profile', label: 'Profile', icon: 'profile' },
   { href: '/dashboard/assignments', label: 'Assignments', icon: 'assignments' },
   { href: '/dashboard/announcements', label: 'Announcements', icon: 'megaphone' },
-  { href: '/dashboard/certificates', label: 'Certificates', icon: 'trophy' },
-  { href: '/dashboard/notifications', label: 'Notifications', icon: 'bell' },
   { href: '/dashboard/office-hours', label: 'Office Hours', icon: 'officeHours' },
   { href: '/dashboard/chat', label: 'Chat', icon: 'chat' },
   { href: '/dashboard/portfolio', label: 'Portfolio', icon: 'portfolio' },
@@ -134,7 +132,10 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', headers: getLmsAuthHeaders() });
-    if (typeof window !== 'undefined') localStorage.removeItem('lms_token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('lms_authenticated');
+      localStorage.removeItem('lms_token');
+    }
     router.push('/login');
   };
 
@@ -152,7 +153,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
       )}
 
       <aside
-        className={`lms-sidebar fixed left-0 top-0 z-50 h-full flex flex-col transition-all duration-200 ${
+        className={`lms-sidebar glass-sidebar fixed left-0 top-0 z-50 h-full flex flex-col transition-all duration-200 ${
           collapsed ? 'lms-sidebar-collapsed w-[72px]' : 'w-[260px]'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
@@ -160,7 +161,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
         <div className="lms-sidebar-header flex items-center justify-between flex-shrink-0">
           {!collapsed && (
             <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="flex items-center gap-2 truncate">
-              <Image src="/logo.png" alt={brandName} width={100} height={28} style={{ height: '22px', width: 'auto' }} priority />
+              <Image src="/logo.png" alt={brandName} width={160} height={44} style={{ height: '36px', width: 'auto' }} priority />
               {variant === 'facilitator' && (
                 <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>Facilitator</span>
               )}
@@ -225,11 +226,11 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
           {user && !collapsed && (
             <Link
               href={variant === 'facilitator' ? '/facilitator' : '/dashboard/profile'}
-              className="flex items-center gap-3 mb-3 rounded-lg p-1 -m-1 hover:opacity-90 transition-opacity"
+              className="flex items-center gap-3 mb-3 rounded-lg py-1 hover:opacity-90 transition-opacity"
             >
               <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 overflow-hidden" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
                 {user.profilePictureUrl ? (
-                  <img src={user.profilePictureUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={user.profilePictureUrl} alt={`${user.firstName || 'User'} profile photo`} className="w-full h-full object-cover" />
                 ) : (
                   (user.firstName || user.email || 'U').charAt(0).toUpperCase()
                 )}
@@ -243,10 +244,10 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm min-h-[44px] transition-colors"
-            style={{ color: 'var(--neutral-600)' }}
+            className="w-full flex items-center gap-3 py-2 rounded-lg text-sm min-h-[44px] transition-colors hover:opacity-90"
+            style={{ color: 'var(--lms-logout-color, #b91c1c)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />

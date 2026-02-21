@@ -82,8 +82,7 @@ export async function ensureDatabaseInitialized() {
           SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'sponsored_applications');
         `;
         if (!sponsoredAppsCheck.rows[0].exists) {
-          const cohortDefault = (DEFAULT_SPONSORED_COHORT || 'Data Science Feb 2026').replace(/'/g, "''");
-          const createSql = `CREATE TABLE sponsored_applications (
+          await sql`CREATE TABLE sponsored_applications (
               id SERIAL PRIMARY KEY,
               application_id VARCHAR(255) UNIQUE NOT NULL,
               first_name VARCHAR(255) NOT NULL,
@@ -101,11 +100,13 @@ export async function ensureDatabaseInitialized() {
               linkedin_post_url VARCHAR(500),
               confirmed_at TIMESTAMP,
               forfeited_at TIMESTAMP,
-              cohort_name VARCHAR(255) DEFAULT '${cohortDefault}',
+              cohort_name VARCHAR(255) DEFAULT 'Data Science Feb 2026',
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )`;
-          const template = Object.assign([createSql], { raw: [createSql] });
-          await sql(template);
+          const cohortDefault = DEFAULT_SPONSORED_COHORT || null;
+          if (cohortDefault && cohortDefault !== 'Data Science Feb 2026') {
+            await sql`ALTER TABLE sponsored_applications ALTER COLUMN cohort_name SET DEFAULT ${cohortDefault}`;
+          }
           await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_review_status ON sponsored_applications(review_status)`;
           await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_email ON sponsored_applications(email)`;
           console.log('sponsored_applications table created');
@@ -350,9 +351,7 @@ export async function initializeDatabase() {
       `;
     }
 
-    // Sponsored cohort applications table (DEFAULT must be literal, not parameter)
-    const cohortDefault = (DEFAULT_SPONSORED_COHORT || 'Data Science Feb 2026').replace(/'/g, "''");
-    const createSql = `CREATE TABLE IF NOT EXISTS sponsored_applications (
+    await sql`CREATE TABLE IF NOT EXISTS sponsored_applications (
         id SERIAL PRIMARY KEY,
         application_id VARCHAR(255) UNIQUE NOT NULL,
         first_name VARCHAR(255) NOT NULL,
@@ -370,13 +369,20 @@ export async function initializeDatabase() {
         linkedin_post_url VARCHAR(500),
         confirmed_at TIMESTAMP,
         forfeited_at TIMESTAMP,
-        cohort_name VARCHAR(255) DEFAULT '${cohortDefault}',
+        cohort_name VARCHAR(255) DEFAULT 'Data Science Feb 2026',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`;
-    const template = Object.assign([createSql], { raw: [createSql] });
-    await sql(template);
+    const cohortDefault2 = DEFAULT_SPONSORED_COHORT || null;
+    if (cohortDefault2 && cohortDefault2 !== 'Data Science Feb 2026') {
+      await sql`ALTER TABLE sponsored_applications ALTER COLUMN cohort_name SET DEFAULT ${cohortDefault2}`;
+    }
     await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_review_status ON sponsored_applications(review_status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_sponsored_applications_email ON sponsored_applications(email)`;
+
+    // Additional indexes for query performance
+    await sql`CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin_id ON admin_sessions(admin_id)`;
 
     console.log('Database initialized successfully');
   } catch (error) {

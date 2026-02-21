@@ -3,6 +3,16 @@ import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import Navbar from '../../components/Navbar';
 
+export async function generateMetadata({ params }) {
+  const code = params?.code;
+  if (!code) return {};
+  return {
+    title: 'Certificate Verification',
+    description: 'Verify the authenticity of a CVERSE Academy certificate.',
+    robots: { index: false },
+  };
+}
+
 export default async function VerifyCertificatePage({ params }) {
   const code = params?.code;
   if (!code) return notFound();

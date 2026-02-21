@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { logger, reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -25,7 +26,7 @@ export async function GET(request, { params }) {
       try {
         return await fn();
       } catch (err) {
-        console.warn('GET /api/admin/users/[id] subquery failed:', err?.message);
+        logger.warn('GET /api/admin/users/[id] subquery failed', { message: err?.message });
         return fallback;
       }
     };
@@ -90,9 +91,9 @@ export async function GET(request, { params }) {
       moderationActions: modRes.rows || [],
     });
   } catch (e) {
-    console.error('GET /api/admin/users/[id]:', e?.message || e);
+    reportError(e, { route: 'GET /api/admin/users/[id]' });
     return NextResponse.json(
-      { error: 'Failed to load user', detail: process.env.NODE_ENV === 'development' ? e?.message : undefined },
+      { error: 'Failed to load user' },
       { status: 500 }
     );
   }

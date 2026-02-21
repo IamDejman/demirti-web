@@ -29,9 +29,7 @@ export default function LoginPage() {
         setError(data.error || 'Login failed');
         return;
       }
-      if (data.token) {
-        localStorage.setItem('lms_token', data.token);
-      }
+      localStorage.setItem('lms_authenticated', 'true');
       if (data.mustChangePassword) {
         router.push('/change-password');
         return;

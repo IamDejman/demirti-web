@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { createChatMessage, getChatMessages, markChatRoomRead, getChatRoomNotificationRecipients, createChatNotifications, getPushSubscriptionsForUsers, recordLmsEvent, applyNotificationTemplate } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { sendChatMessageEmails } from '@/lib/notifications';
 import { sendPushNotifications } from '@/lib/push';
 import { rateLimit } from '@/lib/rateLimit';
+import { isValidUuid } from '@/lib/validation';
+import { validateBody, chatMessageSchema } from '@/lib/schemas';
 
 async function isMember(roomId, userId) {
   const res = await sql`
@@ -18,7 +21,7 @@ export async function GET(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
     if (!(await isMember(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -30,7 +33,7 @@ export async function GET(request, { params }) {
     await markChatRoomRead(id, user.id);
     return NextResponse.json({ messages: messages.reverse() });
   } catch (e) {
-    console.error('GET /api/chat/rooms/[id]/messages:', e);
+    reportError(e, { route: 'GET /api/chat/rooms/[id]/messages' });
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }
@@ -40,14 +43,13 @@ export async function POST(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Room ID required' }, { status: 400 });
     if (!(await isMember(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const body = await request.json();
-    const message = (body.message || '').trim();
-    if (!message) return NextResponse.json({ error: 'Message required' }, { status: 400 });
-    if (message.length > 2000) return NextResponse.json({ error: 'Message too long' }, { status: 400 });
+    const [data, validationErr] = await validateBody(request, chatMessageSchema);
+    if (validationErr) return validationErr;
+    const { message } = data;
     const limiter = await rateLimit(`chat_message_${user.id}`, { windowMs: 60_000, limit: 40 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many messages. Slow down.' }, { status: 429 });
@@ -120,7 +122,7 @@ export async function POST(request, { params }) {
     await recordLmsEvent(user.id, 'chat_message_sent', { roomId: id });
     return NextResponse.json({ message: created });
   } catch (e) {
-    console.error('POST /api/chat/rooms/[id]/messages:', e);
+    reportError(e, { route: 'POST /api/chat/rooms/[id]/messages' });
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema, createJobApplication, recordLmsEvent } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { rateLimit } from '@/lib/rateLimit';
@@ -57,7 +58,7 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({ application });
   } catch (e) {
-    console.error('POST /api/jobs/[id]/apply:', e);
+    reportError(e, { route: 'POST /api/jobs/[id]/apply' });
     return NextResponse.json({ error: 'Failed to apply for job' }, { status: 500 });
   }
 }

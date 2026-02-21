@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAssignment, getWeekById, getCohortFacilitators, createAssignmentNotifications, getPushSubscriptionsForUsers, recordLmsEvent } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { sendAssignmentEmails } from '@/lib/notifications';
@@ -73,7 +74,7 @@ export async function POST(request) {
     }
     return NextResponse.json({ assignment });
   } catch (e) {
-    console.error('POST /api/assignments:', e);
+    reportError(e, { route: 'POST /api/assignments' });
     return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 });
   }
 }

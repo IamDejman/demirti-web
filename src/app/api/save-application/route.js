@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { saveApplication, getAllApplications } from '@/lib/db';
+import { requireAdmin } from '@/lib/adminAuth';
+import { logger, reportError } from '@/lib/logger';
 import { Resend } from 'resend';
+import { validateBody, applicationSchema } from '@/lib/schemas';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
@@ -125,12 +128,12 @@ Application Date: ${new Date(application.created_at).toLocaleString()}`
     });
 
     if (error) {
-      console.error('Resend admin application email failed', error);
+      reportError(error, { route: 'save-application', action: 'send-email' });
     } else {
-      console.log('Application email sent to admin@demirti.com via Resend');
+      logger.info('Application email sent to admin', { via: 'resend' });
     }
   } catch (error) {
-    console.error('Error sending application email via Resend:', error);
+    reportError(error, { route: 'save-application', action: 'send-email' });
     // Don't throw to avoid failing the main request
   }
 }
@@ -138,16 +141,9 @@ Application Date: ${new Date(application.created_at).toLocaleString()}`
 // POST - Save application
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { firstName, lastName, email, phone, trackName, paymentOption, paymentReference, amount, referralSource } = body;
-
-    // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !trackName || !referralSource) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    const [data, validationErr] = await validateBody(request, applicationSchema);
+    if (validationErr) return validationErr;
+    const { firstName, lastName, email, phone, trackName, paymentOption, paymentReference, amount, referralSource, discountCode } = data;
 
     const applicationData = {
       firstName,
@@ -155,10 +151,11 @@ export async function POST(request) {
       email,
       phone,
       trackName,
-      paymentOption: paymentOption || 'paystack',
-      paymentReference: paymentReference || null,
-      amount: amount || null,
-      referralSource: referralSource || null,
+      paymentOption: paymentOption ?? 'paystack',
+      paymentReference: paymentReference ?? null,
+      amount: amount ?? null,
+      referralSource: referralSource ?? null,
+      discountCode: discountCode ?? null,
     };
 
     // Save application to database
@@ -168,7 +165,7 @@ export async function POST(request) {
     try {
       await sendApplicationEmail(savedApplication, !!paymentReference);
     } catch (emailError) {
-      console.error('Failed to send email, but application saved:', emailError);
+      reportError(emailError, { route: 'save-application', action: 'send-email-after-save' });
       // Don't fail the request if email fails
     }
 
@@ -178,16 +175,19 @@ export async function POST(request) {
       application: savedApplication
     });
   } catch (error) {
-    console.error('Error saving application:', error);
+    reportError(error, { route: 'POST /api/save-application' });
     return NextResponse.json(
-      { error: 'Failed to save application', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to save application' },
       { status: 500 }
     );
   }
 }
 
-// GET - Get all applications (for admin use)
-export async function GET() {
+// GET - Get all applications (admin only)
+export async function GET(request) {
+  const [, authErr] = await requireAdmin(request);
+  if (authErr) return authErr;
+
   try {
     const applications = await getAllApplications();
     return NextResponse.json({
@@ -196,9 +196,9 @@ export async function GET() {
       applications
     });
   } catch (error) {
-    console.error('Error getting applications:', error);
+    reportError(error, { route: 'GET /api/save-application' });
     return NextResponse.json(
-      { error: 'Failed to get applications', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get applications' },
       { status: 500 }
     );
   }

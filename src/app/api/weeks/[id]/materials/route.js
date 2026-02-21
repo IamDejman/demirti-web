@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getWeekById, getMaterialsByWeek, createMaterial, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -14,7 +15,7 @@ export async function GET(request, { params }) {
     const materials = await getMaterialsByWeek(id);
     return NextResponse.json({ materials });
   } catch (e) {
-    console.error('GET /api/weeks/[id]/materials:', e);
+    reportError(e, { route: 'GET /api/weeks/[id]/materials' });
     return NextResponse.json({ error: 'Failed to fetch materials' }, { status: 500 });
   }
 }
@@ -47,7 +48,7 @@ export async function POST(request, { params }) {
     });
     return NextResponse.json({ material });
   } catch (e) {
-    console.error('POST /api/weeks/[id]/materials:', e);
+    reportError(e, { route: 'POST /api/weeks/[id]/materials' });
     return NextResponse.json({ error: 'Failed to create material' }, { status: 500 });
   }
 }

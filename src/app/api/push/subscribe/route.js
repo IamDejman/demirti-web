@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { upsertPushSubscription } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request) {
@@ -14,7 +15,7 @@ export async function POST(request) {
     await upsertPushSubscription(user.id, { endpoint, p256dh: keys.p256dh, auth: keys.auth });
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/push/subscribe:', e);
+    reportError(e, { route: 'POST /api/push/subscribe' });
     return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
   }
 }

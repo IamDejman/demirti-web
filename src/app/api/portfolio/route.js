@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { sqlRead } from '@/lib/db-read';
+import { reportError } from '@/lib/logger';
 import crypto from 'crypto';
 import { ensureLmsSchema, recordLmsEvent } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
+import { stripHtml } from '@/lib/sanitize';
 
 function normalizeSlug(slug) {
   if (!slug) return null;
@@ -29,7 +30,7 @@ export async function GET(request) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await ensureLmsSchema();
-    const portfolioRes = await sqlRead`
+    const portfolioRes = await sql`
       SELECT * FROM portfolios WHERE user_id = ${user.id} LIMIT 1;
     `;
     const portfolio = portfolioRes.rows[0] || null;
@@ -37,12 +38,12 @@ export async function GET(request) {
       return NextResponse.json({ portfolio: null, projects: [], socialLinks: [] });
     }
     const [projectsRes, linksRes] = await Promise.all([
-      sqlRead`SELECT * FROM portfolio_projects WHERE portfolio_id = ${portfolio.id} ORDER BY order_index ASC;`,
-      sqlRead`SELECT * FROM portfolio_social_links WHERE portfolio_id = ${portfolio.id} ORDER BY id ASC;`,
+      sql`SELECT * FROM portfolio_projects WHERE portfolio_id = ${portfolio.id} ORDER BY order_index ASC;`,
+      sql`SELECT * FROM portfolio_social_links WHERE portfolio_id = ${portfolio.id} ORDER BY id ASC;`,
     ]);
     return NextResponse.json({ portfolio, projects: projectsRes.rows, socialLinks: linksRes.rows });
   } catch (e) {
-    console.error('GET /api/portfolio:', e);
+    reportError(e, { route: 'GET /api/portfolio' });
     return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 });
   }
 }
@@ -52,7 +53,9 @@ export async function POST(request) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await request.json();
-    const { headline, bio, resumeUrl, isPublic, customDomain } = body;
+    const { resumeUrl, isPublic, customDomain } = body;
+    const headline = body.headline ? stripHtml(body.headline) : null;
+    const bio = body.bio ? stripHtml(body.bio) : null;
     const slug = normalizeSlug(body.slug);
     const normalizedDomain = normalizeDomain(customDomain);
     await ensureLmsSchema();
@@ -111,7 +114,7 @@ export async function POST(request) {
     await recordLmsEvent(user.id, 'portfolio_updated', { isPublic: isPublic === true });
     return NextResponse.json({ portfolio: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/portfolio:', e);
+    reportError(e, { route: 'POST /api/portfolio' });
     return NextResponse.json({ error: 'Failed to save portfolio' }, { status: 500 });
   }
 }

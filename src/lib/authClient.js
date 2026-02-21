@@ -1,30 +1,42 @@
 /**
- * Client-side auth headers for API requests.
- * - getAuthHeaders(): admin_token (admin routes)
- * - getLmsAuthHeaders(): lms_token (student/facilitator LMS routes)
+ * Client-side auth helpers.
+ * Tokens are stored in httpOnly cookies (set by the server on login).
+ * These helpers manage UI-only auth flags and provide empty header stubs
+ * so existing call sites continue to work (cookies are sent automatically).
  */
 
 const SESSION_TIMED_OUT_MESSAGE = 'Session timed out';
 
-/**
- * Clear admin auth and redirect to login with session timeout reason.
- * Call this when a 401 is received on admin API calls.
- */
 export function handleAdmin401() {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem('admin_authenticated');
-    localStorage.removeItem('admin_token');
   } catch {
     // ignore
   }
+  const returnTo = window.location.pathname + window.location.search;
   const params = new URLSearchParams({ message: SESSION_TIMED_OUT_MESSAGE });
+  if (returnTo && returnTo !== '/admin/login') {
+    params.set('returnTo', returnTo);
+  }
   window.location.href = `/admin/login?${params.toString()}`;
 }
 
-/**
- * Returns true if the request URL is for our app's API (so 401 should trigger admin logout).
- */
+export function handleLms401() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('lms_authenticated');
+  } catch {
+    // ignore
+  }
+  const returnTo = window.location.pathname + window.location.search;
+  const params = new URLSearchParams({ message: SESSION_TIMED_OUT_MESSAGE });
+  if (returnTo && returnTo !== '/' && returnTo !== '/login') {
+    params.set('returnTo', returnTo);
+  }
+  window.location.href = `/login?${params.toString()}`;
+}
+
 function isAppApiRequest(url) {
   if (typeof url !== 'string') return false;
   if (url.startsWith('/api/')) return true;
@@ -36,10 +48,6 @@ function isAppApiRequest(url) {
   }
 }
 
-/**
- * Wrap fetch so 401 on app API requests triggers admin logout and redirect with "Session timed out".
- * Call from admin layout (client) once on mount.
- */
 export function installAdmin401Interceptor() {
   if (typeof window === 'undefined') return () => {};
   const originalFetch = window.fetch;
@@ -57,12 +65,31 @@ export function installAdmin401Interceptor() {
   };
 }
 
-export function getAuthHeaders(tokenKey = 'admin_token') {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem(tokenKey);
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export function installLms401Interceptor() {
+  if (typeof window === 'undefined') return () => {};
+  const originalFetch = window.fetch;
+  window.fetch = function fetchWithLms401(input, _init) {
+    const url = typeof input === 'string' ? input : input?.url;
+    return originalFetch.apply(this, arguments).then((response) => {
+      if (response.status === 401 && isAppApiRequest(url)) {
+        handleLms401();
+      }
+      return response;
+    });
+  };
+  return () => {
+    window.fetch = originalFetch;
+  };
+}
+
+/**
+ * Returns empty headers. Auth tokens are now in httpOnly cookies (sent automatically).
+ * Kept as a function for backward compatibility with existing call sites.
+ */
+export function getAuthHeaders() {
+  return {};
 }
 
 export function getLmsAuthHeaders() {
-  return getAuthHeaders('lms_token');
+  return {};
 }

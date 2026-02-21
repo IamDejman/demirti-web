@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sqlRead } from '@/lib/db-read';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
@@ -20,7 +21,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ professionals: result.rows });
   } catch (e) {
-    console.error('GET /api/industry-professionals:', e);
+    reportError(e, { route: 'GET /api/industry-professionals' });
     return NextResponse.json({ error: 'Failed to fetch professionals' }, { status: 500 });
   }
 }

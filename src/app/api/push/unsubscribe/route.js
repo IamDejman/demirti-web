@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deletePushSubscription } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request) {
@@ -14,7 +15,7 @@ export async function POST(request) {
     await deletePushSubscription(user.id, endpoint);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/push/unsubscribe:', e);
+    reportError(e, { route: 'POST /api/push/unsubscribe' });
     return NextResponse.json({ error: 'Failed to remove subscription' }, { status: 500 });
   }
 }

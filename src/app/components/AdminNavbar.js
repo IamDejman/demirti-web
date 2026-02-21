@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import ThemeToggle from './ThemeToggle';
 
 const navLinkStyle = (active) => ({
   textDecoration: 'none',
-  color: active ? '#0066cc' : '#1a1a1a',
+  color: active ? 'var(--primary-color)' : 'var(--text-color)',
   fontWeight: active ? '600' : '400',
   fontSize: '1rem',
   padding: '0.5rem 1rem',
@@ -74,14 +75,12 @@ export default function AdminNavbar() {
   const handleLogout = async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
-      localStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
     } catch {
-      localStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
+      // proceed with client-side cleanup
     }
+    localStorage.removeItem('admin_authenticated');
+    localStorage.removeItem('admin_token');
+    router.push('/admin/login');
   };
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -124,6 +123,7 @@ export default function AdminNavbar() {
                 <Link key={group.id} href={group.href} style={navLinkStyle(isActive(group.href))}>{group.label}</Link>
               )
             ))}
+            <ThemeToggle compact />
             <button
               type="button"
               onClick={handleLogout}
@@ -180,12 +180,12 @@ export default function AdminNavbar() {
           top: 0;
           left: 0;
           right: 0;
-          background-color: #ffffff;
-          color: #1a1a1a;
+          background-color: var(--background-color);
+          color: var(--text-color);
           padding: 1rem 2rem;
           z-index: 1000;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-          border-bottom: 1px solid #e1e4e8;
+          box-shadow: var(--shadow-sm);
+          border-bottom: 1px solid var(--border-color);
           min-height: 70px;
           display: flex;
           flex-direction: column;
@@ -238,7 +238,7 @@ export default function AdminNavbar() {
           padding: 0.5rem 1rem;
           border: none;
           background: transparent;
-          color: #1a1a1a;
+          color: var(--text-color);
           font-size: 1rem;
           font-weight: 400;
           cursor: pointer;
@@ -247,7 +247,7 @@ export default function AdminNavbar() {
         }
         .admin-nav-more-btn:hover,
         .admin-nav-more-btn.active {
-          color: #0066cc;
+          color: var(--primary-color);
           font-weight: 600;
           background: rgba(0, 102, 204, 0.1);
         }
@@ -257,10 +257,10 @@ export default function AdminNavbar() {
           left: 0;
           margin-top: 4px;
           min-width: 220px;
-          background: #fff;
-          border: 1px solid #e1e4e8;
+          background: var(--background-color);
+          border: 1px solid var(--border-color);
           border-radius: 8px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+          box-shadow: var(--shadow-lg);
           padding: 0.5rem 0;
           z-index: 1001;
           max-height: 70vh;
@@ -287,7 +287,7 @@ export default function AdminNavbar() {
           display: block;
           padding: 0.4rem 1rem;
           font-size: 0.9rem;
-          color: #1a1a1a;
+          color: var(--text-color);
           text-decoration: none;
           transition: background 0.15s ease;
         }
@@ -296,7 +296,7 @@ export default function AdminNavbar() {
         .admin-nav-dropdown-group a:hover,
         .admin-nav-dropdown-group a.active {
           background: rgba(0, 102, 204, 0.08);
-          color: #0066cc;
+          color: var(--primary-color);
         }
         .admin-nav-logout-btn {
           padding: 0.5rem;
@@ -320,7 +320,7 @@ export default function AdminNavbar() {
           display: none;
           background: transparent;
           border: none;
-          color: #1a1a1a;
+          color: var(--text-color);
           font-size: 1.5rem;
           cursor: pointer;
           padding: 0.5rem 0.75rem;
@@ -332,7 +332,7 @@ export default function AdminNavbar() {
           flex-direction: column;
           gap: 0;
           padding: 1rem 0 0;
-          border-top: 1px solid #e1e4e8;
+          border-top: 1px solid var(--border-color);
           margin-top: 0.5rem;
           max-width: 1400px;
           margin-left: auto;

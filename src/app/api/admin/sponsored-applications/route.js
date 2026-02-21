@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 import { getAllSponsoredApplications } from '@/lib/db';
 
 export async function GET(request) {
@@ -18,9 +19,9 @@ export async function GET(request) {
     const applications = await getAllSponsoredApplications(filters);
     return NextResponse.json({ success: true, applications });
   } catch (error) {
-    console.error('Error fetching sponsored applications:', error);
+    reportError(error, { route: 'GET /api/admin/sponsored-applications' });
     return NextResponse.json(
-      { error: 'Failed to fetch sponsored applications', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to fetch sponsored applications' },
       { status: 500 }
     );
   }

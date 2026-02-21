@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getContentItemById, updateContentItem, deleteContentItem, getWeekById, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -28,7 +29,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ contentItem: updated });
   } catch (e) {
-    console.error('PUT /api/content/[id]:', e);
+    reportError(e, { route: 'PUT /api/content/[id]' });
     return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
   }
 }
@@ -50,7 +51,7 @@ export async function DELETE(request, { params }) {
     await deleteContentItem(id);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/content/[id]:', e);
+    reportError(e, { route: 'DELETE /api/content/[id]' });
     return NextResponse.json({ error: 'Failed to delete content' }, { status: 500 });
   }
 }

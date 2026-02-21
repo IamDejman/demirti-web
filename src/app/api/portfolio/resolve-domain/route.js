@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
@@ -18,7 +19,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ slug: res.rows[0]?.slug || null });
   } catch (e) {
-    console.error('GET /api/portfolio/resolve-domain:', e);
+    reportError(e, { route: 'GET /api/portfolio/resolve-domain' });
     return NextResponse.json({ slug: null });
   }
 }

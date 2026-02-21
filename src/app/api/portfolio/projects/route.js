@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
+import { stripHtml } from '@/lib/sanitize';
 
 async function ensurePortfolio(userId) {
   const existing = await sql`SELECT * FROM portfolios WHERE user_id = ${userId} LIMIT 1;`;
@@ -27,7 +29,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ projects: result.rows });
   } catch (e) {
-    console.error('GET /api/portfolio/projects:', e);
+    reportError(e, { route: 'GET /api/portfolio/projects' });
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
@@ -37,7 +39,9 @@ export async function POST(request) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await request.json();
-    const { title, description, linkUrl, imageUrl, orderIndex } = body;
+    const { linkUrl, imageUrl, orderIndex } = body;
+    const title = body.title ? stripHtml(body.title) : '';
+    const description = body.description ? stripHtml(body.description) : null;
     if (!title?.trim()) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 });
     }
@@ -57,7 +61,7 @@ export async function POST(request) {
     `;
     return NextResponse.json({ project: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/portfolio/projects:', e);
+    reportError(e, { route: 'POST /api/portfolio/projects' });
     return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
   }
 }

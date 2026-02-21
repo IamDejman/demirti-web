@@ -45,7 +45,6 @@ export default function AdminLogin() {
       if (response.ok && data.success) {
         // Store authentication token
         localStorage.setItem('admin_authenticated', 'true');
-        localStorage.setItem('admin_token', data.token || 'authenticated');
         
         showToast({
           type: 'success',

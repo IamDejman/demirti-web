@@ -143,9 +143,7 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        if (data.token) {
-          localStorage.setItem('lms_token', data.token);
-        }
+        localStorage.setItem('lms_authenticated', 'true');
         showToast({ type: 'success', message: 'Password updated. Redirecting...' });
         const role = data.user?.role;
         if (role === 'admin') router.push('/admin');

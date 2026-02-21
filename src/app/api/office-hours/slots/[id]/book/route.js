@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bookOfficeHourSlot, recordLmsEvent } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request, { params }) {
@@ -15,7 +16,7 @@ export async function POST(request, { params }) {
     await recordLmsEvent(user.id, 'office_hour_booked', { slotId: id });
     return NextResponse.json({ booking });
   } catch (e) {
-    console.error('POST /api/office-hours/slots/[id]/book:', e);
+    reportError(e, { route: 'POST /api/office-hours/slots/[id]/book' });
     return NextResponse.json({ error: e.message || 'Failed to book slot' }, { status: 500 });
   }
 }

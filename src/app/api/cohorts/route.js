@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCohorts, getCohortsForUser, createCohort, getCohortById } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
@@ -22,9 +23,8 @@ export async function GET(request) {
     }
     return NextResponse.json({ cohorts });
   } catch (e) {
-    console.error('GET /api/cohorts:', e);
-    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch cohorts';
-    return NextResponse.json({ error: 'Failed to fetch cohorts', detail: msg }, { status: 500 });
+    reportError(e, { route: 'GET /api/cohorts' });
+    return NextResponse.json({ error: 'Failed to fetch cohorts' }, { status: 500 });
   }
 }
 
@@ -61,12 +61,12 @@ export async function POST(request) {
         actorEmail: admin.email,
       });
     } catch (auditErr) {
-      console.error('Audit log cohort.create (non-blocking):', auditErr);
+      reportError(auditErr, { route: 'POST /api/cohorts', context: 'audit log cohort.create (non-blocking)' });
     }
     const fullCohort = await getCohortById(cohort.id) || cohort;
     return NextResponse.json({ cohort: fullCohort });
   } catch (e) {
-    console.error('POST /api/cohorts:', e);
+    reportError(e, { route: 'POST /api/cohorts' });
     return NextResponse.json({ error: 'Failed to create cohort' }, { status: 500 });
   }
 }

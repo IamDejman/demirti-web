@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -27,7 +28,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ links: result.rows });
   } catch (e) {
-    console.error('GET /api/portfolio/social-links:', e);
+    reportError(e, { route: 'GET /api/portfolio/social-links' });
     return NextResponse.json({ error: 'Failed to fetch social links' }, { status: 500 });
   }
 }
@@ -50,7 +51,7 @@ export async function POST(request) {
     `;
     return NextResponse.json({ link: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/portfolio/social-links:', e);
+    reportError(e, { route: 'POST /api/portfolio/social-links' });
     return NextResponse.json({ error: 'Failed to create social link' }, { status: 500 });
   }
 }

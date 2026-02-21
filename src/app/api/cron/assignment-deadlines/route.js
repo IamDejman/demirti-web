@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema, createAssignmentNotifications, getPushSubscriptionsForUsers, recordLmsEvent } from '@/lib/db-lms';
 import { sendAssignmentEmails } from '@/lib/notifications';
 import { sendPushNotifications } from '@/lib/push';
@@ -52,7 +53,7 @@ export async function GET(request) {
     }
     return NextResponse.json({ success: true, processed });
   } catch (e) {
-    console.error('GET /api/cron/assignment-deadlines:', e);
+    reportError(e, { route: 'GET /api/cron/assignment-deadlines' });
     return NextResponse.json({ error: 'Failed to process deadlines' }, { status: 500 });
   }
 }

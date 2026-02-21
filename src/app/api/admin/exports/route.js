@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -67,7 +68,7 @@ export async function GET(request) {
       },
     });
   } catch (e) {
-    console.error('GET /api/admin/exports:', e);
+    reportError(e, { route: 'GET /api/admin/exports' });
     return NextResponse.json({ error: 'Failed to export' }, { status: 500 });
   }
 }

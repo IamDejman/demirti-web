@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function GET(request, { params }) {
   try {
+    const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+    const limiter = await rateLimit(`cert_verify_${ip}`, { windowMs: 3_600_000, limit: 20 });
+    if (!limiter.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
+    }
+
     const code = params?.code;
     if (!code) return NextResponse.json({ error: 'Code required' }, { status: 400 });
     await ensureLmsSchema();
@@ -13,7 +21,7 @@ export async function GET(request, { params }) {
       JOIN users u ON u.id = c.user_id
       LEFT JOIN cohorts co ON co.id = c.cohort_id
       LEFT JOIN tracks t ON t.id = co.track_id
-      WHERE c.verification_code = ${code} OR c.certificate_number = ${code}
+      WHERE c.verification_code = ${code}
       LIMIT 1;
     `;
     if (result.rows.length === 0) {
@@ -37,7 +45,7 @@ export async function GET(request, { params }) {
       },
     });
   } catch (e) {
-    console.error('GET /api/certificates/verify/[code]:', e);
+    reportError(e, { route: 'GET /api/certificates/verify/[code]' });
     return NextResponse.json({ error: 'Failed to verify certificate' }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import AdminNavigationLoader from './AdminNavigationLoader';
 import AuditPageViewTracker from './AuditPageViewTracker';
+import ErrorBoundary from './ErrorBoundary';
 import { installAdmin401Interceptor } from '@/lib/authClient';
 
 const AUTH_PATHS = ['/admin/login', '/admin/forgot-password'];
@@ -94,7 +95,9 @@ export default function AdminLayoutShell({ children }) {
     <div className="admin-app">
       <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
       <main className="admin-main" style={{ marginLeft: sidebarWidth }}>
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </main>
       <style jsx>{`
         .admin-app {
@@ -106,7 +109,7 @@ export default function AdminLayoutShell({ children }) {
           flex: 1;
           min-width: 0;
           min-height: 100vh;
-          background-color: #ffffff;
+          background-color: var(--background-color, #ffffff);
           padding: 2.5rem 2rem 2rem 2rem;
           overflow-y: auto;
           transition: margin-left 0.2s ease;

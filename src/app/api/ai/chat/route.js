@@ -4,7 +4,7 @@ import { ensureLmsSchema, recordLmsEvent, getAiSettings } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { sendClaudeMessage } from '@/lib/ai';
 import { rateLimit } from '@/lib/rateLimit';
-import { safeErrorMessage } from '@/lib/logger';
+import { reportError, safeErrorMessage } from '@/lib/logger';
 
 const BASE_SYSTEM_PROMPT = `
 You are the CVERSE Academy study assistant.
@@ -195,7 +195,7 @@ export async function POST(request) {
 
     return NextResponse.json({ conversationId: conversation.id, message: finalReply });
   } catch (e) {
-    console.error('POST /api/ai/chat:', e);
+    reportError(e, { route: 'POST /api/ai/chat' });
     return NextResponse.json({ error: safeErrorMessage(e, 'Failed to send message') }, { status: 500 });
   }
 }

@@ -52,20 +52,21 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="h-10 w-64 lms-skeleton rounded-lg" />
-        <div className="h-64 lms-skeleton rounded-xl" />
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+        <div className="h-24 lms-skeleton rounded-xl" />
+        <div className="lms-skeleton rounded-xl" style={{ height: 200 }} />
+        <div className="lms-skeleton rounded-xl" style={{ height: 320 }} />
+        <div className="lms-skeleton rounded-xl" style={{ height: 140 }} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title="Notifications"
         subtitle="Manage your notifications and preferences."
         icon={LmsIcons.bell}
-        breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
       />
 
       <LmsCard
@@ -74,7 +75,7 @@ export default function NotificationsPage() {
         action={
           <button
             type="button"
-            className="text-sm font-medium text-primary hover:underline"
+            className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0"
             onClick={async () => {
               await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
               setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
@@ -85,16 +86,14 @@ export default function NotificationsPage() {
         }
       >
         {notifications.length === 0 ? (
-          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
+          <p className="text-sm text-[var(--neutral-500)]">No notifications yet.</p>
         ) : (
-          <ul className="space-y-1">
+          <ul className="space-y-0">
             {notifications.map((n) => (
-              <li key={n.id} className="flex items-center justify-between py-3 px-3 rounded-lg transition-colors" style={{ backgroundColor: n.is_read ? 'transparent' : 'rgba(0, 82, 163, 0.03)', borderBottom: '1px solid var(--neutral-100)' }}>
+              <li key={n.id} className={`lms-notification-row ${!n.is_read ? 'lms-notification-row-unread' : ''}`}>
                 <div className="flex items-center gap-3">
-                  {!n.is_read && (
-                    <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary-color)' }} />
-                  )}
-                  <span className={`text-sm ${n.is_read ? '' : 'font-medium'}`} style={{ color: n.is_read ? 'var(--neutral-500)' : 'var(--neutral-900)' }}>{n.title}</span>
+                  {!n.is_read && <span className="lms-notification-dot" />}
+                  <span className={`text-sm ${n.is_read ? 'text-[var(--neutral-500)]' : 'font-medium text-[var(--neutral-900)]'}`}>{n.title}</span>
                 </div>
                 {!n.is_read && (
                   <button
@@ -115,7 +114,7 @@ export default function NotificationsPage() {
       </LmsCard>
 
       <LmsCard title="Notification preferences">
-        <div className="space-y-5">
+        <div className="flex flex-col" style={{ gap: 'var(--lms-space-5)' }}>
           {/* Master toggles */}
           <div className="flex flex-col gap-3">
             <label className="lms-toggle">
@@ -125,7 +124,7 @@ export default function NotificationsPage() {
                 onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
               />
               <span className="lms-toggle-track" />
-              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>In-app notifications</span>
+              <span className="text-sm font-medium text-[var(--neutral-700)]">In-app notifications</span>
             </label>
             <label className="lms-toggle">
               <input
@@ -134,16 +133,16 @@ export default function NotificationsPage() {
                 onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
               />
               <span className="lms-toggle-track" />
-              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Email notifications</span>
+              <span className="text-sm font-medium text-[var(--neutral-700)]">Email notifications</span>
             </label>
           </div>
 
           {/* Category grids */}
-          <div className="grid md:grid-cols-3 text-sm" style={{ color: 'var(--neutral-600)', gap: 'var(--lms-space-4)' }}>
-            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+          <div className="grid md:grid-cols-3 text-sm text-[var(--neutral-600)]" style={{ gap: 'var(--lms-space-4)' }}>
+            <div className="lms-prefs-column">
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.bell}</span>
-                <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>In-app</p>
+                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.bell}</span>
+                <p className="lms-prefs-column-title">In-app</p>
               </div>
               {[['in_app_announcements', 'Announcements'], ['in_app_chat', 'Chat'], ['in_app_assignments', 'Assignments'], ['in_app_grades', 'Grades'], ['in_app_deadlines', 'Deadlines']].map(([key, label]) => (
                 <label key={key} className="lms-toggle mt-2.5">
@@ -153,10 +152,10 @@ export default function NotificationsPage() {
                 </label>
               ))}
             </div>
-            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+            <div className="lms-prefs-column">
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.megaphone}</span>
-                <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Email</p>
+                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.megaphone}</span>
+                <p className="lms-prefs-column-title">Email</p>
               </div>
               {[['email_announcements', 'Announcements'], ['email_chat', 'Chat'], ['email_assignments', 'Assignments'], ['email_grades', 'Grades'], ['email_deadlines', 'Deadlines']].map(([key, label]) => (
                 <label key={key} className="lms-toggle mt-2.5">
@@ -166,10 +165,10 @@ export default function NotificationsPage() {
                 </label>
               ))}
             </div>
-            <div className="rounded-xl p-5" style={{ background: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
+            <div className="lms-prefs-column">
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))', color: 'var(--primary-color)' }}>{LmsIcons.chat}</span>
-                <p className="font-semibold text-sm" style={{ color: 'var(--neutral-900)' }}>Push</p>
+                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.chat}</span>
+                <p className="lms-prefs-column-title">Push</p>
               </div>
               {[['push_announcements', 'Announcements'], ['push_chat', 'Chat'], ['push_assignments', 'Assignments'], ['push_grades', 'Grades'], ['push_deadlines', 'Deadlines']].map(([key, label]) => (
                 <label key={key} className="lms-toggle mt-2.5">

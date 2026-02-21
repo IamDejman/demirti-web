@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
+
+  // Centralized cron auth -- reject unauthorized cron requests early
+  if (pathname.startsWith('/api/cron/')) {
+    const authHeader = request.headers.get('authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || token !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
   const rawHost = request.headers.get('host') || '';
   const host = rawHost.split(':')[0].toLowerCase();
   let baseDomain = '';
@@ -32,9 +43,18 @@ export async function proxy(request) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  response.headers.set('x-request-id', crypto.randomUUID());
+
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Cache-Control', 'no-store');
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|favicon.ico|robots.txt|sitemap.xml).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|logo.png|sw.js|manifest.webmanifest).*)'],
 };

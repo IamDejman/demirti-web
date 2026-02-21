@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getClientIp } from '@/lib/api-helpers';
+import { reportError } from '@/lib/logger';
 import { verifyAdminCredentials, createAdminSession } from '@/lib/admin';
 import { rateLimit } from '@/lib/rateLimit';
 import { recordAuditLog } from '@/lib/audit';
@@ -7,7 +9,7 @@ import { recordAuditLog } from '@/lib/audit';
 // POST - Admin login
 export async function POST(request) {
   try {
-    const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+    const ip = getClientIp(request);
     const limiter = await rateLimit(`admin_login_${ip}`, { windowMs: 60_000, limit: 8 });
     if (!limiter.allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
@@ -32,7 +34,7 @@ export async function POST(request) {
       if (admin) {
         const token = crypto.randomBytes(32).toString('hex');
         await createAdminSession(admin.id, token);
-        const ipAddress = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null;
+        const ipAddress = getClientIp(request);
         try {
           await recordAuditLog({
             userId: null,
@@ -44,11 +46,10 @@ export async function POST(request) {
             actorEmail: admin.email,
           });
         } catch (auditErr) {
-          console.error('Audit log admin.login (non-blocking):', auditErr);
+          reportError(auditErr, { route: 'POST /api/admin/login' });
         }
-        return NextResponse.json({
+        const res = NextResponse.json({
           success: true,
-          token,
           admin: {
             id: admin.id,
             email: admin.email,
@@ -57,6 +58,14 @@ export async function POST(request) {
           },
           message: 'Login successful'
         });
+        res.cookies.set('admin_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+        return res;
       } else {
         return NextResponse.json(
           { error: 'Invalid email or password. Please check your credentials and try again.' },
@@ -64,7 +73,7 @@ export async function POST(request) {
         );
       }
     } catch (dbError) {
-      console.error('Database error during login');
+      reportError(dbError, { route: 'POST /api/admin/login' });
       // Check if it's a database connection error
       if (dbError.message && dbError.message.includes('relation') && dbError.message.includes('does not exist')) {
         return NextResponse.json(
@@ -78,7 +87,7 @@ export async function POST(request) {
       throw dbError; // Re-throw to be caught by outer catch
     }
   } catch (error) {
-    console.error('Login error');
+    reportError(error, { route: 'POST /api/admin/login' });
     
     if (error.message === 'Admin account is disabled') {
       return NextResponse.json(

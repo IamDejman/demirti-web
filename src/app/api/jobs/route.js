@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sqlRead } from '@/lib/db-read';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
@@ -26,7 +27,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ jobs: result.rows });
   } catch (e) {
-    console.error('GET /api/jobs:', e);
+    reportError(e, { route: 'GET /api/jobs' });
     return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
   }
 }

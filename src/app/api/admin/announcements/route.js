@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAnnouncement, getAnnouncementsAll, createAnnouncementNotifications, getPushSubscriptionsForUsers } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { sendAnnouncementEmails } from '@/lib/notifications';
 import { sendPushNotifications } from '@/lib/push';
@@ -12,7 +13,7 @@ export async function GET(request) {
     const announcements = await getAnnouncementsAll(200);
     return NextResponse.json({ announcements });
   } catch (e) {
-    console.error('GET /api/admin/announcements:', e);
+    reportError(e, { route: 'GET /api/admin/announcements' });
     return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
   }
 }
@@ -80,7 +81,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ announcement, recipients: recipientsCount });
   } catch (e) {
-    console.error('POST /api/admin/announcements:', e);
+    reportError(e, { route: 'POST /api/admin/announcements' });
     return NextResponse.json({ error: 'Failed to create announcement' }, { status: 500 });
   }
 }

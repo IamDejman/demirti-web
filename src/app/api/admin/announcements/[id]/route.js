@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema, createAnnouncementNotifications, getPushSubscriptionsForUsers } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { sendAnnouncementEmails } from '@/lib/notifications';
@@ -98,7 +99,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ announcement: result.rows[0] });
   } catch (e) {
-    console.error('PUT /api/admin/announcements/[id]:', e);
+    reportError(e, { route: 'PUT /api/admin/announcements/[id]' });
     return NextResponse.json({ error: 'Failed to update announcement' }, { status: 500 });
   }
 }
@@ -121,7 +122,7 @@ export async function DELETE(request, { params }) {
     });
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/admin/announcements/[id]:', e);
+    reportError(e, { route: 'DELETE /api/admin/announcements/[id]' });
     return NextResponse.json({ error: 'Failed to delete announcement' }, { status: 500 });
   }
 }

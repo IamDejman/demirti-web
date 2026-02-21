@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cancelOfficeHourBooking, cancelOfficeHourSlot } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request, { params }) {
@@ -18,7 +19,7 @@ export async function POST(request, { params }) {
     }
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   } catch (e) {
-    console.error('POST /api/office-hours/slots/[id]/cancel:', e);
+    reportError(e, { route: 'POST /api/office-hours/slots/[id]/cancel' });
     return NextResponse.json({ error: 'Failed to cancel' }, { status: 500 });
   }
 }

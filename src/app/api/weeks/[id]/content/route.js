@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getWeekById, createContentItem, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -33,7 +34,7 @@ export async function POST(request, { params }) {
     });
     return NextResponse.json({ contentItem: item });
   } catch (e) {
-    console.error('POST /api/weeks/[id]/content:', e);
+    reportError(e, { route: 'POST /api/weeks/[id]/content' });
     return NextResponse.json({ error: 'Failed to create content item' }, { status: 500 });
   }
 }

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getTrackConfig, getAllTracks, updateTrackConfig } from '@/lib/db';
+import { requireAdmin } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
+import { validateBody, trackConfigSchema } from '@/lib/schemas';
 
-// GET - Get track configuration
+// GET - Get track configuration (public)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -23,28 +26,28 @@ export async function GET(request) {
       return NextResponse.json({ tracks });
     }
   } catch (error) {
-    console.error('Error getting track config:', error);
+    reportError(error, { route: 'GET /api/track-config' });
     return NextResponse.json(
-      { error: 'Failed to get track configuration', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get track configuration' },
       { status: 500 }
     );
   }
 }
 
-// PUT - Update track configuration
+// PUT - Update track configuration (admin only)
 export async function PUT(request) {
+  const [, authErr] = await requireAdmin(request);
+  if (authErr) return authErr;
+
   try {
-    const body = await request.json();
-    const { trackName, ...updates } = body;
+    const [data, validationErr] = await validateBody(request, trackConfigSchema);
+    if (validationErr) return validationErr;
+    const { trackName, coursePrice, scholarshipLimit, scholarshipDiscountPercentage, isActive } = data;
+    const updates = { coursePrice, scholarshipLimit, scholarshipDiscountPercentage, isActive };
     
-    if (!trackName) {
-      return NextResponse.json(
-        { error: 'Track name is required' },
-        { status: 400 }
-      );
-    }
-    
-    const updated = await updateTrackConfig(trackName, updates);
+    const updated = await updateTrackConfig(trackName, Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    ));
     
     if (!updated) {
       return NextResponse.json(
@@ -58,9 +61,9 @@ export async function PUT(request) {
       track: updated
     });
   } catch (error) {
-    console.error('Error updating track config:', error);
+    reportError(error, { route: 'PUT /api/track-config' });
     return NextResponse.json(
-      { error: 'Failed to update track configuration', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update track configuration' },
       { status: 500 }
     );
   }

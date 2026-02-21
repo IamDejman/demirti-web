@@ -4,6 +4,12 @@
 
 export default [
   {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: { self: "readonly", caches: "readonly", clients: "readonly", skipWaiting: "readonly", claim: "readonly" },
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
@@ -60,6 +66,13 @@ export default [
         CustomEvent: "readonly",
         crypto: "readonly",
         Blob: "readonly",
+        IntersectionObserver: "readonly",
+        performance: "readonly",
+        requestAnimationFrame: "readonly",
+        cancelAnimationFrame: "readonly",
+        Response: "readonly",
+        Request: "readonly",
+        Headers: "readonly",
         // React globals
         React: "readonly",
       },
@@ -69,7 +82,7 @@ export default [
         "warn",
         {
           argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|LmsPageHeader|LmsBadge|AdminStatsGrid|AdminNavigationLoader|ImpersonateContent|AuditPageViewTracker|StatusBadge|ClientAppShell|CookiePreferencesLink|SocialIcons|FaqItem)$",
+          varsIgnorePattern: "^_|^(Navbar|AdminNavbar|AdminLayoutShell|AdminSidebar|AdminPageHeader|AdminCard|AdminFormField|AdminButton|AdminMessage|AdminEmptyState|AdminTable|ChatPanel|Link|Image|ApplicationForm|ContactForm|SponsoredApplicationForm|Script|ToastProvider|Suspense|PaymentFailedContent|PaymentSuccessContent|LineChart|Line|XAxis|YAxis|CartesianGrid|Tooltip|ResponsiveContainer|PieChart|Pie|Cell|BarChart|Bar|Legend|PushToggle|PwaRegister|LmsCard|LmsEmptyState|LmsLayoutShell|LmsSidebar|LmsPageHeader|LmsBadge|AdminStatsGrid|AdminNavigationLoader|ImpersonateContent|AuditPageViewTracker|StatusBadge|ClientAppShell|CookiePreferencesLink|SocialIcons|FaqItem|ThemeToggle|ErrorBoundary|ImpersonationBanner|StreakCounter|ThemeProvider|OfflineIndicator|CookieConsent|RechartsLineChart|RechartsBarChart|CohortStudentList|CohortAssignments|AnimatedCounter|BadgeItem|TryAgainButton|TrackConfigSection|AdminManagementSection|ChatRoomList|ChatMessageList)$",
           ignoreRestSiblings: true,
         },
       ],

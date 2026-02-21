@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -18,7 +19,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ certificates: result.rows });
   } catch (e) {
-    console.error('GET /api/certificates:', e);
+    reportError(e, { route: 'GET /api/certificates' });
     return NextResponse.json({ error: 'Failed to fetch certificates' }, { status: 500 });
   }
 }

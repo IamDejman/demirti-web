@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
@@ -37,7 +38,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ template: result.rows[0] });
   } catch (e) {
-    console.error('PUT /api/admin/notification-templates/[id]:', e);
+    reportError(e, { route: 'PUT /api/admin/notification-templates/[id]' });
     return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
   }
 }
@@ -60,7 +61,7 @@ export async function DELETE(request, { params }) {
     });
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/admin/notification-templates/[id]:', e);
+    reportError(e, { route: 'DELETE /api/admin/notification-templates/[id]' });
     return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 });
   }
 }

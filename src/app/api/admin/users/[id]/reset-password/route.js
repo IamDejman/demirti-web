@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 export async function POST(request, { params }) {
   try {
@@ -15,6 +17,12 @@ export async function POST(request, { params }) {
     await ensureLmsSchema();
     const body = await request.json().catch(() => ({}));
     const provided = (body.password || '').trim();
+    if (provided) {
+      const pw = validatePassword(provided);
+      if (!pw.valid) {
+        return NextResponse.json({ error: pw.message }, { status: 400 });
+      }
+    }
     const tempPassword = provided || crypto.randomBytes(6).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
     const hash = await bcrypt.hash(tempPassword, 10);
 
@@ -36,7 +44,7 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({ tempPassword });
   } catch (e) {
-    console.error('POST /api/admin/users/[id]/reset-password:', e);
+    reportError(e, { route: 'POST /api/admin/users/[id]/reset-password' });
     return NextResponse.json({ error: 'Failed to reset password' }, { status: 500 });
   }
 }

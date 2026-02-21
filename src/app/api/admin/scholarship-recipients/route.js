@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { getAllTracks } from '@/lib/db';
 
 // GET - Get scholarship recipients (people who received scholarships)
@@ -62,9 +63,9 @@ export async function GET() {
       recipientsByTrack: recipientsData
     });
   } catch (error) {
-    console.error('Error getting scholarship recipients:', error);
+    reportError(error, { route: 'GET /api/admin/scholarship-recipients' });
     return NextResponse.json(
-      { error: 'Failed to get scholarship recipients', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get scholarship recipients' },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -40,7 +41,7 @@ export async function POST(request, { params }) {
     }
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/admin/chat/reports/[id]/resolve:', e);
+    reportError(e, { route: 'POST /api/admin/chat/reports/[id]/resolve' });
     return NextResponse.json({ error: 'Failed to resolve report' }, { status: 500 });
   }
 }

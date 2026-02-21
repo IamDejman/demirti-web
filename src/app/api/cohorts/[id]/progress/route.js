@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCohortById, getCohortProgress, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -9,17 +10,19 @@ export async function GET(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
-    const cohort = await getCohortById(id);
+    const [cohort, facilitators, progress] = await Promise.all([
+      getCohortById(id),
+      getCohortFacilitators(id),
+      getCohortProgress(id),
+    ]);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
-    const facilitators = await getCohortFacilitators(id);
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
     if (user.role !== 'admin' && !isFacilitator) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const progress = await getCohortProgress(id);
     return NextResponse.json({ progress });
   } catch (e) {
-    console.error('GET /api/cohorts/[id]/progress:', e);
+    reportError(e, { route: 'GET /api/cohorts/[id]/progress' });
     return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 });
   }
 }

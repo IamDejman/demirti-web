@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getNotificationsForUser } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request) {
@@ -12,7 +13,7 @@ export async function GET(request) {
     const notifications = await getNotificationsForUser(user.id, limit, unreadOnly);
     return NextResponse.json({ notifications });
   } catch (e) {
-    console.error('GET /api/notifications:', e);
+    reportError(e, { route: 'GET /api/notifications' });
     return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
   }
 }

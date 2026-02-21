@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
@@ -28,7 +29,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('GET /api/portfolio/verify-domain:', e);
+    reportError(e, { route: 'GET /api/portfolio/verify-domain' });
     return NextResponse.json({ error: 'Failed to verify domain' }, { status: 500 });
   }
 }

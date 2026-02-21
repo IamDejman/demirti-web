@@ -59,13 +59,13 @@ export const metadata = {
     siteName: 'CVERSE by Demirti',
     title: 'CVERSE by Demirti - Digital Skills Training',
     description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
-    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'CVERSE by Demirti' }],
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'CVERSE by Demirti' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CVERSE by Demirti - Digital Skills Training',
     description: 'Transform your career through world-class education in Data Science and Technical Product Management at CVERSE, Demirti\'s premier digital training initiative.',
-    images: ['/logo.png'],
+    images: ['/api/og'],
   },
 }
 
@@ -73,7 +73,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${plusJakartaSans.variable}`}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

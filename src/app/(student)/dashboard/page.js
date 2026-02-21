@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { LmsCard, LmsEmptyState, LmsPageHeader, StreakCounter } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatDateLagos, formatTimeLagos } from '@/lib/dateUtils';
+import { useFetch } from '@/hooks/useFetch';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -24,6 +26,9 @@ function deadlineColor(date) {
   return 'success';
 }
 
+const DASHBOARD_GAP_STYLE = { gap: 'var(--lms-space-8)' };
+const DASHBOARD_GAP_4_STYLE = { gap: 'var(--lms-space-4)' };
+
 function deadlineLabel(date) {
   if (!date) return '';
   const diff = new Date(date) - new Date();
@@ -35,76 +40,60 @@ function deadlineLabel(date) {
 }
 
 export default function StudentDashboardPage() {
-  const [cohorts, setCohorts] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [weeks, setWeeks] = useState([]);
-  const [progress, setProgress] = useState({ total_items: 0, completed_items: 0 });
-  const [events, setEvents] = useState([]);
-  const [userName, setUserName] = useState('');
-  const [loading, setLoading] = useState(true);
+  const { data: meData, isLoading: meLoading, error: meError } = useFetch('/api/auth/me');
+  const { data: cohortsData, isLoading: cohortsLoading, error: cohortsError } = useFetch('/api/cohorts');
+  const { data: calData, isLoading: calLoading, error: calError } = useFetch('/api/calendar');
+  const cohortId = cohortsData?.cohorts?.[0]?.id;
+  const { data: assignData } = useFetch(cohortId ? `/api/cohorts/${cohortId}/assignments` : null);
+  const { data: weeksData } = useFetch(cohortId ? `/api/cohorts/${cohortId}/weeks` : null);
+  const { data: streakData } = useFetch('/api/auth/streak');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [meRes] = await Promise.all([
-          fetch('/api/auth/me', { headers: getLmsAuthHeaders() }),
-        ]);
-        const meData = await meRes.json();
-        if (meRes.ok && meData.user) setUserName(meData.user.firstName || '');
-
-        const res = await fetch('/api/cohorts', { headers: getLmsAuthHeaders() });
-        const data = await res.json();
-        if (res.ok && data.cohorts?.length) {
-          setCohorts(data.cohorts);
-          const cohortId = data.cohorts[0].id;
-          const [assignRes, weeksRes, progressRes] = await Promise.all([
-            fetch(`/api/cohorts/${cohortId}/assignments`, { headers: getLmsAuthHeaders() }),
-            fetch(`/api/cohorts/${cohortId}/weeks`, { headers: getLmsAuthHeaders() }),
-            fetch(`/api/cohorts/${cohortId}/my-progress`, { headers: getLmsAuthHeaders() }),
-          ]);
-          const assignData = await assignRes.json();
-          const weeksData = await weeksRes.json();
-          const progressData = await progressRes.json();
-          if (assignRes.ok && assignData.assignments) setAssignments(assignData.assignments);
-          if (weeksRes.ok && weeksData.weeks) setWeeks(weeksData.weeks);
-          if (progressRes.ok && progressData.progress) setProgress(progressData.progress);
-        }
-        const calRes = await fetch('/api/calendar', { headers: getLmsAuthHeaders() });
-        const calData = await calRes.json();
-        if (calRes.ok && calData.events) setEvents(calData.events);
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const cohorts = cohortsData?.cohorts ?? [];
+  const assignments = assignData?.assignments ?? [];
+  const weeks = weeksData?.weeks ?? [];
+  const events = calData?.events ?? [];
+  const userName = meData?.user?.firstName ?? '';
+  const loading = meLoading || cohortsLoading || calLoading;
+  const error = meError || cohortsError || calError;
 
   const currentCohort = cohorts[0];
-  const currentWeek = weeks.find((w) => !w.is_locked) || weeks[0];
-  const upcomingDeadlines = assignments
-    .filter((a) => a.deadline_at && new Date(a.deadline_at) > new Date())
-    .sort((a, b) => new Date(a.deadline_at) - new Date(b.deadline_at))
-    .slice(0, 5);
-  const completionPercent = progress.total_items
-    ? Math.round((progress.completed_items / progress.total_items) * 100)
-    : 0;
-  const weekProgressPercent = currentCohort ? Math.min(100, ((currentCohort.current_week ?? 1) / 12) * 100) : 0;
+  const currentWeek = useMemo(
+    () => weeks.find((w) => !w.is_locked) || weeks[0],
+    [weeks]
+  );
+  const upcomingDeadlines = useMemo(
+    () =>
+      assignments
+        .filter((a) => a.deadline_at && new Date(a.deadline_at) > new Date())
+        .sort((a, b) => new Date(a.deadline_at) - new Date(b.deadline_at))
+        .slice(0, 5),
+    [assignments]
+  );
+  const weekProgressPercent = useMemo(
+    () => (currentCohort ? Math.min(100, ((currentCohort.current_week ?? 1) / 12) * 100) : 0),
+    [currentCohort]
+  );
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'short' }) : '');
-  const formatDateTime = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+  const formatDate = (d) => formatDateLagos(d);
+  const formatDateTime = (d) => formatTimeLagos(d);
 
-  const now = new Date();
-  const nextLiveClass = events
-    .filter((ev) => ev.type === 'live_class' && new Date(ev.start) > now)
-    .sort((a, b) => new Date(a.start) - new Date(b.start))[0] ?? null;
-  const dueSoon = events
-    .filter((ev) => new Date(ev.start) > now)
-    .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .slice(0, 7);
+  const nextLiveClass = useMemo(() => {
+    const now = new Date();
+    return events
+      .filter((ev) => ev.type === 'live_class' && new Date(ev.start) > now)
+      .sort((a, b) => new Date(a.start) - new Date(b.start))[0] ?? null;
+  }, [events]);
+  const dueSoon = useMemo(() => {
+    const now = new Date();
+    return events
+      .filter((ev) => new Date(ev.start) > now)
+      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .slice(0, 7);
+  }, [events]);
 
   if (loading) {
     return (
-      <div className="flex flex-col rounded-lg" style={{ gap: 'var(--lms-space-8)' }}>
+      <div className="flex flex-col rounded-lg" style={DASHBOARD_GAP_STYLE}>
         <div className="h-10 w-64 lms-skeleton rounded-lg" />
         <div className="grid grid-cols-3 gap-4">
           <div className="h-28 lms-skeleton rounded-xl" />
@@ -120,12 +109,30 @@ export default function StudentDashboardPage() {
     );
   }
 
+  if (error) {
+    return (
+      <LmsCard hoverable={false}>
+        <LmsEmptyState
+          icon={LmsIcons.inbox}
+          title="Failed to load dashboard"
+          description={error?.message || 'Something went wrong. Please try again.'}
+        />
+      </LmsCard>
+    );
+  }
+
   return (
-    <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+    <div className="flex flex-col" style={DASHBOARD_GAP_STYLE}>
       {/* Greeting */}
-      <div>
-        <h1 className="lms-greeting">{getGreeting()}{userName ? `, ${userName}` : ''} 👋</h1>
-        <p className="lms-greeting-sub">Here&apos;s your learning overview.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="lms-greeting">{getGreeting()}{userName ? `, ${userName}` : ''} 👋</h1>
+          <p className="lms-greeting-sub">Here&apos;s your learning overview.</p>
+        </div>
+        <StreakCounter
+          currentStreak={streakData?.currentStreak ?? 0}
+          longestStreak={streakData?.longestStreak}
+        />
       </div>
 
       {!currentCohort ? (
@@ -139,19 +146,11 @@ export default function StudentDashboardPage() {
       ) : (
         <>
           {/* Stat cards row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={DASHBOARD_GAP_4_STYLE}>
             <div className="lms-stat-card">
               <div className="lms-stat-icon">{LmsIcons.calendar}</div>
               <div className="lms-stat-value">Week {currentCohort.current_week ?? 1}</div>
               <div className="lms-stat-label">of 12 weeks</div>
-            </div>
-            <div className="lms-stat-card">
-              <div className="lms-stat-icon">{LmsIcons.checkCircle}</div>
-              <div className="lms-stat-value">{completionPercent}%</div>
-              <div className="lms-stat-label">Checklist done</div>
-              <div className="mt-2 lms-progress-bar">
-                <div className="lms-progress-bar-fill" style={{ width: `${completionPercent}%` }} />
-              </div>
             </div>
             <div className="lms-stat-card">
               <div className="lms-stat-icon">{LmsIcons.bell}</div>
@@ -161,28 +160,21 @@ export default function StudentDashboardPage() {
           </div>
 
           {/* Current cohort + portfolio row */}
-          <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-4)' }}>
-            <LmsCard title="Current cohort" subtitle={currentCohort.track_name} icon={LmsIcons.graduation} accent="primary">
-              <p className="text-primary font-semibold">{currentCohort.name}</p>
-              {currentCohort.start_date && (
-                <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
-                  {formatDate(currentCohort.start_date)} – {formatDate(currentCohort.end_date)}
-                </p>
-              )}
-              <div className="mt-3 lms-progress-bar">
-                <div className="lms-progress-bar-fill" style={{ width: `${weekProgressPercent}%` }} />
+          <div className="grid md:grid-cols-2" style={DASHBOARD_GAP_4_STYLE}>
+            <LmsCard title="Current cohort" icon={LmsIcons.graduation}>
+              <p className="font-semibold text-lg" style={{ color: 'var(--neutral-900)' }}>{currentCohort.name}</p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex-1 min-w-0 lms-progress-bar">
+                  <div className="lms-progress-bar-fill" style={{ width: `${weekProgressPercent}%` }} />
+                </div>
+                <span className="text-sm flex-shrink-0 tabular-nums" style={{ color: 'var(--neutral-500)' }}>{Math.round(weekProgressPercent)}%</span>
               </div>
-              <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>{Math.round(weekProgressPercent)}% course progress</p>
             </LmsCard>
 
             <LmsCard title="Portfolio" subtitle="Build your public profile." icon={LmsIcons.briefcase}>
-              <p className="text-sm mb-4" style={{ color: 'var(--neutral-600)' }}>
-                Edit your public profile, projects, and links.
-              </p>
-              <Link href="/dashboard/portfolio" className="lms-btn lms-btn-primary lms-btn-sm">
-                {LmsIcons.briefcase}
+              <Link href="/dashboard/portfolio" className="lms-btn lms-btn-primary inline-flex items-center gap-2 w-fit" aria-label="Edit portfolio">
                 Edit portfolio
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </Link>

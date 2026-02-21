@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { completeChecklistItem } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
@@ -30,7 +31,7 @@ export async function POST(request, { params }) {
     await completeChecklistItem(user.id, itemId);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/checklist/[itemId]/complete:', e);
+    reportError(e, { route: 'POST /api/checklist/[itemId]/complete' });
     return NextResponse.json({ error: 'Failed to complete item' }, { status: 500 });
   }
 }

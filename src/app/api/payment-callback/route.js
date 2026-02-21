@@ -70,7 +70,6 @@ export async function GET(request) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
     if (data.status && data.data && data.data.status === 'success') {
-      // Payment successful - update application status in database
       const paymentData = data.data;
       const customer = paymentData.customer;
       const amount = paymentData.amount;
@@ -88,6 +87,17 @@ export async function GET(request) {
         hasMetadata: !!metadata,
         customFieldsCount: customFields.length,
       });
+
+      const alreadyPaid = await sql`
+        SELECT id FROM applications WHERE payment_reference = ${reference} AND status = 'paid' LIMIT 1;
+      `;
+      if (alreadyPaid.rows.length > 0) {
+        logger.info('Payment already processed (idempotency check)', { reference });
+        const idempotentHtml = `<!DOCTYPE html><html><head><title>Payment Successful</title></head><body>
+          <script>if(window.opener){window.opener.location.href='${baseUrl}/payment-success?reference=${reference}';window.close();}else{window.location.href='${baseUrl}/payment-success?reference=${reference}';}</script>
+          <p>Payment successful! Redirecting...</p></body></html>`;
+        return new NextResponse(idempotentHtml, { headers: { 'Content-Type': 'text/html' } });
+      }
       
       // Update application status if we have email and track
       if (email && trackName) {
@@ -210,60 +220,11 @@ export async function GET(request) {
           metadataKeys: metadata ? Object.keys(metadata) : [],
         });
         
-        // Try to find application by payment reference as last resort
         if (reference) {
-          try {
-            const refResult = await sql`
-              SELECT * FROM applications
-              WHERE payment_reference = ${reference}
-              LIMIT 1;
-            `;
-            
-            if (refResult.rows.length > 0) {
-              logger.info('Found application by payment reference, but already has reference set');
-            } else {
-              // Try to find any pending application and update it
-              const pendingResult = await sql`
-                UPDATE applications
-                SET 
-                  payment_reference = ${reference},
-                  amount = ${amount},
-                  status = 'paid',
-                  paid_at = CURRENT_TIMESTAMP
-                WHERE id = (
-                  SELECT id FROM applications
-                  WHERE status = 'pending'
-                  ORDER BY created_at DESC
-                  LIMIT 1
-                )
-                RETURNING *;
-              `;
-              
-              if (pendingResult.rows.length > 0) {
-                const updatedApp = pendingResult.rows[0];
-                logger.info('Updated most recent pending application', { applicationId: updatedApp?.id });
-                
-                // Try to increment scholarship count if we have track name
-                if (updatedApp.track_name) {
-                  try {
-                    await incrementScholarshipCount(updatedApp.track_name);
-                    logger.info('Scholarship count incremented', { track: updatedApp.track_name });
-                  } catch (error) {
-                    logger.error('Error updating scholarship count', { message: error?.message });
-                  }
-                }
-                await maybeEnroll({
-                  email: updatedApp.email,
-                  firstName: updatedApp.first_name,
-                  lastName: updatedApp.last_name,
-                  trackName: updatedApp.track_name,
-                  applicationId: updatedApp.application_id,
-                });
-              }
-            }
-          } catch (error) {
-            logger.error('Error in fallback update by reference', { message: error?.message });
-          }
+          logger.warn('Payment callback: missing email/trackName, cannot match application', {
+            reference,
+            hasEmail: !!email,
+          });
         }
       }
       
@@ -390,7 +351,14 @@ export async function POST(request) {
         track: trackName,
       });
 
-      // Update or create application with payment details
+      const alreadyProcessed = await sql`
+        SELECT id FROM applications WHERE payment_reference = ${reference} AND status = 'paid' LIMIT 1;
+      `;
+      if (alreadyProcessed.rows.length > 0) {
+        logger.info('Webhook: payment already processed (idempotent)', { reference });
+        return NextResponse.json({ received: true });
+      }
+
       let savedApplication = null;
       try {
         if (!customer?.email || !trackName) {

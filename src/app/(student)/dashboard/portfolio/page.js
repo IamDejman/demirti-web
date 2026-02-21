@@ -28,11 +28,12 @@ const emptyLinkForm = {
   url: '',
 };
 
-const inputClass =
-  'w-full px-4 py-2.5 rounded-lg border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-primary';
-const inputStyle = { borderColor: 'var(--neutral-200)', color: 'var(--neutral-900)' };
-const labelClass = 'block text-sm font-medium mb-1.5';
-const labelStyle = { color: 'var(--neutral-700)' };
+const inputCls = 'lms-form-input border-token w-full px-4 py-2.5 rounded-lg';
+const textareaCls = 'lms-form-textarea border-token w-full px-4 py-2.5 rounded-xl resize-y';
+
+const PORTFOLIO_GAP_STYLE = { gap: 'var(--lms-space-8)' };
+const PORTFOLIO_GAP_6_STYLE = { gap: 'var(--lms-space-6)' };
+const PORTFOLIO_GRID_GAP_STYLE = { gap: 'var(--lms-space-4)' };
 
 export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
@@ -165,13 +166,12 @@ export default function PortfolioPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="h-10 w-48 lms-skeleton rounded-lg" />
-        <div className="h-40 lms-skeleton rounded-xl" />
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-72 lms-skeleton rounded-xl" />
-          <div className="h-72 lms-skeleton rounded-xl" />
-        </div>
+      <div className="flex flex-col" style={PORTFOLIO_GAP_STYLE}>
+        <div className="h-24 lms-skeleton rounded-xl" />
+        <div className="h-32 lms-skeleton rounded-xl" />
+        <div className="h-80 lms-skeleton rounded-xl" />
+        <div className="h-72 lms-skeleton rounded-xl" />
+        <div className="h-64 lms-skeleton rounded-xl" />
       </div>
     );
   }
@@ -180,36 +180,32 @@ export default function PortfolioPage() {
   const domainStatus = portfolio?.domain_verified_at ? 'Verified' : portfolio?.custom_domain ? 'Pending verification' : null;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col" style={PORTFOLIO_GAP_STYLE}>
       <LmsPageHeader
         title="Portfolio"
         subtitle="Build a public profile for recruiters and showcase your projects."
         icon={LmsIcons.briefcase}
-        breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
       />
 
       {(message || publicUrl || portfolio?.custom_domain) && (
-        <div
-          className="rounded-xl p-4 flex flex-col gap-3 text-sm"
-          style={{ backgroundColor: 'var(--neutral-50)', border: '1px solid var(--neutral-200)' }}
-        >
+        <div className="lms-info-banner flex flex-col gap-3 text-sm">
           {message && (
-            <p className="font-medium" style={{ color: message.includes('Failed') ? 'var(--red-600, #dc2626)' : 'var(--primary-color)' }}>
+            <div className={`lms-alert ${message.includes('Failed') ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert">
               {message}
-            </p>
+            </div>
           )}
           {publicUrl && portfolio?.is_public && (
-            <div className={message ? 'pt-1 border-t border-gray-200' : ''}>
-              <span style={{ color: 'var(--neutral-600)' }}>Public profile: </span>
-              <Link href={publicUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+            <div className={message ? 'pt-1 border-t border-[var(--neutral-200)]' : ''}>
+              <span className="text-[var(--neutral-600)]">Public profile: </span>
+              <Link href={publicUrl} target="_blank" rel="noopener noreferrer" className="lms-link font-medium">
                 View portfolio
               </Link>
             </div>
           )}
           {portfolio?.custom_domain && portfolio?.domain_verified_at && (
-            <div className={message || (publicUrl && portfolio?.is_public) ? 'pt-1 border-t border-gray-200' : ''}>
-              <span style={{ color: 'var(--neutral-600)' }}>Custom domain: </span>
-              <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+            <div className={message || (publicUrl && portfolio?.is_public) ? 'pt-1 border-t border-[var(--neutral-200)]' : ''}>
+              <span className="text-[var(--neutral-600)]">Custom domain: </span>
+              <a href={`https://${portfolio.custom_domain}`} target="_blank" rel="noreferrer" className="lms-link font-medium">
                 {portfolio.custom_domain}
               </a>
             </div>
@@ -218,57 +214,57 @@ export default function PortfolioPage() {
       )}
 
       <LmsCard title="Profile details" subtitle="Slug, headline, bio, resume and visibility" icon={LmsIcons.briefcase}>
-        <form onSubmit={savePortfolio} className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+        <form onSubmit={savePortfolio} className="flex flex-col" style={PORTFOLIO_GAP_6_STYLE}>
+          <div className="grid gap-6 md:grid-cols-2" style={PORTFOLIO_GAP_6_STYLE}>
             <div>
-              <label className={labelClass} style={labelStyle}>Portfolio slug</label>
+              <label className="lms-form-label block mb-1.5">Portfolio slug</label>
               <input
                 type="text"
                 placeholder="e.g. jane-doe"
                 value={form.slug}
                 onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                className={inputClass}
-                style={inputStyle}
+                className={inputCls}
               />
-              <p className="mt-1 text-xs" style={{ color: 'var(--neutral-500)' }}>Your portfolio URL will be /portfolio/[slug]</p>
+              <p className="mt-1 text-xs text-[var(--neutral-500)]">Your portfolio URL will be /portfolio/[slug]</p>
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Headline</label>
+              <label className="lms-form-label block mb-1.5">Headline</label>
               <input
                 type="text"
                 placeholder="e.g. Data Scientist | Python & ML"
                 value={form.headline}
                 onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
-                className={inputClass}
-                style={inputStyle}
+                className={inputCls}
               />
             </div>
           </div>
 
           <div>
-            <label className={labelClass} style={labelStyle}>Bio</label>
+            <label className="lms-form-label block mb-1.5">Bio</label>
             <textarea
               rows={4}
               placeholder="Tell recruiters about yourself, skills and goals..."
               value={form.bio}
               onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-              className={`${inputClass} resize-y min-h-[100px]`}
-              style={inputStyle}
+              className={`${textareaCls} min-h-[100px]`}
             />
           </div>
 
           <div>
-            <label className={labelClass} style={labelStyle}>Resume</label>
+            <label className="lms-form-label block mb-1.5">Resume</label>
             <input
               type="text"
               placeholder="https://... or upload below"
               value={form.resumeUrl}
               onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm hover:bg-gray-50 transition-colors" style={{ borderColor: 'var(--neutral-200)' }}>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <label className="portfolio-upload-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--neutral-700)] bg-[var(--neutral-100)] border-2 border-[var(--neutral-300)] cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--primary-color)_8%,var(--neutral-100))] hover:border-[color:color-mix(in_srgb,var(--primary-color)_35%,var(--neutral-300))] focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--primary-color)] focus-within:ring-offset-2 transition-colors">
+                <span className="portfolio-upload-icon" aria-hidden>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13V3M10 3L6 7M10 3l4 4" /><path d="M3 14v2a2 2 0 002 2h10a2 2 0 002-2v-2" /></svg>
+                </span>
+                <span>Upload PDF/DOC</span>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -281,28 +277,26 @@ export default function PortfolioPage() {
                   })}
                   className="sr-only"
                 />
-                <span style={{ color: 'var(--neutral-700)' }}>Upload PDF/DOC</span>
               </label>
-              {uploading && <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>Uploading...</span>}
-              {uploadMessage && <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>{uploadMessage}</span>}
+              {uploading && <span className="text-xs text-[var(--neutral-500)]">Uploading...</span>}
+              {uploadMessage && <span className="text-xs text-[var(--neutral-500)]">{uploadMessage}</span>}
             </div>
           </div>
 
           <div>
-            <label className={labelClass} style={labelStyle}>Custom domain</label>
+            <label className="lms-form-label block mb-1.5">Custom domain</label>
             <input
               type="text"
               placeholder="e.g. portfolio.yourdomain.com"
               value={form.customDomain}
               onChange={(e) => setForm((f) => ({ ...f, customDomain: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
             {domainStatus && (
-              <p className="mt-1 text-xs" style={{ color: 'var(--neutral-500)' }}>Domain status: {domainStatus}</p>
+              <p className="mt-1 text-xs text-[var(--neutral-500)]">Domain status: {domainStatus}</p>
             )}
             {portfolio?.domain_verification_token && form.customDomain && (
-              <div className="mt-2 p-3 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'var(--neutral-100)', color: 'var(--neutral-600)' }}>
+              <div className="mt-2 p-3 rounded-lg text-xs space-y-1 bg-[var(--neutral-100)] text-[var(--neutral-600)]">
                 <p>Verify by adding a CNAME record, then visit:</p>
                 <p className="break-all font-mono">https://{form.customDomain}/api/portfolio/verify-domain?token={portfolio.domain_verification_token}</p>
               </div>
@@ -316,14 +310,11 @@ export default function PortfolioPage() {
               onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
             />
             <span className="lms-toggle-track" />
-            <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Make portfolio public</span>
+            <span className="text-sm font-medium text-[var(--neutral-700)]">Make portfolio public</span>
           </label>
 
           <div className="pt-4">
-            <button
-              type="submit"
-              className="lms-btn lms-btn-primary"
-            >
+            <button type="submit" className="lms-btn lms-btn-primary">
               Save profile
             </button>
           </div>
@@ -331,23 +322,21 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Projects" subtitle="Showcase work with title, description, link and image" icon={LmsIcons.book}>
-        <form onSubmit={saveProject} className="space-y-4 p-4 rounded-xl mb-6" style={{ backgroundColor: 'var(--neutral-50)', border: '1px dashed var(--neutral-200)' }}>
+        <form onSubmit={saveProject} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
           <div className="grid gap-4 md:grid-cols-2">
             <input
               type="text"
               placeholder="Project title"
               value={projectForm.title}
               onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
             <input
               type="text"
               placeholder="Project URL"
               value={projectForm.linkUrl}
               onChange={(e) => setProjectForm((f) => ({ ...f, linkUrl: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
           </div>
           <textarea
@@ -355,8 +344,7 @@ export default function PortfolioPage() {
             placeholder="Short description"
             value={projectForm.description}
             onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
-            className={`${inputClass} resize-y`}
-            style={inputStyle}
+            className={`${textareaCls}`}
           />
           <div className="flex flex-wrap items-center gap-3">
             <input
@@ -364,10 +352,9 @@ export default function PortfolioPage() {
               placeholder="Image URL"
               value={projectForm.imageUrl}
               onChange={(e) => setProjectForm((f) => ({ ...f, imageUrl: e.target.value }))}
-              className={`${inputClass} flex-1 min-w-0 max-w-md`}
-              style={inputStyle}
+              className={`${inputCls} flex-1 min-w-0 max-w-md`}
             />
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm hover:bg-white transition-colors" style={{ borderColor: 'var(--neutral-200)' }}>
+            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--neutral-200)] cursor-pointer text-sm hover:bg-white transition-colors">
               <input
                 type="file"
                 accept="image/*"
@@ -380,23 +367,16 @@ export default function PortfolioPage() {
                 })}
                 className="sr-only"
               />
-              <span style={{ color: 'var(--neutral-700)' }}>Upload image</span>
+              <span className="text-[var(--neutral-700)]">Upload image</span>
             </label>
-            {uploading && <span className="text-xs" style={{ color: 'var(--neutral-500)' }}>Uploading...</span>}
+            {uploading && <span className="text-xs text-[var(--neutral-500)]">Uploading...</span>}
           </div>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="lms-btn lms-btn-primary"
-            >
+            <button type="submit" className="lms-btn lms-btn-primary">
               {editingProjectId ? 'Update project' : 'Add project'}
             </button>
             {editingProjectId && (
-              <button
-                type="button"
-                onClick={() => { setEditingProjectId(null); setProjectForm(emptyProjectForm); }}
-                className="lms-btn lms-btn-secondary"
-              >
+              <button type="button" onClick={() => { setEditingProjectId(null); setProjectForm(emptyProjectForm); }} className="lms-btn lms-btn-secondary">
                 Cancel
               </button>
             )}
@@ -404,34 +384,30 @@ export default function PortfolioPage() {
         </form>
 
         {projects.length === 0 ? (
-          <div className="text-center py-10 rounded-xl" style={{ backgroundColor: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
-            <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--primary-color)', opacity: 0.15 }}>
+          <div className="text-center py-10 text-[var(--neutral-600)]">
+            <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 bg-[var(--neutral-100)] text-[var(--neutral-400)]">
               {LmsIcons.book}
             </div>
-            <p className="text-sm font-medium" style={{ color: 'var(--neutral-600)' }}>No projects yet</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--neutral-500)' }}>Add a project above to showcase your work.</p>
+            <p className="text-sm font-medium text-[var(--neutral-600)]">No projects yet</p>
+            <p className="text-xs mt-1 text-[var(--neutral-500)]">Add a project above to showcase your work.</p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2" style={PORTFOLIO_GRID_GAP_STYLE}>
             {projects.map((project) => (
-              <div
-                key={project.id}
-                className="rounded-xl border overflow-hidden transition-shadow hover:shadow-md"
-                style={{ borderColor: 'var(--neutral-200)' }}
-              >
+              <div key={project.id} className="rounded-xl border border-[var(--neutral-200)] overflow-hidden transition-shadow hover:shadow-md">
                 {project.image_url && (
-                  <div className="aspect-video bg-gray-100 relative">
-                    <img src={project.image_url} alt="" className="w-full h-full object-cover" />
+                  <div className="aspect-video bg-[var(--neutral-100)] relative">
+                    <img src={project.image_url} alt={project.title || 'Project image'} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-semibold" style={{ color: 'var(--neutral-900)', fontSize: 'var(--lms-title-sm)' }}>{project.title}</h3>
+                  <h3 className="font-semibold text-[var(--neutral-900)]" style={{ fontSize: 'var(--lms-title-sm)' }}>{project.title}</h3>
                   {project.description && (
-                    <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--neutral-500)' }}>{project.description}</p>
+                    <p className="text-sm mt-1 line-clamp-2 text-[var(--neutral-500)]">{project.description}</p>
                   )}
                   <div className="mt-3 flex items-center justify-between gap-2">
                     {project.link_url && (
-                      <a href={project.link_url} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline truncate">
+                      <a href={project.link_url} target="_blank" rel="noreferrer" className="lms-link text-sm font-medium truncate">
                         View project
                       </a>
                     )}
@@ -452,11 +428,7 @@ export default function PortfolioPage() {
                       >
                         Edit
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteProject(project.id)}
-                        className="lms-btn lms-btn-sm lms-btn-outline" style={{ color: 'var(--red-600, #dc2626)', borderColor: 'var(--red-200, #fecaca)' }}
-                      >
+                      <button type="button" onClick={() => deleteProject(project.id)} className="lms-btn lms-btn-sm lms-btn-danger">
                         Delete
                       </button>
                     </div>
@@ -469,38 +441,29 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Social links" subtitle="LinkedIn, GitHub, Twitter, etc." icon={LmsIcons.chat}>
-        <form onSubmit={saveLink} className="space-y-4 p-4 rounded-xl mb-6" style={{ backgroundColor: 'var(--neutral-50)', border: '1px dashed var(--neutral-200)' }}>
+        <form onSubmit={saveLink} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
           <div className="grid gap-4 md:grid-cols-2">
             <input
               type="text"
               placeholder="Platform (e.g. LinkedIn, GitHub)"
               value={linkForm.platform}
               onChange={(e) => setLinkForm((f) => ({ ...f, platform: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
             <input
               type="text"
               placeholder="https://..."
               value={linkForm.url}
               onChange={(e) => setLinkForm((f) => ({ ...f, url: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputCls}
             />
           </div>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="lms-btn lms-btn-primary"
-            >
+            <button type="submit" className="lms-btn lms-btn-primary">
               {editingLinkId ? 'Update link' : 'Add link'}
             </button>
             {editingLinkId && (
-              <button
-                type="button"
-                onClick={() => { setEditingLinkId(null); setLinkForm(emptyLinkForm); }}
-                className="lms-btn lms-btn-secondary"
-              >
+              <button type="button" onClick={() => { setEditingLinkId(null); setLinkForm(emptyLinkForm); }} className="lms-btn lms-btn-secondary">
                 Cancel
               </button>
             )}
@@ -508,20 +471,14 @@ export default function PortfolioPage() {
         </form>
 
         {links.length === 0 ? (
-          <div className="text-center py-8 rounded-xl" style={{ backgroundColor: 'var(--neutral-50)', border: '1px solid var(--neutral-100)' }}>
-            <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No social links added.</p>
-          </div>
+          <p className="text-sm text-center text-[var(--neutral-500)] py-4">No social links added.</p>
         ) : (
           <ul className="space-y-2">
             {links.map((link) => (
-              <li
-                key={link.id}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border"
-                style={{ borderColor: 'var(--neutral-200)' }}
-              >
+              <li key={link.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[var(--neutral-200)]">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate" style={{ color: 'var(--neutral-900)' }}>{link.platform}</p>
-                  <a href={link.url} target="_blank" rel="noreferrer" className="text-sm truncate block text-primary hover:underline">
+                  <p className="font-medium truncate text-[var(--neutral-900)]">{link.platform}</p>
+                  <a href={link.url} target="_blank" rel="noreferrer" className="lms-link text-sm truncate block">
                     {link.url}
                   </a>
                 </div>
@@ -533,11 +490,7 @@ export default function PortfolioPage() {
                   >
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteLink(link.id)}
-                    className="lms-btn lms-btn-sm lms-btn-outline" style={{ color: 'var(--red-600, #dc2626)', borderColor: 'var(--red-200, #fecaca)' }}
-                  >
+                  <button type="button" onClick={() => deleteLink(link.id)} className="lms-btn lms-btn-sm lms-btn-danger">
                     Delete
                   </button>
                 </div>

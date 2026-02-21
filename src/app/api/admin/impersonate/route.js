@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { reportError } from '@/lib/logger';
 import { sql } from '@vercel/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
@@ -39,9 +40,17 @@ export async function POST(request) {
       details: { email: user.email },
       ipAddress,
     });
-    return NextResponse.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    const res = NextResponse.json({ user: { id: user.id, email: user.email, role: user.role } });
+    res.cookies.set('lms_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return res;
   } catch (e) {
-    console.error('POST /api/admin/impersonate:', e);
+    reportError(e, { route: 'POST /api/admin/impersonate' });
     return NextResponse.json({ error: 'Failed to impersonate' }, { status: 500 });
   }
 }

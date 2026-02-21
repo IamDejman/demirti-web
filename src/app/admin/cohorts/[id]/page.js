@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AdminPageHeader } from '../../../components/admin';
@@ -450,6 +450,16 @@ export default function AdminCohortDetailPage() {
 
   const formatDate = (d) => (d ? formatDateLagos(d) : '');
 
+  // Must be before any conditional return (rules of hooks)
+  const enrolledEmails = new Set(students.map((s) => s.email));
+  const applicationsNotEnrolled = cohort
+    ? applications.filter((a) => {
+        if (enrolledEmails.has(a.email)) return false;
+        const sameTrack = !cohort.track_name || (a.track_name && String(a.track_name).toLowerCase() === String(cohort.track_name).toLowerCase());
+        return sameTrack;
+      })
+    : [];
+
   if (loading) {
     return (
       <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-loading">
@@ -470,12 +480,6 @@ export default function AdminCohortDetailPage() {
       </div>
     );
   }
-
-  const applicationsNotEnrolled = useMemo(() => {
-    const enrolledEmails = new Set(students.map((s) => s.email));
-    const sameTrack = (a) => !cohort?.track_name || (a.track_name && String(a.track_name).toLowerCase() === String(cohort.track_name).toLowerCase());
-    return applications.filter((a) => !enrolledEmails.has(a.email) && sameTrack(a));
-  }, [students, applications, cohort]);
 
   return (
     <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">

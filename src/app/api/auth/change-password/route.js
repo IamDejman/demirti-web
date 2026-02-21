@@ -1,8 +1,20 @@
 import { NextResponse } from 'next/server';
+import { getClientIp } from '@/lib/api-helpers';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest, updateUserPassword } from '@/lib/auth';
+import { validatePassword } from '@/lib/passwordPolicy';
+import { rateLimit } from '@/lib/rateLimit';
+import { validateBody, changePasswordSchema } from '@/lib/schemas';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const limiter = await rateLimit(`auth_change_pw_${ip}`, { windowMs: 60_000, limit: 5 });
+    if (!limiter.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
+    }
+
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -14,34 +26,28 @@ export async function POST(request) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { newPassword, confirmPassword } = body;
+    const [data, validationErr] = await validateBody(request, changePasswordSchema);
+    if (validationErr) return validationErr;
+    const { newPassword } = data;
 
-    if (!newPassword || !confirmPassword) {
-      return NextResponse.json(
-        { error: 'New password and confirm password are required' },
-        { status: 400 }
-      );
-    }
-
-    if (newPassword !== confirmPassword) {
-      return NextResponse.json(
-        { error: 'New password and confirm password do not match' },
-        { status: 400 }
-      );
-    }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+    const pw = validatePassword(newPassword);
+    if (!pw.valid) {
+      return NextResponse.json({ error: pw.message }, { status: 400 });
     }
 
     await updateUserPassword(user.id, newPassword);
+    recordAuditLog({
+      userId: user.id,
+      action: 'user.password_changed',
+      targetType: 'user',
+      targetId: user.id,
+      details: { type: 'forced_change' },
+      ipAddress: ip,
+      actorEmail: user.email,
+    }).catch(() => {});
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('Change password error:', e);
+    reportError(e, { route: 'POST /api/auth/change-password' });
     return NextResponse.json({ error: 'Failed to change password' }, { status: 500 });
   }
 }

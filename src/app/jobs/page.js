@@ -83,121 +83,171 @@ export default function JobsPage() {
   };
 
   return (
-    <main>
+    <main style={{ backgroundColor: 'var(--background-light)', minHeight: '100vh' }}>
       <Navbar />
-      <section className="container" style={{ padding: '6rem 0 3rem' }}>
-        <h1 className="text-3xl font-bold text-gray-900">Job Board</h1>
-        <p className="text-gray-600 mt-2">Explore roles curated for CVERSE learners and alumni.</p>
-        <div className="mt-6 flex flex-wrap gap-3">
+
+      {/* Header */}
+      <section className="container" style={{ padding: 'calc(var(--header-offset) + 2.5rem) 1.5rem 2rem', maxWidth: 900 }}>
+        <h1 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, color: 'var(--text-color)', letterSpacing: '-0.02em' }}>
+          Job Board
+        </h1>
+        <p style={{ color: 'var(--text-light)', marginTop: '0.375rem', fontSize: '1.0625rem' }}>
+          Explore roles curated for CVERSE learners and alumni.
+        </p>
+        <div style={{ marginTop: '1.5rem' }}>
           <input
             type="text"
-            placeholder="Search roles or companies"
+            placeholder="Search roles or companies…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && loadJobs()}
-            className="flex-1 min-w-[240px] px-3 py-2 border border-gray-300 rounded-lg"
+            className="auth-input"
+            style={{ maxWidth: 420 }}
           />
         </div>
       </section>
-      <section className="container" style={{ paddingBottom: '4rem' }}>
+
+      {/* Job list */}
+      <section className="container" style={{ paddingBottom: '4rem', maxWidth: 900 }}>
         {loading ? (
-          <p className="text-gray-500">Loading jobs...</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="lms-skeleton" style={{ height: 120, borderRadius: 12 }} />
+            ))}
+          </div>
         ) : jobs.length === 0 ? (
-          <p className="text-gray-500">No jobs available right now.</p>
+          <div
+            style={{
+              textAlign: 'center', padding: '3rem 1rem',
+              background: 'var(--background-color)', borderRadius: 16,
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            <p style={{ color: 'var(--text-light)' }}>No jobs available right now.</p>
+          </div>
         ) : (
-          <div className="grid gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {jobs.map((job) => (
-              <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{job.title}</h2>
-                    <p className="text-sm text-gray-600">{job.company || 'Company'} · {job.location || 'Remote'}</p>
+              <div
+                key={job.id}
+                className="portfolio-project-card"
+                style={{
+                  background: 'var(--background-color)', borderRadius: 14,
+                  border: '1px solid var(--border-color)',
+                  padding: '1.5rem', boxShadow: 'var(--shadow-sm)',
+                  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-color)' }}>{job.title}</h2>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
+                      {job.company || 'Company'} · {job.location || 'Remote'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
                     {job.external_url && (
-                      <a href={job.external_url} target="_blank" rel="noreferrer" className="text-sm text-primary font-medium">
-                        External apply
+                      <a
+                        href={job.external_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="lms-btn lms-btn-secondary lms-btn-sm"
+                      >
+                        External
                       </a>
                     )}
                     <button
                       type="button"
                       onClick={() => setApplyJobId(applyJobId === job.id ? null : job.id)}
-                      className="text-sm text-primary font-medium"
+                      className="lms-btn lms-btn-primary lms-btn-sm"
                     >
-                      Apply
+                      {applyJobId === job.id ? 'Close' : 'Apply'}
                     </button>
                   </div>
                 </div>
-                {job.description && <p className="text-sm text-gray-600 mt-3">{job.description}</p>}
-                <div className="mt-3 text-xs text-gray-500 flex flex-wrap gap-3">
-                  {job.employment_type && <span>{job.employment_type}</span>}
-                  {job.salary_range && <span>{job.salary_range}</span>}
-                  {job.track_name && <span>{job.track_name}</span>}
-                </div>
+
+                {job.description && (
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', lineHeight: 1.6, marginTop: '0.75rem' }}>
+                    {job.description}
+                  </p>
+                )}
+
+                {(job.employment_type || job.salary_range || job.track_name) && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    {job.employment_type && <span className="lms-badge lms-badge-info">{job.employment_type}</span>}
+                    {job.salary_range && <span className="lms-badge lms-badge-success">{job.salary_range}</span>}
+                    {job.track_name && <span className="lms-badge lms-badge-neutral">{job.track_name}</span>}
+                  </div>
+                )}
+
                 {applyJobId === job.id && (
-                  <div className="mt-4 border-t border-gray-100 pt-4">
-                    {applyMessage && <p className="text-xs text-gray-500 mb-2">{applyMessage}</p>}
-                    <div className="grid gap-3 md:grid-cols-2">
+                  <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                    {applyMessage && (
+                      <p className="lms-alert lms-alert-info" style={{ marginBottom: '0.75rem' }}>{applyMessage}</p>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
                       <input
                         type="text"
                         placeholder="Your name"
                         value={applyForm.name}
                         onChange={(e) => setApplyForm((prev) => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className="auth-input"
                       />
                       <input
                         type="email"
                         placeholder="Email"
                         value={applyForm.email}
                         onChange={(e) => setApplyForm((prev) => ({ ...prev, email: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className="auth-input"
                       />
                     </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginTop: '0.75rem' }}>
                       <input
                         type="text"
                         placeholder="Resume URL (optional)"
                         value={applyForm.resumeUrl}
                         onChange={(e) => setApplyForm((prev) => ({ ...prev, resumeUrl: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className="auth-input"
                       />
                       <input
                         type="text"
                         placeholder="Portfolio URL (optional)"
                         value={applyForm.portfolioUrl}
                         onChange={(e) => setApplyForm((prev) => ({ ...prev, portfolioUrl: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className="auth-input"
                       />
                     </div>
-                    <div className="mt-3 flex items-center gap-3">
+
+                    <label className="file-upload-area" style={{ marginTop: '0.75rem' }}>
                       <input
                         type="file"
                         accept=".pdf,.doc,.docx"
                         onChange={(e) => uploadResume(e.target.files?.[0])}
-                        className="text-xs"
+                        style={{ display: 'none' }}
                       />
-                      {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
-                    </div>
+                      <span className="file-upload-area-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      </span>
+                      <span className="file-upload-area-text">
+                        {uploading ? 'Uploading…' : <><strong>Click to upload</strong> your resume (PDF, DOC)</>}
+                      </span>
+                      <span className="file-upload-area-hint">Max 10 MB</span>
+                    </label>
+
                     <textarea
                       rows={3}
                       placeholder="Cover letter (optional)"
                       value={applyForm.coverLetter}
                       onChange={(e) => setApplyForm((prev) => ({ ...prev, coverLetter: e.target.value }))}
-                      className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className="auth-input"
+                      style={{ marginTop: '0.75rem', resize: 'vertical', minHeight: 80 }}
                     />
-                    <div className="mt-3 flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => submitApplication(job.id)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
-                      >
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                      <button type="button" onClick={() => submitApplication(job.id)} className="lms-btn lms-btn-primary">
                         Submit application
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setApplyJobId(null)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                      >
+                      <button type="button" onClick={() => setApplyJobId(null)} className="lms-btn lms-btn-secondary">
                         Cancel
                       </button>
                     </div>

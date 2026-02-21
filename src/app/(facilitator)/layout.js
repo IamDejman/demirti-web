@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { LmsLayoutShell } from '@/app/components/lms';
-import { getLmsAuthHeaders } from '@/lib/authClient';
+import ThemeToggle from '@/app/components/ThemeToggle';
+import { getLmsAuthHeaders, installLms401Interceptor } from '@/lib/authClient';
+import { useVisibilityPolling } from '@/hooks/useVisibilityPolling';
+import ErrorBoundary from '@/app/components/ErrorBoundary';
 import AuditPageViewTracker from '@/app/components/AuditPageViewTracker';
 
 export default function FacilitatorLayout({ children }) {
@@ -13,12 +16,17 @@ export default function FacilitatorLayout({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-    if (!token) {
+    const uninstall = installLms401Interceptor();
+    return uninstall;
+  }, []);
+
+  useEffect(() => {
+    const authenticated = typeof window !== 'undefined' ? localStorage.getItem('lms_authenticated') : null;
+    if (!authenticated) {
       router.push('/login');
       return;
     }
-    fetch('/api/auth/me', { headers: getLmsAuthHeaders() })
+    fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -41,20 +49,20 @@ export default function FacilitatorLayout({ children }) {
       .finally(() => setLoading(false));
   }, [router]);
 
+  const loadGradingQueue = useCallback(() => {
+    fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (ok && data.submissions) setPendingCount(data.submissions.length);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
-    if (!user) return;
-    const load = () => {
-      fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() })
-        .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-        .then(({ ok, data }) => {
-          if (ok && data.submissions) setPendingCount(data.submissions.length);
-        })
-        .catch(() => {});
-    };
-    load();
-    const interval = setInterval(load, 60000);
-    return () => clearInterval(interval);
-  }, [user]);
+    if (user) loadGradingQueue();
+  }, [user, loadGradingQueue]);
+
+  useVisibilityPolling(loadGradingQueue, 60000, !!user);
 
   if (loading) {
     return (
@@ -70,9 +78,11 @@ export default function FacilitatorLayout({ children }) {
   if (!user) return null;
 
   return (
-    <LmsLayoutShell variant="facilitator" user={user} pendingCount={pendingCount}>
+    <LmsLayoutShell variant="facilitator" user={user} pendingCount={pendingCount} topBarContent={<ThemeToggle compact />}>
       <AuditPageViewTracker />
-      {children}
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
     </LmsLayoutShell>
   );
 }

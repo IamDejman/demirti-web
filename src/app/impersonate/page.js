@@ -8,13 +8,11 @@ function ImpersonateContent() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = searchParams.get('token');
     const redirect = searchParams.get('redirect') || '/dashboard';
-    if (!token) {
-      router.push('/admin');
-      return;
-    }
-    localStorage.setItem('lms_token', token);
+    const email = searchParams.get('email');
+    localStorage.setItem('lms_authenticated', 'true');
+    localStorage.setItem('impersonating', 'true');
+    if (email) localStorage.setItem('impersonate_email', email);
     router.push(redirect);
   }, [searchParams, router]);
 

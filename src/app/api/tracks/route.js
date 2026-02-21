@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllTracks } from '@/lib/db';
+import { reportError } from '@/lib/logger';
 import { createTrackLms } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -8,7 +9,7 @@ export async function GET() {
     const tracks = await getAllTracks();
     return NextResponse.json({ tracks });
   } catch (e) {
-    console.error('GET /api/tracks:', e);
+    reportError(e, { route: 'GET /api/tracks' });
     return NextResponse.json({ error: 'Failed to fetch tracks' }, { status: 500 });
   }
 }
@@ -48,7 +49,7 @@ export async function POST(request) {
     if (e.code === '23505') {
       return NextResponse.json({ error: 'Track with this name or slug already exists' }, { status: 409 });
     }
-    console.error('POST /api/tracks:', e);
+    reportError(e, { route: 'POST /api/tracks' });
     return NextResponse.json({ error: 'Failed to create track' }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { reportError } from '@/lib/logger';
 
 export async function POST(request) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request) {
     // Validate Paystack secret key
     const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
     if (!paystackSecretKey) {
-      console.error('PAYSTACK_SECRET_KEY is not configured');
+      reportError(new Error('PAYSTACK_SECRET_KEY is not configured'), { route: 'POST /api/initialize-payment' });
       return NextResponse.json(
         { error: 'Paystack secret key is not configured' },
         { status: 500 }
@@ -69,10 +70,9 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Paystack API error:', {
+      reportError(new Error(data?.message || data?.error || 'Paystack API error'), {
+        route: 'POST /api/initialize-payment',
         status: response.status,
-        statusText: response.statusText,
-        data: data
       });
       
       // Handle different Paystack error formats
@@ -96,7 +96,7 @@ export async function POST(request) {
       { status: 500 }
     );
   } catch (error) {
-    console.error('Payment initialization error:', error);
+    reportError(error, { route: 'POST /api/initialize-payment' });
     return NextResponse.json(
       { error: 'An error occurred while initializing payment' },
       { status: 500 }

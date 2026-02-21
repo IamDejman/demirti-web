@@ -4,4 +4,7 @@ export { default as LmsCard } from './LmsCard';
 export { default as LmsEmptyState } from './LmsEmptyState';
 export { default as LmsPageHeader } from './LmsPageHeader';
 export { default as LmsBadge } from './LmsBadge';
+export { default as StreakCounter } from './StreakCounter';
+export { default as AchievementBadges } from './AchievementBadges';
+export { default as ProgressMilestones } from './ProgressMilestones';
 export { LmsIcons } from './LmsIcons';

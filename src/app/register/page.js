@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,8 +44,8 @@ export default function RegisterPage() {
           credentials: 'include',
         });
         const loginData = await loginRes.json();
-        if (loginRes.ok && loginData.token) {
-          localStorage.setItem('lms_token', loginData.token);
+        if (loginRes.ok && loginData.success) {
+          localStorage.setItem('lms_authenticated', 'true');
           router.push('/dashboard');
           return;
         }
@@ -58,82 +59,96 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl border border-gray-200 shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">Create account</h1>
-        <p className="text-gray-500 text-center mt-1 text-sm">CVERSE Academy</p>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+    <div className="auth-page">
+      <div className="auth-card" style={{ maxWidth: 440 }}>
+        <div className="auth-header">
+          <Image src="/logo.png" alt="CVERSE" width={48} height={48} className="auth-logo" priority />
+          <h1 className="auth-title">Create account</h1>
+          <p className="auth-subtitle">Join CVERSE Academy</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {error && <div className="auth-error">{error}</div>}
+
+          <div className="auth-field">
+            <label htmlFor="email" className="auth-label">Email</label>
             <input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
+              placeholder="you@example.com"
+              className="auth-input"
+              disabled={loading}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">First name</label>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="auth-field">
+              <label htmlFor="firstName" className="auth-label">First name</label>
               <input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
+                className="auth-input"
+                disabled={loading}
               />
             </div>
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last name</label>
+            <div className="auth-field">
+              <label htmlFor="lastName" className="auth-label">Last name</label>
               <input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
+                className="auth-input"
+                disabled={loading}
               />
             </div>
           </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <div className="relative">
+
+          <div className="auth-field">
+            <label htmlFor="password" className="auth-label">Password</label>
+            <div style={{ position: 'relative' }}>
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 pr-14 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"
+                className="auth-input"
+                style={{ paddingRight: '3.5rem' }}
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
                 disabled={loading}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-light)',
+                }}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Optional; you can set it later.</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-lighter)', marginTop: '0.25rem' }}>
+              Optional — you can set it later.
+            </p>
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
-          >
-            {loading ? 'Creating account...' : 'Create account'}
+
+          <button type="submit" disabled={loading} className="auth-btn">
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Already have an account? <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
-        </p>
+
+        <div className="auth-link-wrap">
+          Already have an account?{' '}
+          <Link href="/login" className="auth-link">Sign in</Link>
+        </div>
       </div>
     </div>
   );

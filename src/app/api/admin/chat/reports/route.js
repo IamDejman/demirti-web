@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -41,7 +42,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ reports: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/chat/reports:', e);
+    reportError(e, { route: 'GET /api/admin/chat/reports' });
     return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
   }
 }

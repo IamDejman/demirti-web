@@ -42,82 +42,60 @@ export default function ConfirmSpotPage() {
   return (
     <main className="with-fixed-header">
       <Navbar />
-      <section style={{
-        padding: '8rem 1.5rem 4rem',
-        maxWidth: '560px',
-        margin: '0 auto',
-        minHeight: '60vh'
-      }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center' }}>
-          Confirm your spot
-        </h1>
-        <p style={{ color: '#666', marginBottom: '2rem', textAlign: 'center' }}>
-          You were conditionally accepted to the CVerse Data Science Academy sponsored cohort. Submit the link to your LinkedIn post here to confirm your spot (within 48 hours of acceptance).
-        </p>
+      <section className="auth-page">
+        <div className="auth-card">
+          <h1 className="auth-title">Confirm your spot</h1>
+          <p className="auth-subtitle">
+            You were conditionally accepted to the CVerse Data Science Academy sponsored cohort. Submit the link to your LinkedIn post here to confirm your spot (within 48 hours of acceptance).
+          </p>
 
-        {success ? (
-          <div style={{
-            padding: '2rem',
-            backgroundColor: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '12px',
-            color: '#155724',
-            textAlign: 'center'
-          }}>
-            <p style={{ margin: 0, fontWeight: '600' }}>{message}</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ marginBottom: '1.5rem' }}>
-            <div style={{ marginBottom: '1.25rem' }}>
-              <label htmlFor="confirm-email" style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>
-                Email address *
-              </label>
-              <input
-                id="confirm-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Same email you used to apply"
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-              />
+          {success ? (
+            <div className="success-message">
+              <p className="font-semibold m-0">{message}</p>
             </div>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="confirm-linkedin" style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>
-                Link to your LinkedIn post *
-              </label>
-              <input
-                id="confirm-linkedin"
-                type="url"
-                required
-                value={linkedinPostUrl}
-                onChange={(e) => setLinkedinPostUrl(e.target.value)}
-                placeholder="https://www.linkedin.com/..."
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-              />
-            </div>
-            {message && !success && (
-              <p style={{ color: '#dc3545', marginBottom: '1rem' }}>{message}</p>
-            )}
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: submitting ? '#ccc' : '#0066cc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: submitting ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {submitting ? 'Submitting...' : 'Confirm my spot'}
-            </button>
-          </form>
-        )}
-
+          ) : (
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="auth-field">
+                <label htmlFor="confirm-email" className="auth-label">
+                  Email address *
+                </label>
+                <input
+                  id="confirm-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Same email you used to apply"
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-field">
+                <label htmlFor="confirm-linkedin" className="auth-label">
+                  Link to your LinkedIn post *
+                </label>
+                <input
+                  id="confirm-linkedin"
+                  type="url"
+                  required
+                  value={linkedinPostUrl}
+                  onChange={(e) => setLinkedinPostUrl(e.target.value)}
+                  placeholder="https://www.linkedin.com/..."
+                  className="auth-input"
+                />
+              </div>
+              {message && !success && (
+                <div className="auth-error" role="alert">{message}</div>
+              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="auth-btn"
+              >
+                {submitting ? 'Submitting...' : 'Confirm my spot'}
+              </button>
+            </form>
+          )}
+        </div>
       </section>
     </main>
   );

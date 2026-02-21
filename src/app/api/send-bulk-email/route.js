@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
@@ -172,13 +173,7 @@ export async function POST(request) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('Error sending bulk email:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to send bulk email',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined || 'Unknown error',
-      },
-      { status: 500 }
-    );
+    reportError(error, { route: 'POST /api/send-bulk-email' });
+    return NextResponse.json({ error: 'Failed to send bulk email' }, { status: 500 });
   }
 }

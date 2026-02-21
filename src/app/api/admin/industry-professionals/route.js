@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
@@ -17,7 +18,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ professionals: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/industry-professionals:', e);
+    reportError(e, { route: 'GET /api/admin/industry-professionals' });
     return NextResponse.json({ error: 'Failed to fetch professionals' }, { status: 500 });
   }
 }
@@ -57,7 +58,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ professional: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/admin/industry-professionals:', e);
+    reportError(e, { route: 'POST /api/admin/industry-professionals' });
     return NextResponse.json({ error: 'Failed to create professional' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getTrackByIdLms, updateTrackLms } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
 export async function GET(request, { params }) {
@@ -10,7 +11,7 @@ export async function GET(request, { params }) {
     if (!track) return NextResponse.json({ error: 'Track not found' }, { status: 404 });
     return NextResponse.json({ track });
   } catch (e) {
-    console.error('GET /api/tracks/[id]:', e);
+    reportError(e, { route: 'GET /api/tracks/[id]' });
     return NextResponse.json({ error: 'Failed to fetch track' }, { status: 500 });
   }
 }
@@ -35,7 +36,7 @@ export async function PUT(request, { params }) {
     if (!track) return NextResponse.json({ error: 'Track not found' }, { status: 404 });
     return NextResponse.json({ track });
   } catch (e) {
-    console.error('PUT /api/tracks/[id]:', e);
+    reportError(e, { route: 'PUT /api/tracks/[id]' });
     return NextResponse.json({ error: 'Failed to update track' }, { status: 500 });
   }
 }

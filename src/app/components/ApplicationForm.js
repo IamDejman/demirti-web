@@ -1,7 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from './ToastProvider';
+
+const FORM_CONTAINER_STYLE = { maxWidth: '600px', margin: '0 auto' };
+const REQUIRED_ASTERISK_STYLE = { color: 'red' };
+const SELECT_BASE_STYLE = {
+  width: '100%',
+  padding: '0.75rem',
+  fontSize: '1rem',
+  border: '1px solid #e1e4e8',
+  borderRadius: '8px',
+};
+const INPUT_OTHER_STYLE = {
+  marginTop: '0.75rem',
+  width: '100%',
+  padding: '0.75rem',
+  fontSize: '1rem',
+  border: '1px solid #e1e4e8',
+  borderRadius: '8px',
+};
+const VALIDATING_MSG_STYLE = { margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#666', fontStyle: 'italic' };
+const APPLIED_DISCOUNT_STYLE = { margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#00c896', fontWeight: '600' };
+const PRICE_BOX_STYLE = {
+  backgroundColor: 'white',
+  padding: '1.5rem',
+  borderRadius: '12px',
+  marginBottom: '1.5rem',
+  border: '1px solid #e1e4e8',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+};
+const RADIO_INPUT_STYLE = {
+  marginRight: '0.75rem',
+  width: '20px',
+  height: '20px',
+  accentColor: '#0066cc',
+};
+const LABEL_FLEX_STYLE = { display: 'flex', alignItems: 'center', margin: 0 };
+const TITLE_DIV_STYLE = { fontWeight: '600', fontSize: '1rem', color: '#1a1a1a' };
+const REFERRAL_SOURCE_OPTIONS = [
+  { value: 'Company website', label: 'Company website' },
+  { value: 'LinkedIn', label: 'LinkedIn' },
+  { value: 'TikTok', label: 'TikTok' },
+  { value: 'Instagram', label: 'Instagram' },
+  { value: 'Facebook', label: 'Facebook' },
+  { value: 'Twitter/X', label: 'Twitter/X' },
+  { value: 'Friend', label: 'Friend' },
+  { value: 'Others', label: 'Others' },
+];
 
 export default function ApplicationForm({ 
   trackName, 
@@ -37,6 +83,20 @@ export default function ApplicationForm({
     setScholarshipLimit(initialScholarshipLimit);
     setScholarshipAvailable(initialScholarshipAvailable);
   }, [initialCoursePrice, initialDiscountPercentage, initialScholarshipLimit, initialScholarshipAvailable]);
+
+  const finalPrice = useMemo(() => {
+    let price = coursePrice;
+    if (scholarshipAvailable) {
+      price = price * (1 - discountPercentage / 100);
+    }
+    if (appliedDiscount) {
+      const discountPercent = typeof appliedDiscount.percentage === 'string'
+        ? parseFloat(appliedDiscount.percentage)
+        : appliedDiscount.percentage;
+      price = price * (1 - discountPercent / 100);
+    }
+    return Math.round(price);
+  }, [coursePrice, scholarshipAvailable, discountPercentage, appliedDiscount]);
 
   // Load Paystack script on demand (only when needed for payment)
   const loadPaystackScript = () => {
@@ -245,14 +305,15 @@ export default function ApplicationForm({
           // Store reference for polling
           const paymentReference = data.reference;
 
-          // Poll for payment status (callback URL will handle the actual verification)
-          // This is a backup in case the callback URL redirect doesn't work
+          let pollActive = true;
           const pollInterval = setInterval(async () => {
+            if (document.hidden || !pollActive) return;
             try {
               const verifyResponse = await fetch(`/api/payment-callback?reference=${paymentReference}&check_only=true`);
               if (verifyResponse.ok) {
                 const verifyData = await verifyResponse.json();
                 if (verifyData.status === 'success') {
+                  pollActive = false;
                   clearInterval(pollInterval);
                   window.location.href = `/payment-success?reference=${paymentReference}`;
                 }
@@ -260,10 +321,9 @@ export default function ApplicationForm({
             } catch {
               // Silent fail - continue polling
             }
-          }, 2000); // Poll every 2 seconds
+          }, 2000);
 
-          // Clear polling after 10 minutes
-          setTimeout(() => clearInterval(pollInterval), 600000);
+          setTimeout(() => { pollActive = false; clearInterval(pollInterval); }, 600000);
         } else {
           // Fallback to redirect if PaystackPop is not loaded
           if (data.authorization_url) {
@@ -292,10 +352,10 @@ export default function ApplicationForm({
   };
 
   return (
-    <div className="contact-form" style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div className="contact-form" style={FORM_CONTAINER_STYLE}>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="firstName">First Name <span style={{ color: 'red' }}>*</span></label>
+          <label htmlFor="firstName">First Name <span style={REQUIRED_ASTERISK_STYLE}>*</span></label>
           <input
             type="text"
             id="firstName"
@@ -309,7 +369,7 @@ export default function ApplicationForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="lastName">Last Name <span style={{ color: 'red' }}>*</span></label>
+          <label htmlFor="lastName">Last Name <span style={REQUIRED_ASTERISK_STYLE}>*</span></label>
           <input
             type="text"
             id="lastName"
@@ -323,7 +383,7 @@ export default function ApplicationForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email Address <span style={{ color: 'red' }}>*</span></label>
+          <label htmlFor="email">Email Address <span style={REQUIRED_ASTERISK_STYLE}>*</span></label>
           <input
             type="email"
             id="email"
@@ -337,7 +397,7 @@ export default function ApplicationForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="phone">Phone Number <span style={{ color: 'red' }}>*</span></label>
+          <label htmlFor="phone">Phone Number <span style={REQUIRED_ASTERISK_STYLE}>*</span></label>
           <input
             type="tel"
             id="phone"
@@ -351,7 +411,7 @@ export default function ApplicationForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="referralSource">How did you hear about Cverse? <span style={{ color: 'red' }}>*</span></label>
+          <label htmlFor="referralSource">How did you hear about Cverse? <span style={REQUIRED_ASTERISK_STYLE}>*</span></label>
           <select
             id="referralSource"
             name="referralSource"
@@ -360,24 +420,15 @@ export default function ApplicationForm({
             required
             disabled={isSubmitting}
             style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #e1e4e8',
-              borderRadius: '8px',
+              ...SELECT_BASE_STYLE,
               backgroundColor: isSubmitting ? '#f5f5f5' : 'white',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer'
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
             }}
           >
             <option value="">Select an option</option>
-            <option value="Company website">Company website</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="TikTok">TikTok</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Facebook">Facebook</option>
-            <option value="Twitter/X">Twitter/X</option>
-            <option value="Friend">Friend</option>
-            <option value="Others">Others</option>
+            {REFERRAL_SOURCE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
           {formData.referralSource === 'Others' && (
             <input
@@ -389,14 +440,7 @@ export default function ApplicationForm({
               required
               disabled={isSubmitting}
               placeholder="Please specify"
-              style={{
-                marginTop: '0.75rem',
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid #e1e4e8',
-                borderRadius: '8px'
-              }}
+              style={INPUT_OTHER_STYLE}
             />
           )}
         </div>
@@ -414,20 +458,16 @@ export default function ApplicationForm({
             placeholder="Enter discount code"
           />
           {validatingDiscount && (
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#666', fontStyle: 'italic' }}>
-              Validating discount code...
-            </p>
+            <p style={VALIDATING_MSG_STYLE}>Validating discount code...</p>
           )}
           {appliedDiscount && (
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#00c896', fontWeight: '600' }}>
-              ✓ {appliedDiscount.name} - {appliedDiscount.percentage}% discount applied
-            </p>
+            <p style={APPLIED_DISCOUNT_STYLE}>✓ {appliedDiscount.name} - {appliedDiscount.percentage}% discount applied</p>
           )}
         </div>
 
         <div className="form-group">
           <label style={{ marginBottom: '1rem', display: 'block' }}>
-            Payment Method <span style={{ color: 'red' }}>*</span>
+            Payment Method <span style={REQUIRED_ASTERISK_STYLE}>*</span>
           </label>
           <div
           onClick={() => !isSubmitting && setFormData(prev => ({ ...prev, paymentOption: 'paystack' }))}
@@ -452,12 +492,10 @@ export default function ApplicationForm({
             cursor: isSubmitting ? 'not-allowed' : 'pointer'
           }}
           >
-            <label style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              margin: 0
-            }}>
+          <label style={{
+            ...LABEL_FLEX_STYLE,
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+          }}>
               <input
                 type="radio"
                 name="paymentOption"
@@ -465,20 +503,13 @@ export default function ApplicationForm({
                 checked={formData.paymentOption === 'paystack'}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                style={{ 
-                  marginRight: '0.75rem',
-                  width: '20px',
-                  height: '20px',
+                style={{
+                  ...RADIO_INPUT_STYLE,
                   cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  accentColor: '#0066cc'
                 }}
               />
               <div style={{ flex: 1 }}>
-                <div style={{ 
-                  fontWeight: '600', 
-                  fontSize: '1rem',
-                  color: '#1a1a1a'
-                }}>
+                <div style={TITLE_DIV_STYLE}>
                   Paystack
                 </div>
               </div>
@@ -486,60 +517,24 @@ export default function ApplicationForm({
           </div>
         </div>
 
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '12px', 
-          marginBottom: '1.5rem',
-          border: '1px solid #e1e4e8',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-        }}>
-          {(() => {
-            // Calculate final price - discounts stack together
-            // Start with original price
-            let finalPrice = coursePrice;
-            let hasDiscount = false;
-            
-            // Step 1: Apply scholarship discount if available (10 spots still open)
-            if (scholarshipAvailable) {
-              finalPrice = finalPrice * (1 - discountPercentage / 100);
-              hasDiscount = true;
-            }
-            
-            // Step 2: Apply discount code discount on top of current price (scholarship price or original)
-            if (appliedDiscount) {
-              // Ensure percentage is a number
-              const discountPercent = typeof appliedDiscount.percentage === 'string' 
-                ? parseFloat(appliedDiscount.percentage) 
-                : appliedDiscount.percentage;
-              
-              // Apply discount code discount on the current price
-              finalPrice = finalPrice * (1 - discountPercent / 100);
-              hasDiscount = true;
-            }
-            
-            return (
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600' }}>
-                  Course Fee
-                </p>
-                {hasDiscount ? (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '1rem', fontWeight: '500', color: '#999', textDecoration: 'line-through' }}>
-                      ₦{coursePrice.toLocaleString()}
-                    </span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#00c896' }}>
-                      ₦{Math.round(finalPrice).toLocaleString()}
-                    </span>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0066cc' }}>
-                    ₦{coursePrice.toLocaleString()}
-                  </span>
-                )}
+        <div style={PRICE_BOX_STYLE}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, fontSize: '1rem', color: '#1a1a1a', fontWeight: '600' }}>Course Fee</p>
+            {appliedDiscount || scholarshipAvailable ? (
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '1rem', fontWeight: '500', color: '#999', textDecoration: 'line-through' }}>
+                  ₦{coursePrice.toLocaleString()}
+                </span>
+                <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#00c896' }}>
+                  ₦{finalPrice.toLocaleString()}
+                </span>
               </div>
-            );
-          })()}
+            ) : (
+              <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0066cc' }}>
+                ₦{coursePrice.toLocaleString()}
+              </span>
+            )}
+          </div>
           {scholarshipAvailable && (
             <div style={{ 
               marginTop: '0.75rem',
@@ -570,24 +565,7 @@ export default function ApplicationForm({
             ? 'Processing...'
             : isPaystackLoading
             ? 'Loading payment widget...'
-            : (() => {
-            // Calculate final price - same logic as display (discounts stack)
-            let finalPrice = coursePrice;
-            
-            // Apply scholarship discount first if available
-            if (scholarshipAvailable) {
-              finalPrice = finalPrice * (1 - discountPercentage / 100);
-            }
-            
-            // Apply discount code discount on top
-            if (appliedDiscount) {
-              const discountPercent = typeof appliedDiscount.percentage === 'string' 
-                ? parseFloat(appliedDiscount.percentage) 
-                : appliedDiscount.percentage;
-              finalPrice = finalPrice * (1 - discountPercent / 100);
-            }
-            return `Proceed to Payment (₦${Math.round(finalPrice).toLocaleString()})`;
-          })()}
+            : `Proceed to Payment (₦${finalPrice.toLocaleString()})`}
         </button>
       </form>
     </div>

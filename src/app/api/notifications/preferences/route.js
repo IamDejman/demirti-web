@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getNotificationPreferences, setNotificationPreferences } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request) {
@@ -9,7 +10,7 @@ export async function GET(request) {
     const prefs = await getNotificationPreferences(user.id);
     return NextResponse.json({ preferences: prefs });
   } catch (e) {
-    console.error('GET /api/notifications/preferences:', e);
+    reportError(e, { route: 'GET /api/notifications/preferences' });
     return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 });
   }
 }
@@ -43,7 +44,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ preferences: prefs });
   } catch (e) {
-    console.error('POST /api/notifications/preferences:', e);
+    reportError(e, { route: 'POST /api/notifications/preferences' });
     return NextResponse.json({ error: 'Failed to save preferences' }, { status: 500 });
   }
 }

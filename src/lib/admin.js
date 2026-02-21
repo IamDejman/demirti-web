@@ -118,57 +118,24 @@ export async function updateAdmin(id, updates) {
 }
 
 export async function verifyAdminCredentials(email, password) {
-  if (!email || !password) {
-    console.log('verifyAdminCredentials: Missing email or password');
-    return null;
-  }
+  if (!email || !password) return null;
 
-  // Normalize email to lowercase for case-insensitive lookup
   const normalizedEmail = email.toLowerCase().trim();
-  
   const admin = await getAdminByEmail(normalizedEmail);
-  
-  if (!admin) {
-    console.log('verifyAdminCredentials: Admin not found for email:', normalizedEmail);
-    return null;
-  }
-  
+  if (!admin) return null;
+
   if (!admin.is_active) {
-    console.log('verifyAdminCredentials: Admin account is disabled for email:', normalizedEmail);
     throw new Error('Admin account is disabled');
   }
-  
-  // Check if stored hash is bcrypt format (starts with $2a$, $2b$, or $2y$)
-  const isBcryptHash = admin.password_hash && (
-    admin.password_hash.startsWith('$2a$') ||
-    admin.password_hash.startsWith('$2b$') ||
-    admin.password_hash.startsWith('$2y$')
-  );
-  
-  let passwordMatches = false;
-  
-  if (isBcryptHash) {
-    // Use bcrypt comparison for bcrypt hashes
-    passwordMatches = await verifyPassword(password, admin.password_hash);
-    console.log('verifyAdminCredentials: Using bcrypt verification');
-  } else {
-    // Fallback to SHA-256 for legacy hashes (shouldn't happen with new code)
-    const crypto = await import('crypto');
-    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-    passwordMatches = admin.password_hash === passwordHash;
-    console.log('verifyAdminCredentials: Using SHA-256 verification (legacy)');
-  }
-  
-  console.log('verifyAdminCredentials: Password match result:', passwordMatches);
-  
+
+  const passwordMatches = await verifyPassword(password, admin.password_hash);
+
   if (passwordMatches) {
-    // Update last login
     await sql`
       UPDATE admins
       SET last_login = CURRENT_TIMESTAMP
       WHERE id = ${admin.id};
     `;
-    
     return {
       id: admin.id,
       email: admin.email,
@@ -176,8 +143,7 @@ export async function verifyAdminCredentials(email, password) {
       lastName: admin.last_name
     };
   }
-  
-  console.log('verifyAdminCredentials: Password mismatch for email:', normalizedEmail);
+
   return null;
 }
 

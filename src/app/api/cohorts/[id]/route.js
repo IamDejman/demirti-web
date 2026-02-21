@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getCohortById, updateCohort, deleteCohort, getCohortFacilitators, isStudentInCohort } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
+import { isValidUuid } from '@/lib/validation';
 
 export async function GET(request, { params }) {
   try {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
-    const cohort = await getCohortById(id);
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
+    const [cohort, facilitators] = await Promise.all([
+      getCohortById(id),
+      getCohortFacilitators(id),
+    ]);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
     const isAdmin = user.role === 'admin';
-    if (isAdmin) return NextResponse.json({ cohort: { ...cohort, facilitators: await getCohortFacilitators(id) } });
-    const facilitators = await getCohortFacilitators(id);
+    if (isAdmin) return NextResponse.json({ cohort: { ...cohort, facilitators } });
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => String(f.id) === String(user.id));
     const isStudent = typeof user.id === 'string' && /^[0-9a-f-]{36}$/i.test(user.id)
       ? await isStudentInCohort(id, user.id)
@@ -23,9 +27,8 @@ export async function GET(request, { params }) {
     }
     return NextResponse.json({ cohort: { ...cohort, facilitators } });
   } catch (e) {
-    console.error('GET /api/cohorts/[id]:', e);
-    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch cohort';
-    return NextResponse.json({ error: 'Failed to fetch cohort', detail: msg }, { status: 500 });
+    reportError(e, { route: 'GET /api/cohorts/[id]' });
+    return NextResponse.json({ error: 'Failed to fetch cohort' }, { status: 500 });
   }
 }
 
@@ -34,10 +37,12 @@ export async function PUT(request, { params }) {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
-    const cohort = await getCohortById(id);
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
+    const [cohort, facilitators] = await Promise.all([
+      getCohortById(id),
+      getCohortFacilitators(id),
+    ]);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
-    const facilitators = await getCohortFacilitators(id);
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => String(f.id) === String(user.id));
     if (user.role !== 'admin' && !isFacilitator) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -62,11 +67,11 @@ export async function PUT(request, { params }) {
         actorEmail: user.email,
       });
     } catch (auditErr) {
-      console.error('Audit log cohort.update (non-blocking):', auditErr);
+      reportError(auditErr, { route: 'PUT /api/cohorts/[id]', context: 'audit log cohort.update (non-blocking)' });
     }
     return NextResponse.json({ cohort: updated });
   } catch (e) {
-    console.error('PUT /api/cohorts/[id]:', e);
+    reportError(e, { route: 'PUT /api/cohorts/[id]' });
     return NextResponse.json({ error: 'Failed to update cohort' }, { status: 500 });
   }
 }
@@ -76,10 +81,12 @@ export async function DELETE(request, { params }) {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
-    const cohort = await getCohortById(id);
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
+    const [cohort, facilitators] = await Promise.all([
+      getCohortById(id),
+      getCohortFacilitators(id),
+    ]);
     if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
-    const facilitators = await getCohortFacilitators(id);
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => String(f.id) === String(user.id));
     if (user.role !== 'admin' && !isFacilitator) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -98,11 +105,11 @@ export async function DELETE(request, { params }) {
         actorEmail: user.email,
       });
     } catch (auditErr) {
-      console.error('Audit log cohort.delete (non-blocking):', auditErr);
+      reportError(auditErr, { route: 'DELETE /api/cohorts/[id]', context: 'audit log cohort.delete (non-blocking)' });
     }
     return NextResponse.json({ deleted: true });
   } catch (e) {
-    console.error('DELETE /api/cohorts/[id]:', e);
+    reportError(e, { route: 'DELETE /api/cohorts/[id]' });
     return NextResponse.json({ error: 'Failed to delete cohort' }, { status: 500 });
   }
 }

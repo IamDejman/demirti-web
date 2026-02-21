@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserByEmail } from '@/lib/auth';
 import { recordAuditLog } from '@/lib/audit';
 
 function generateCode(prefix) {
-  return `${prefix}-${crypto.randomBytes(4).toString('hex')}-${Date.now().toString(36)}`.toUpperCase();
+  return `${prefix}-${crypto.randomBytes(16).toString('hex')}`.toUpperCase();
 }
 
 export async function GET(request) {
@@ -24,7 +25,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ certificates: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/certificates:', e);
+    reportError(e, { route: 'GET /api/admin/certificates' });
     return NextResponse.json({ error: 'Failed to fetch certificates' }, { status: 500 });
   }
 }
@@ -66,7 +67,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ certificate: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/admin/certificates:', e);
+    reportError(e, { route: 'POST /api/admin/certificates' });
     return NextResponse.json({ error: 'Failed to issue certificate' }, { status: 500 });
   }
 }

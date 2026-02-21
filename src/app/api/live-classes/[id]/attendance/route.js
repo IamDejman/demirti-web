@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLiveClassById, getAttendanceByLiveClass, ensureAttendanceRecordsForLiveClass, bulkUpdateAttendance } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getCohortFacilitators } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
@@ -24,7 +25,7 @@ export async function GET(request, { params }) {
     }
     return NextResponse.json({ liveClass, attendance: records });
   } catch (e) {
-    console.error('GET /api/live-classes/[id]/attendance:', e);
+    reportError(e, { route: 'GET /api/live-classes/[id]/attendance' });
     return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
   }
 }
@@ -50,7 +51,7 @@ export async function POST(request, { params }) {
     const attendance = await bulkUpdateAttendance(id, updates, user.id);
     return NextResponse.json({ attendance });
   } catch (e) {
-    console.error('POST /api/live-classes/[id]/attendance:', e);
+    reportError(e, { route: 'POST /api/live-classes/[id]/attendance' });
     return NextResponse.json({ error: 'Failed to update attendance' }, { status: 500 });
   }
 }

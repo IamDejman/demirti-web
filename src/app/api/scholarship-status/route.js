@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getScholarshipCount, incrementScholarshipCount, getTrackConfig } from '@/lib/db';
+import { requireAdmin } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 
 // Cache duration: 30 seconds (revalidate every 30 seconds)
 export const revalidate = 30;
@@ -46,16 +48,19 @@ export async function GET(request) {
     
     return response;
   } catch (error) {
-    console.error('Error checking scholarship status:', error);
+    reportError(error, { route: 'GET /api/scholarship-status' });
     return NextResponse.json(
-      { error: 'Failed to check scholarship status', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to check scholarship status' },
       { status: 500 }
     );
   }
 }
 
-// POST - Increment scholarship count for a specific track (called after successful payment)
+// POST - Increment scholarship count (admin/internal only)
 export async function POST(request) {
+  const [, authErr] = await requireAdmin(request);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { trackName } = body;
@@ -95,9 +100,10 @@ export async function POST(request) {
       trackName
     });
   } catch (error) {
-    console.error('Error incrementing scholarship count:', error);
+    reportError(error, { route: 'POST /api/scholarship-status' });
     return NextResponse.json(
-      { error: 'Failed to update scholarship count', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update scholarship count' },
+
       { status: 500 }
     );
   }

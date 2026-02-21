@@ -63,6 +63,7 @@ export async function ensureLmsSchema() {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience SMALLINT;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;`.catch(() => {});
       }
       lmsInitialized = true;
     } catch (e) {
@@ -861,6 +862,16 @@ export async function initializeLmsSchema() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_user_password_resets_email_expires ON user_password_resets(email, expires_at);`.catch(() => {});
 
+  // Additional indexes for query performance
+  await sql`CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_attendance_records_student_id ON attendance_records(student_id);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_id ON chat_messages(sender_id);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_office_hour_bookings_slot_id ON office_hour_bookings(slot_id);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_office_hour_bookings_status ON office_hour_bookings(status);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment_status ON assignment_submissions(assignment_id, status);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_cohort_students_status ON cohort_students(status);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_certificates_verification_code ON certificates(verification_code);`.catch(() => {});
+
   console.log('LMS schema initialized');
 }
 
@@ -1025,14 +1036,15 @@ export async function removeCohortFacilitator(cohortId, facilitatorId) {
   `;
 }
 
-export async function getCohortStudents(cohortId) {
+export async function getCohortStudents(cohortId, limit = 500) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT cs.*, u.email, u.first_name, u.last_name
     FROM cohort_students cs
     JOIN users u ON u.id = cs.student_id
     WHERE cs.cohort_id = ${cohortId}
-    ORDER BY cs.enrolled_at DESC;
+    ORDER BY cs.enrolled_at DESC
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1048,7 +1060,7 @@ export async function enrollStudentInCohort(cohortId, studentId, applicationId =
   return result.rows[0];
 }
 
-export async function getCohortProgress(cohortId) {
+export async function getCohortProgress(cohortId, limit = 500) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT cs.student_id, cs.status, cs.completed_at,
@@ -1059,7 +1071,8 @@ export async function getCohortProgress(cohortId) {
             WHERE scp.student_id = cs.student_id AND scp.completed_at IS NOT NULL) AS completed_checklist_items
     FROM cohort_students cs
     JOIN cohorts c ON c.id = cs.cohort_id
-    WHERE cs.cohort_id = ${cohortId};
+    WHERE cs.cohort_id = ${cohortId}
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1307,14 +1320,15 @@ export async function getStudentChecklistProgress(studentId, weekId) {
 }
 
 // --- Assignments ---
-export async function getAssignmentsByCohort(cohortId) {
+export async function getAssignmentsByCohort(cohortId, limit = 200) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT a.*, w.week_number, w.title AS week_title
     FROM assignments a
     JOIN weeks w ON w.id = a.week_id
     WHERE a.cohort_id = ${cohortId}
-    ORDER BY w.week_number ASC, a.deadline_at ASC;
+    ORDER BY w.week_number ASC, a.deadline_at ASC
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1370,14 +1384,15 @@ export async function updateAssignment(id, updates) {
 }
 
 // --- Submissions ---
-export async function getSubmissionsByAssignment(assignmentId) {
+export async function getSubmissionsByAssignment(assignmentId, limit = 500) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT s.*, u.first_name, u.last_name, u.email
     FROM assignment_submissions s
     JOIN users u ON u.id = s.student_id
     WHERE s.assignment_id = ${assignmentId}
-    ORDER BY s.submitted_at DESC;
+    ORDER BY s.submitted_at DESC
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1423,17 +1438,26 @@ export async function createSubmission({ assignmentId, studentId, submissionType
   return result.rows[0];
 }
 
-export async function gradeSubmission(submissionId, { score, feedback, gradedBy }) {
+export async function gradeSubmission(submissionId, { score, feedback, gradedBy, expectedGradedAt = null }) {
   await ensureLmsSchema();
-  await sql`
+  const condition = expectedGradedAt
+    ? sql`id = ${submissionId} AND graded_at = ${expectedGradedAt}`
+    : sql`id = ${submissionId} AND graded_at IS NULL`;
+  const result = await sql`
     UPDATE assignment_submissions
     SET score = ${score}, feedback = ${feedback || null}, graded_by = ${gradedBy}, graded_at = CURRENT_TIMESTAMP, status = 'graded'
-    WHERE id = ${submissionId};
+    WHERE ${condition}
+    RETURNING id;
   `;
+  if (result.rows.length === 0) {
+    const err = new Error('Grading conflict: submission was already graded by another facilitator');
+    err.code = 'GRADING_CONFLICT';
+    throw err;
+  }
   return getSubmissionById(submissionId);
 }
 
-export async function getPendingSubmissionsForFacilitator(facilitatorId) {
+export async function getPendingSubmissionsForFacilitator(facilitatorId, limit = 200) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT s.*, a.title AS assignment_title, a.deadline_at, a.max_score, u.first_name, u.last_name, u.email
@@ -1442,7 +1466,8 @@ export async function getPendingSubmissionsForFacilitator(facilitatorId) {
     JOIN cohort_facilitators cf ON cf.cohort_id = a.cohort_id AND cf.facilitator_id = ${facilitatorId}
     JOIN users u ON u.id = s.student_id
     WHERE s.status = 'submitted'
-    ORDER BY s.submitted_at ASC;
+    ORDER BY s.submitted_at ASC
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1459,14 +1484,15 @@ export async function getLiveClassById(id) {
   return result.rows[0] || null;
 }
 
-export async function getLiveClassesByCohort(cohortId) {
+export async function getLiveClassesByCohort(cohortId, limit = 200) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT lc.*, w.week_number, w.title AS week_title
     FROM live_classes lc
     JOIN weeks w ON w.id = lc.week_id
     WHERE lc.cohort_id = ${cohortId}
-    ORDER BY lc.scheduled_at ASC;
+    ORDER BY lc.scheduled_at ASC
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1503,14 +1529,15 @@ export async function updateLiveClass(id, updates) {
 }
 
 // --- Attendance ---
-export async function getAttendanceByLiveClass(liveClassId) {
+export async function getAttendanceByLiveClass(liveClassId, limit = 500) {
   await ensureLmsSchema();
   const result = await sql`
     SELECT ar.*, u.first_name, u.last_name, u.email
     FROM attendance_records ar
     JOIN users u ON u.id = ar.student_id
     WHERE ar.live_class_id = ${liveClassId}
-    ORDER BY ar.join_clicked_at DESC NULLS LAST, u.last_name;
+    ORDER BY ar.join_clicked_at DESC NULLS LAST, u.last_name
+    LIMIT ${limit};
   `;
   return result.rows;
 }
@@ -1562,9 +1589,12 @@ export async function bulkUpdateAttendance(liveClassId, updates, markedBy) {
 // --- Announcements & Notifications ---
 export async function createAnnouncement({ title, body, scope = 'system', trackId = null, cohortId = null, createdBy = null, isPublished = true, publishAt = null, sendEmail = true }) {
   await ensureLmsSchema();
+  const { stripHtml, sanitizeHtml } = await import('@/lib/sanitize');
+  const safeTitle = stripHtml(title);
+  const safeBody = sanitizeHtml(body);
   const result = await sql`
     INSERT INTO announcements (title, body, scope, track_id, cohort_id, created_by, is_published, publish_at, send_email)
-    VALUES (${title}, ${body}, ${scope}, ${trackId}, ${cohortId}, ${createdBy}, ${isPublished}, ${publishAt}, ${sendEmail})
+    VALUES (${safeTitle}, ${safeBody}, ${scope}, ${trackId}, ${cohortId}, ${createdBy}, ${isPublished}, ${publishAt}, ${sendEmail})
     RETURNING *;
   `;
   return result.rows[0];
@@ -2067,6 +2097,19 @@ export async function getOfficeHourSlotsForFacilitator(facilitatorId) {
 
 export async function getOfficeHourSlotsForStudent(studentId, cohortIds) {
   await ensureLmsSchema();
+  if (cohortIds && cohortIds.length > 0) {
+    const result = await sql`
+      SELECT s.*, c.name AS cohort_name, u.first_name, u.last_name
+      FROM office_hour_slots s
+      LEFT JOIN cohorts c ON c.id = s.cohort_id
+      JOIN users u ON u.id = s.facilitator_id
+      WHERE s.is_cancelled = false
+        AND s.start_time >= CURRENT_TIMESTAMP
+        AND (s.cohort_id IS NULL OR s.cohort_id = ANY(${cohortIds}))
+      ORDER BY s.start_time ASC;
+    `;
+    return result.rows;
+  }
   const result = await sql`
     SELECT s.*, c.name AS cohort_name, u.first_name, u.last_name
     FROM office_hour_slots s
@@ -2074,7 +2117,6 @@ export async function getOfficeHourSlotsForStudent(studentId, cohortIds) {
     JOIN users u ON u.id = s.facilitator_id
     WHERE s.is_cancelled = false
       AND s.start_time >= CURRENT_TIMESTAMP
-      ${cohortIds && cohortIds.length > 0 ? sql`AND (s.cohort_id IS NULL OR s.cohort_id = ANY(${cohortIds}))` : sql``}
     ORDER BY s.start_time ASC;
   `;
   return result.rows;
@@ -2300,11 +2342,18 @@ export async function setNotificationPreferences(userId, {
 
 export async function getNotificationsForUser(userId, limit = 50, unreadOnly = false) {
   await ensureLmsSchema();
+  if (unreadOnly) {
+    const result = await sql`
+      SELECT * FROM notifications
+      WHERE user_id = ${userId} AND is_read = false
+      ORDER BY created_at DESC
+      LIMIT ${limit};
+    `;
+    return result.rows;
+  }
   const result = await sql`
-    SELECT *
-    FROM notifications
+    SELECT * FROM notifications
     WHERE user_id = ${userId}
-      ${unreadOnly ? sql`AND is_read = false` : sql``}
     ORDER BY created_at DESC
     LIMIT ${limit};
   `;
@@ -2397,27 +2446,66 @@ export async function createDmRoom(userId, otherUserId) {
 
 export async function getChatMessages(roomId, limit = 50, before = null, viewerId = null) {
   await ensureLmsSchema();
-  const result = await sql`
-    SELECT m.*, u.first_name, u.last_name, u.email
-    FROM chat_messages m
-    JOIN users u ON u.id = m.sender_id
-    WHERE m.room_id = ${roomId}
-      AND m.is_deleted = false
-      ${viewerId ? sql`AND (m.is_shadowbanned = false OR m.sender_id = ${viewerId})` : sql`AND m.is_shadowbanned = false`}
-      ${before ? sql`AND m.created_at < ${before}` : sql``}
-    ORDER BY m.created_at DESC
-    LIMIT ${limit};
-  `;
+  let result;
+  if (viewerId && before) {
+    result = await sql`
+      SELECT m.*, u.first_name, u.last_name, u.email
+      FROM chat_messages m
+      JOIN users u ON u.id = m.sender_id
+      WHERE m.room_id = ${roomId}
+        AND m.is_deleted = false
+        AND (m.is_shadowbanned = false OR m.sender_id = ${viewerId})
+        AND m.created_at < ${before}
+      ORDER BY m.created_at DESC
+      LIMIT ${limit};
+    `;
+  } else if (viewerId) {
+    result = await sql`
+      SELECT m.*, u.first_name, u.last_name, u.email
+      FROM chat_messages m
+      JOIN users u ON u.id = m.sender_id
+      WHERE m.room_id = ${roomId}
+        AND m.is_deleted = false
+        AND (m.is_shadowbanned = false OR m.sender_id = ${viewerId})
+      ORDER BY m.created_at DESC
+      LIMIT ${limit};
+    `;
+  } else if (before) {
+    result = await sql`
+      SELECT m.*, u.first_name, u.last_name, u.email
+      FROM chat_messages m
+      JOIN users u ON u.id = m.sender_id
+      WHERE m.room_id = ${roomId}
+        AND m.is_deleted = false
+        AND m.is_shadowbanned = false
+        AND m.created_at < ${before}
+      ORDER BY m.created_at DESC
+      LIMIT ${limit};
+    `;
+  } else {
+    result = await sql`
+      SELECT m.*, u.first_name, u.last_name, u.email
+      FROM chat_messages m
+      JOIN users u ON u.id = m.sender_id
+      WHERE m.room_id = ${roomId}
+        AND m.is_deleted = false
+        AND m.is_shadowbanned = false
+      ORDER BY m.created_at DESC
+      LIMIT ${limit};
+    `;
+  }
   return result.rows;
 }
 
 export async function createChatMessage(roomId, senderId, body) {
   await ensureLmsSchema();
+  const { stripHtml } = await import('@/lib/sanitize');
+  const sanitizedBody = stripHtml(body);
   const senderRes = await sql`SELECT is_shadowbanned FROM users WHERE id = ${senderId} LIMIT 1;`;
   const isShadowbanned = senderRes.rows[0]?.is_shadowbanned === true;
   const result = await sql`
     INSERT INTO chat_messages (room_id, sender_id, body, is_shadowbanned)
-    VALUES (${roomId}, ${senderId}, ${body}, ${isShadowbanned})
+    VALUES (${roomId}, ${senderId}, ${sanitizedBody}, ${isShadowbanned})
     RETURNING *;
   `;
   await sql`UPDATE chat_rooms SET last_message_at = CURRENT_TIMESTAMP WHERE id = ${roomId}`;

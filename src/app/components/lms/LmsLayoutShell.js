@@ -5,7 +5,7 @@ import LmsSidebar from './LmsSidebar';
 
 const STORAGE_KEY = 'lms_sidebar_collapsed';
 
-export default function LmsLayoutShell({ variant = 'student', children, user, pendingCount = 0 }) {
+export default function LmsLayoutShell({ variant = 'student', children, user, pendingCount = 0, topBarContent }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -43,10 +43,13 @@ export default function LmsLayoutShell({ variant = 'student', children, user, pe
         pendingCount={pendingCount}
       />
       <main
-        className="lms-main flex-1 min-w-0 min-h-screen overflow-y-auto transition-[margin] duration-200"
+        className="lms-main flex-1 min-w-0 min-h-screen overflow-y-auto transition-[margin] duration-200 flex flex-col"
         style={mounted ? { marginLeft: sidebarWidth } : {}}
       >
-        <div className="lms-main-content max-w-6xl mx-auto flex flex-col">
+        <header className="lms-topbar flex-shrink-0 flex items-center justify-end py-3" style={{ minHeight: '52px' }}>
+          {topBarContent}
+        </header>
+        <div className="lms-main-content flex flex-col flex-1 w-full">
           {children}
         </div>
       </main>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import dynamic from 'next/dynamic';
 import {
   AdminPageHeader,
   AdminCard,
@@ -12,6 +12,46 @@ import {
 } from '../../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
+
+const RechartsLineChart = dynamic(
+  () => import('recharts').then((mod) => {
+    const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = mod;
+    const Wrapper = ({ data, dataKey, stroke }) => (
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="day" />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey={dataKey} stroke={stroke} strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+    Wrapper.displayName = 'RechartsLineChart';
+    return Wrapper;
+  }),
+  { ssr: false, loading: () => <div style={{ height: 260 }} /> }
+);
+
+const RechartsBarChart = dynamic(
+  () => import('recharts').then((mod) => {
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = mod;
+    const Wrapper = ({ data, height }) => (
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 60 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" />
+          <YAxis type="category" dataKey="email" width={160} tick={{ fontSize: 12 }} />
+          <Tooltip />
+          <Bar dataKey="count" fill="#00c896" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+    Wrapper.displayName = 'RechartsBarChart';
+    return Wrapper;
+  }),
+  { ssr: false, loading: () => <div style={{ height: 260 }} /> }
+);
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 
@@ -83,43 +123,19 @@ export default function AdminAiUsagePage() {
 
           <AdminCard title="Daily AI replies">
             <div className="admin-chart-container">
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={usage.byDay || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#0066cc" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <RechartsLineChart data={usage.byDay || []} dataKey="count" stroke="#0066cc" />
             </div>
           </AdminCard>
 
           <AdminCard title="Blocked prompts by day">
             <div className="admin-chart-container">
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={usage.blockedByDay || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#dc3545" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <RechartsLineChart data={usage.blockedByDay || []} dataKey="count" stroke="#dc3545" />
             </div>
           </AdminCard>
 
           <AdminCard title="Top users">
             <div className="admin-chart-container">
-              <ResponsiveContainer width="100%" height={Math.max(260, (usage.topUsers?.length || 0) * 36)}>
-                <BarChart data={usage.topUsers || []} layout="vertical" margin={{ left: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="email" width={160} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#00c896" />
-                </BarChart>
-              </ResponsiveContainer>
+              <RechartsBarChart data={usage.topUsers || []} height={Math.max(260, (usage.topUsers?.length || 0) * 36)} />
             </div>
           </AdminCard>
         </>

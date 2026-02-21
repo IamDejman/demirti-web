@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLiveClassById, upsertAttendanceJoinClick, isStudentInCohort } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request, { params }) {
@@ -18,7 +19,7 @@ export async function POST(request, { params }) {
     await upsertAttendanceJoinClick(id, user.id);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/live-classes/[id]/join-click:', e);
+    reportError(e, { route: 'POST /api/live-classes/[id]/join-click' });
     return NextResponse.json({ error: 'Failed to record join' }, { status: 500 });
   }
 }

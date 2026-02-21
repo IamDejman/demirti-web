@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getClientIp } from '@/lib/api-helpers';
+import { reportError } from '@/lib/logger';
 import { ensureDatabaseInitialized } from '@/lib/db';
-import { getAdminByEmail, getValidPasswordReset, deletePasswordReset, updateAdmin } from '@/lib/admin';
+import { getAdminByEmail, getValidPasswordReset, deletePasswordReset, updateAdmin, createAdminSession } from '@/lib/admin';
+import { validatePassword } from '@/lib/passwordPolicy';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const limiter = await rateLimit(`admin_reset_pw_${ip}`, { windowMs: 60_000, limit: 5 });
+    if (!limiter.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
+    }
+
     await ensureDatabaseInitialized();
 
     const body = await request.json();
@@ -25,11 +35,9 @@ export async function POST(request) {
       );
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+    const pw = validatePassword(newPassword);
+    if (!pw.valid) {
+      return NextResponse.json({ error: pw.message }, { status: 400 });
     }
 
     const resetRow = await getValidPasswordReset(normalizedEmail, String(otp).trim());
@@ -52,9 +60,9 @@ export async function POST(request) {
     await deletePasswordReset(normalizedEmail);
 
     const token = crypto.randomBytes(32).toString('hex');
-    return NextResponse.json({
+    await createAdminSession(admin.id, token);
+    const res = NextResponse.json({
       success: true,
-      token,
       admin: {
         id: admin.id,
         email: admin.email,
@@ -62,8 +70,16 @@ export async function POST(request) {
         lastName: admin.last_name,
       },
     });
+    res.cookies.set('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return res;
   } catch (error) {
-    console.error('Reset password error:', error?.message || error);
+    reportError(error, { route: 'POST /api/admin/reset-password' });
     if (error?.message?.includes('does not exist') || error?.code === '42P01') {
       return NextResponse.json(
         { error: 'Service is updating. Please request a new code and try again.' },

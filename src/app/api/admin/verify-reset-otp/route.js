@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getValidPasswordReset } from '@/lib/admin';
+import { reportError } from '@/lib/logger';
 
 export async function POST(request) {
   try {
@@ -24,7 +25,7 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Verify reset OTP error:', error);
+    reportError(error, { route: 'POST /api/admin/verify-reset-otp' });
     return NextResponse.json(
       { error: 'Something went wrong. Try again later.' },
       { status: 500 }

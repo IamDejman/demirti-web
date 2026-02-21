@@ -71,82 +71,87 @@ export default function FacilitatorOfficeHoursPage() {
     }
   };
 
+  const isMessageError = message && (message.includes('Failed') || message.includes('fail'));
+
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
-      <LmsPageHeader title="Office Hours" subtitle="Create slots and manage bookings." icon={LmsIcons.clock}>
-        {message && <p className="text-sm mt-2 opacity-80">{message}</p>}
-      </LmsPageHeader>
+      <LmsPageHeader title="Office Hours" subtitle="Create slots and manage bookings." icon={LmsIcons.clock} />
+      {message && (
+        <div className={`lms-alert ${isMessageError ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+          {message}
+        </div>
+      )}
 
       <LmsCard title="Create slot" icon={LmsIcons.clock}>
-        <form onSubmit={handleCreate} className="mt-4 space-y-4">
+        <form onSubmit={handleCreate} className="flex flex-col mt-4" style={{ gap: 'var(--lms-space-4)' }}>
           <div>
-            <label className="lms-form-label">Title</label>
+            <label className="lms-form-label block mb-1.5">Title</label>
             <input
               type="text"
               placeholder="Office hour title"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
             />
           </div>
           <div>
-            <label className="lms-form-label">Description</label>
+            <label className="lms-form-label block mb-1.5">Description</label>
             <textarea
               rows={3}
               placeholder="What will be covered..."
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="lms-form-textarea w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-textarea border-token w-full px-3 py-2 rounded-lg"
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="lms-form-label">Start time</label>
+              <label className="lms-form-label block mb-1.5">Start time</label>
               <input
                 type="datetime-local"
                 value={form.startTime}
                 onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
               />
             </div>
             <div>
-              <label className="lms-form-label">End time</label>
+              <label className="lms-form-label block mb-1.5">End time</label>
               <input
                 type="datetime-local"
                 value={form.endTime}
                 onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
               />
             </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="lms-form-label">Meeting link</label>
+              <label className="lms-form-label block mb-1.5">Meeting link</label>
               <input
                 type="text"
                 placeholder="https://..."
                 value={form.meetingLink}
                 onChange={(e) => setForm((f) => ({ ...f, meetingLink: e.target.value }))}
-                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
               />
             </div>
             <div>
-              <label className="lms-form-label">Capacity</label>
+              <label className="lms-form-label block mb-1.5">Capacity</label>
               <input
                 type="number"
                 min="1"
                 value={form.capacity}
                 onChange={(e) => setForm((f) => ({ ...f, capacity: parseInt(e.target.value, 10) || 1 }))}
-                className="lms-form-input w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
               />
             </div>
           </div>
           <div>
-            <label className="lms-form-label">Cohort</label>
+            <label className="lms-form-label block mb-1.5">Cohort</label>
             <select
               value={form.cohortId}
               onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-              className="lms-form-select w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="lms-form-select border-token w-full px-3 py-2 rounded-lg"
             >
               <option value="">Open to all cohorts</option>
               {cohorts.map((c) => (
@@ -154,7 +159,7 @@ export default function FacilitatorOfficeHoursPage() {
               ))}
             </select>
           </div>
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
+          <button type="submit" className="lms-btn lms-btn-primary">
             Create slot
           </button>
         </form>
@@ -166,34 +171,34 @@ export default function FacilitatorOfficeHoursPage() {
         ) : (
           <ul className="space-y-3">
             {slots.map((slot) => (
-              <li key={slot.id} className="border-b pb-3 last:border-0" style={{ borderColor: 'var(--neutral-100)' }}>
+              <li key={slot.id} className="border-b border-[var(--neutral-100)] pb-3 last:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium" style={{ color: 'var(--neutral-900)' }}>{slot.title || 'Office hour slot'}</p>
-                    <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>
+                    <p className="font-medium text-[var(--neutral-900)]">{slot.title || 'Office hour slot'}</p>
+                    <p className="text-xs text-[var(--neutral-500)]">
                       {new Date(slot.start_time).toLocaleString()} - {new Date(slot.end_time).toLocaleTimeString()}
                     </p>
-                    {slot.cohort_name && <p className="text-xs" style={{ color: 'var(--neutral-500)' }}>Cohort: {slot.cohort_name}</p>}
+                    {slot.cohort_name && <p className="text-xs text-[var(--neutral-500)]">Cohort: {slot.cohort_name}</p>}
                   </div>
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => loadBookings(slot.id)}
-                      className="text-xs text-primary hover:underline"
+                      className="lms-link text-xs bg-transparent border-none cursor-pointer p-0"
                     >
                       View bookings
                     </button>
                     <button
                       type="button"
                       onClick={() => handleCancel(slot.id)}
-                      className="text-xs text-red-600 hover:underline"
+                      className="text-xs text-red-600 hover:underline bg-transparent border-none cursor-pointer p-0"
                     >
                       Cancel slot
                     </button>
                   </div>
                 </div>
                 {bookingsBySlot[slot.id]?.length > 0 && (
-                  <ul className="mt-2 text-xs space-y-1" style={{ color: 'var(--neutral-500)' }}>
+                  <ul className="mt-2 text-xs space-y-1 text-[var(--neutral-500)]">
                     {bookingsBySlot[slot.id].map((b) => (
                       <li key={b.id}>{b.first_name || ''} {b.last_name || ''} · {b.email}</li>
                     ))}

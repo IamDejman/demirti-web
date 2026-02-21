@@ -3,14 +3,17 @@ import { initializeDatabase } from '@/lib/db';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { sql } from '@vercel/postgres';
 import { logger } from '@/lib/logger';
+import { getAdminFromRequest } from '@/lib/adminAuth';
 
-// Ensure POSTGRES_URL is set from NEW_POSTGRES_URL if needed (e.g. Vercel env)
 if (!process.env.POSTGRES_URL?.trim() && process.env.NEW_POSTGRES_URL?.trim()) {
   process.env.POSTGRES_URL = process.env.NEW_POSTGRES_URL;
 }
 
-// Initialize database tables (run once). No auth required; visit the URL to run.
-export async function GET(_request) {
+export async function GET(request) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized – admin authentication required' }, { status: 401 });
+  }
   try {
     // First, check database connection
     try {
@@ -21,7 +24,6 @@ export async function GET(_request) {
       return NextResponse.json(
         {
           error: 'Database connection failed',
-          details: process.env.NODE_ENV === 'development' ? connError?.message : undefined,
           hint: 'Set POSTGRES_URL or NEW_POSTGRES_URL in your environment (e.g. Vercel env vars).'
         },
         { status: 500 }
@@ -98,13 +100,6 @@ export async function GET(_request) {
     });
   } catch (error) {
     logger.error('Database initialization error', { message: error?.message });
-    return NextResponse.json(
-      { 
-        error: 'Failed to initialize database',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to initialize database' }, { status: 500 });
   }
 }

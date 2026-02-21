@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema, createAnnouncementNotifications, getPushSubscriptionsForUsers } from '@/lib/db-lms';
 import { sendAnnouncementEmails } from '@/lib/notifications';
 import { sendPushNotifications } from '@/lib/push';
@@ -48,7 +49,7 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, processed });
   } catch (e) {
-    console.error('GET /api/cron/announcements:', e);
+    reportError(e, { route: 'GET /api/cron/announcements' });
     return NextResponse.json({ error: 'Failed to process announcements' }, { status: 500 });
   }
 }

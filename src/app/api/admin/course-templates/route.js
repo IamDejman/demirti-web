@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { recordAuditLog } from '@/lib/audit';
@@ -12,7 +13,7 @@ export async function GET(request) {
     const result = await sql`SELECT * FROM course_templates ORDER BY created_at DESC;`;
     return NextResponse.json({ templates: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/course-templates:', e);
+    reportError(e, { route: 'GET /api/admin/course-templates' });
     return NextResponse.json({ error: 'Failed to fetch templates' }, { status: 500 });
   }
 }
@@ -68,7 +69,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ template: result.rows[0] });
   } catch (e) {
-    console.error('POST /api/admin/course-templates:', e);
+    reportError(e, { route: 'POST /api/admin/course-templates' });
     return NextResponse.json({ error: 'Failed to create template' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getOfficeHourBookingsForSlot } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request, { params }) {
@@ -14,7 +15,7 @@ export async function GET(request, { params }) {
     const bookings = await getOfficeHourBookingsForSlot(id);
     return NextResponse.json({ bookings });
   } catch (e) {
-    console.error('GET /api/office-hours/slots/[id]/bookings:', e);
+    reportError(e, { route: 'GET /api/office-hours/slots/[id]/bookings' });
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
   }
 }

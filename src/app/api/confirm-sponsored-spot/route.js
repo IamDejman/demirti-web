@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { updateSponsoredApplicationConfirmationByEmail } from '@/lib/db';
+import { reportError } from '@/lib/logger';
 
 function isValidUrl(s) {
   if (!s || typeof s !== 'string') return false;
@@ -56,10 +57,7 @@ export async function POST(request) {
       message: 'Your spot is confirmed. Thank you for sharing your LinkedIn post!'
     });
   } catch (error) {
-    console.error('Error confirming sponsored spot:', error);
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
-      { status: 500 }
-    );
+    reportError(error, { route: 'POST /api/confirm-sponsored-spot' });
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
   }
 }

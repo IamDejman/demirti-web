@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCohortById, enrollStudentInCohort } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserByEmail, createUser } from '@/lib/auth';
 
@@ -35,7 +36,7 @@ export async function POST(request, { params }) {
     const enrollment = await enrollStudentInCohort(id, userId, applicationId || null);
     return NextResponse.json({ enrollment });
   } catch (e) {
-    console.error('POST /api/cohorts/[id]/enroll:', e);
+    reportError(e, { route: 'POST /api/cohorts/[id]/enroll' });
     return NextResponse.json({ error: 'Failed to enroll student' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getWeekById, getChecklistItemsByWeek, createChecklistItem, getCohortFacilitators, isStudentInCohort } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 
 export async function GET(request, { params }) {
@@ -10,17 +11,19 @@ export async function GET(request, { params }) {
     if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
-    const facilitators = await getCohortFacilitators(week.cohort_id);
+    const [facilitators, isStudent, checklistItems] = await Promise.all([
+      getCohortFacilitators(week.cohort_id),
+      isStudentInCohort(week.cohort_id, user.id),
+      getChecklistItemsByWeek(id),
+    ]);
     const isAdmin = user.role === 'admin';
     const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
-    const isStudent = await isStudentInCohort(week.cohort_id, user.id);
     if (!isAdmin && !isFacilitator && !isStudent) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const checklistItems = await getChecklistItemsByWeek(id);
     return NextResponse.json({ checklistItems });
   } catch (e) {
-    console.error('GET /api/weeks/[id]/checklist:', e);
+    reportError(e, { route: 'GET /api/weeks/[id]/checklist' });
     return NextResponse.json({ error: 'Failed to fetch checklist' }, { status: 500 });
   }
 }
@@ -49,7 +52,7 @@ export async function POST(request, { params }) {
     });
     return NextResponse.json({ checklistItem: item });
   } catch (e) {
-    console.error('POST /api/weeks/[id]/checklist:', e);
+    reportError(e, { route: 'POST /api/weeks/[id]/checklist' });
     return NextResponse.json({ error: 'Failed to create checklist item' }, { status: 500 });
   }
 }

@@ -2,6 +2,11 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
+function escapeHtml(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export async function sendAnnouncementEmails({ recipients, announcement }) {
   if (!process.env.RESEND_API_KEY || !Array.isArray(recipients) || recipients.length === 0) {
     return;
@@ -15,10 +20,10 @@ export async function sendAnnouncementEmails({ recipients, announcement }) {
     const firstName = recipient.first_name || recipient.firstName || '';
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6;">
-        <h2 style="color:#0066cc; margin-bottom:8px;">${announcement.title}</h2>
-        <p style="margin:0 0 16px;">Hello ${firstName || 'there'},</p>
+        <h2 style="color:#0066cc; margin-bottom:8px;">${escapeHtml(announcement.title)}</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
         <div style="background:#f8f9fa; padding:16px; border-radius:8px;">
-          ${announcement.body?.replace(/\n/g, '<br/>') || ''}
+          ${escapeHtml(announcement.body)?.replace(/\n/g, '<br/>') || ''}
         </div>
         <p style="margin-top:16px;">You can log in to your dashboard for more details.</p>
         <a href="${baseUrl}" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
@@ -54,11 +59,11 @@ export async function sendChatMessageEmails({ recipients, message, sender, roomT
     const resolvedBody = body || snippet;
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6;">
-        <h2 style="color:#0066cc; margin-bottom:8px;">${roomTitle || 'Chat'}</h2>
-        <p style="margin:0 0 12px;">Hello ${firstName || 'there'},</p>
-        <p style="margin:0 0 12px;"><strong>${senderName}</strong> sent a new message:</p>
+        <h2 style="color:#0066cc; margin-bottom:8px;">${escapeHtml(roomTitle) || 'Chat'}</h2>
+        <p style="margin:0 0 12px;">Hello ${escapeHtml(firstName) || 'there'},</p>
+        <p style="margin:0 0 12px;"><strong>${escapeHtml(senderName)}</strong> sent a new message:</p>
         <div style="background:#f8f9fa; padding:12px; border-radius:8px;">
-          ${resolvedBody.replace(/\n/g, '<br/>')}
+          ${escapeHtml(resolvedBody).replace(/\n/g, '<br/>')}
         </div>
         <p style="margin-top:16px;">Open your dashboard to reply.</p>
         <a href="${baseUrl}" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
@@ -90,10 +95,10 @@ export async function sendAssignmentEmails({ recipients, assignment, title, body
     const firstName = recipient.first_name || recipient.firstName || '';
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6;">
-        <h2 style="color:#0066cc; margin-bottom:8px;">${title || assignment?.title || 'Assignment update'}</h2>
-        <p style="margin:0 0 16px;">Hello ${firstName || 'there'},</p>
+        <h2 style="color:#0066cc; margin-bottom:8px;">${escapeHtml(title || assignment?.title || 'Assignment update')}</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
         <div style="background:#f8f9fa; padding:16px; border-radius:8px;">
-          ${description.replace(/\n/g, '<br/>')}
+          ${escapeHtml(description).replace(/\n/g, '<br/>')}
         </div>
         <p style="margin-top:16px;">Open your dashboard to view details.</p>
         <a href="${baseUrl}/dashboard/assignments" style="display:inline-block; margin-top:8px; color:#0066cc;">View assignments</a>
@@ -123,10 +128,10 @@ export async function sendGradeEmail({ recipient, assignment, title, body }) {
   const firstName = recipient.first_name || recipient.firstName || '';
   const html = `
     <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6;">
-      <h2 style="color:#0066cc; margin-bottom:8px;">${title || `Graded: ${assignment?.title || 'Assignment'}`}</h2>
-      <p style="margin:0 0 16px;">Hello ${firstName || 'there'},</p>
+      <h2 style="color:#0066cc; margin-bottom:8px;">${escapeHtml(title || `Graded: ${assignment?.title || 'Assignment'}`)}</h2>
+      <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
       <div style="background:#f8f9fa; padding:16px; border-radius:8px;">
-        ${description.replace(/\n/g, '<br/>')}
+        ${escapeHtml(description).replace(/\n/g, '<br/>')}
       </div>
       <p style="margin-top:16px;">Open your dashboard to review feedback.</p>
       <a href="${baseUrl}/dashboard/assignments" style="display:inline-block; margin-top:8px; color:#0066cc;">View assignment</a>

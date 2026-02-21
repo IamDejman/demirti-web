@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { createUser } from '@/lib/auth';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 const ALLOWED_ROLES = ['guest', 'student', 'facilitator', 'alumni', 'admin'];
 
@@ -17,9 +19,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
     const role = ALLOWED_ROLES.includes(requestedRole) ? requestedRole : 'student';
+    const passwordValue = password?.trim() || null;
+    if (passwordValue) {
+      const pw = validatePassword(passwordValue);
+      if (!pw.valid) {
+        return NextResponse.json({ error: pw.message }, { status: 400 });
+      }
+    }
     const user = await createUser({
       email: email.trim(),
-      password: password?.trim() || null,
+      password: passwordValue,
       firstName: firstName?.trim() || null,
       lastName: lastName?.trim() || null,
       role,
@@ -40,9 +49,9 @@ export async function POST(request) {
     if (e.message === 'An account with this email already exists') {
       return NextResponse.json({ error: e.message }, { status: 409 });
     }
-    console.error('POST /api/admin/users:', e);
+    reportError(e, { route: 'POST /api/admin/users' });
     return NextResponse.json(
-      { error: 'Failed to create user', detail: e?.message },
+      { error: 'Failed to create user' },
       { status: 500 }
     );
   }
@@ -104,11 +113,9 @@ export async function GET(request) {
 
     return NextResponse.json({ users: rowsRes.rows, total: countRes.rows[0]?.total ?? 0 });
   } catch (e) {
-    console.error('GET /api/admin/users:', e);
-    const message = e?.message || String(e);
-    const isDev = process.env.NODE_ENV !== 'production';
+    reportError(e, { route: 'GET /api/admin/users' });
     return NextResponse.json(
-      { error: 'Failed to fetch users', ...(isDev && { detail: message }) },
+      { error: 'Failed to fetch users' },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAssignmentById, getSubmissionByAssignmentAndStudent, isStudentInCohort } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request, { params }) {
@@ -18,7 +19,7 @@ export async function GET(request, { params }) {
     const submission = await getSubmissionByAssignmentAndStudent(id, user.id);
     return NextResponse.json({ submission: submission || null });
   } catch (e) {
-    console.error('GET /api/assignments/[id]/my-submission:', e);
+    reportError(e, { route: 'GET /api/assignments/[id]/my-submission' });
     return NextResponse.json({ error: 'Failed to fetch submission' }, { status: 500 });
   }
 }

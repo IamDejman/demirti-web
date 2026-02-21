@@ -22,10 +22,7 @@ export async function GET(request) {
     logger.info('Database connection successful');
   } catch (connError) {
     logger.error('Database connection error', { hint: connError?.message });
-    return NextResponse.json(
-      { error: 'Database connection failed', details: process.env.NODE_ENV === 'development' ? connError?.message : undefined },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
   }
 
   try {
@@ -55,6 +52,6 @@ export async function GET(request) {
     });
   } catch (e) {
     logger.error('init-db-run failed', { message: e.message });
-    return NextResponse.json({ error: 'Initialization failed', details: process.env.NODE_ENV === 'development' ? e?.message : undefined }, { status: 500 });
+    return NextResponse.json({ error: 'Initialization failed' }, { status: 500 });
   }
 }

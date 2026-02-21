@@ -70,12 +70,9 @@ export async function GET(request) {
     });
   } catch (error) {
     const searchParams = new URL(request.url).searchParams;
-    reportError(error, { route: '/api/admin/applications', track: searchParams.get('track') });
+    reportError(error, { route: 'GET /api/admin/applications', track: searchParams.get('track') });
     return NextResponse.json(
-      {
-        error: 'Failed to get applications',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      },
+      { error: 'Failed to get applications' },
       { status: 500 }
     );
   }

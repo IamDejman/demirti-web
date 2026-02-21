@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMaterialById, updateMaterial, deleteMaterial, getWeekById, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -27,7 +28,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ material: updated });
   } catch (e) {
-    console.error('PUT /api/materials/[id]:', e);
+    reportError(e, { route: 'PUT /api/materials/[id]' });
     return NextResponse.json({ error: 'Failed to update material' }, { status: 500 });
   }
 }
@@ -49,7 +50,7 @@ export async function DELETE(request, { params }) {
     await deleteMaterial(id);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/materials/[id]:', e);
+    reportError(e, { route: 'DELETE /api/materials/[id]' });
     return NextResponse.json({ error: 'Failed to delete material' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -28,8 +29,7 @@ export async function GET(request) {
     `;
     return NextResponse.json({ applications: result.rows });
   } catch (e) {
-    console.error('GET /api/admin/job-applications:', e);
-    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch applications';
-    return NextResponse.json({ error: 'Failed to fetch applications', detail: msg }, { status: 500 });
+    reportError(e, { route: 'GET /api/admin/job-applications' });
+    return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
   }
 }

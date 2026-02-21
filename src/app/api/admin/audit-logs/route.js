@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 import { getAuditLogs } from '@/lib/audit';
 import { formatTimeLagos } from '@/lib/dateUtils';
 
@@ -44,8 +45,7 @@ export async function GET(request) {
     }
     return NextResponse.json({ logs });
   } catch (e) {
-    console.error('GET /api/admin/audit-logs:', e);
-    const msg = process.env.NODE_ENV === 'development' ? e.message : 'Failed to fetch audit logs';
-    return NextResponse.json({ error: 'Failed to fetch audit logs', detail: msg }, { status: 500 });
+    reportError(e, { route: 'GET /api/admin/audit-logs' });
+    return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });
   }
 }

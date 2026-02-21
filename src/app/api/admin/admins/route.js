@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getAllAdmins, createAdmin, updateAdmin, disableAdmin, enableAdmin } from '@/lib/admin';
+import { reportError } from '@/lib/logger';
+import { validatePassword } from '@/lib/passwordPolicy';
+import { requireAdmin } from '@/lib/adminAuth';
 
-// GET - Get all admins
-export async function GET() {
+export async function GET(request) {
   try {
+    const [, authError] = await requireAdmin(request);
+    if (authError) return authError;
+
     const admins = await getAllAdmins();
     
     // Remove password hashes from response
@@ -23,9 +28,9 @@ export async function GET() {
       admins: safeAdmins
     });
   } catch (error) {
-    console.error('Error getting admins:', error);
+    reportError(error, { route: 'GET /api/admin/admins' });
     return NextResponse.json(
-      { error: 'Failed to get admins', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get admins' },
       { status: 500 }
     );
   }
@@ -34,6 +39,9 @@ export async function GET() {
 // POST - Create new admin
 export async function POST(request) {
   try {
+    const [, authError] = await requireAdmin(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { email, password, firstName, lastName } = body;
 
@@ -42,6 +50,11 @@ export async function POST(request) {
         { error: 'Email and password are required' },
         { status: 400 }
       );
+    }
+
+    const pw = validatePassword(password);
+    if (!pw.valid) {
+      return NextResponse.json({ error: pw.message }, { status: 400 });
     }
 
     const admin = await createAdmin({ email, password, firstName, lastName });
@@ -58,9 +71,9 @@ export async function POST(request) {
       }
     });
   } catch (error) {
-    console.error('Error creating admin:', error);
+    reportError(error, { route: 'POST /api/admin/admins' });
     return NextResponse.json(
-      { error: error.message || 'Failed to create admin', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: error.message || 'Failed to create admin' },
       { status: 400 }
     );
   }
@@ -69,8 +82,11 @@ export async function POST(request) {
 // PUT - Update admin
 export async function PUT(request) {
   try {
+    const [, authError] = await requireAdmin(request);
+    if (authError) return authError;
+
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id, email, password, firstName, lastName, isActive } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -78,6 +94,13 @@ export async function PUT(request) {
         { status: 400 }
       );
     }
+
+    const updates = {};
+    if (email !== undefined) updates.email = email;
+    if (password !== undefined) updates.password = password;
+    if (firstName !== undefined) updates.firstName = firstName;
+    if (lastName !== undefined) updates.lastName = lastName;
+    if (isActive !== undefined) updates.isActive = isActive;
 
     const updated = await updateAdmin(id, updates);
     
@@ -100,9 +123,9 @@ export async function PUT(request) {
       }
     });
   } catch (error) {
-    console.error('Error updating admin:', error);
+    reportError(error, { route: 'PUT /api/admin/admins' });
     return NextResponse.json(
-      { error: 'Failed to update admin', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update admin' },
       { status: 500 }
     );
   }
@@ -111,8 +134,11 @@ export async function PUT(request) {
 // PATCH - Disable/Enable admin
 export async function PATCH(request) {
   try {
+    const [, authError] = await requireAdmin(request);
+    if (authError) return authError;
+
     const body = await request.json();
-    const { id, action } = body; // action: 'disable' or 'enable'
+    const { id, action } = body;
 
     if (!id || !action) {
       return NextResponse.json(
@@ -149,9 +175,9 @@ export async function PATCH(request) {
       }
     });
   } catch (error) {
-    console.error('Error updating admin status:', error);
+    reportError(error, { route: 'PATCH /api/admin/admins' });
     return NextResponse.json(
-      { error: 'Failed to update admin status', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update admin status' },
       { status: 500 }
     );
   }

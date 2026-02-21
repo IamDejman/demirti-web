@@ -21,12 +21,12 @@ export default function ChangePasswordPage() {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('lms_token') : null;
-    if (!token) {
+    const authenticated = typeof window !== 'undefined' ? localStorage.getItem('lms_authenticated') : null;
+    if (!authenticated) {
       router.push('/login');
       return;
     }
-    fetch('/api/auth/me', { headers: getLmsAuthHeaders() })
+    fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {

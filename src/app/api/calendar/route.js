@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { sqlRead } from '@/lib/db-read';
+import '@/lib/env-db';
+import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { getCohortIdsForUser } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -9,38 +11,39 @@ export async function GET(request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const cohortIds = await getCohortIdsForUser(user.id, user.role);
 
-    const liveRes = cohortIds.length > 0
-      ? await sqlRead`
-          SELECT lc.id, lc.scheduled_at, lc.google_meet_link, w.title AS week_title, c.name AS cohort_name
-          FROM live_classes lc
-          JOIN weeks w ON w.id = lc.week_id
-          JOIN cohorts c ON c.id = lc.cohort_id
-          WHERE lc.cohort_id = ANY(${cohortIds});
-        `
-      : { rows: [] };
-    const assignRes = cohortIds.length > 0
-      ? await sqlRead`
-          SELECT a.id, a.deadline_at, a.title, c.name AS cohort_name
-          FROM assignments a
-          JOIN cohorts c ON c.id = a.cohort_id
-          WHERE a.cohort_id = ANY(${cohortIds});
-        `
-      : { rows: [] };
-
-    const officeRes = user.role === 'facilitator'
-      ? await sqlRead`
-          SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
-          FROM office_hour_slots s
-          LEFT JOIN cohorts c ON c.id = s.cohort_id
-          WHERE s.facilitator_id = ${user.id} AND s.is_cancelled = false;
-        `
-      : await sqlRead`
-          SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
-          FROM office_hour_bookings b
-          JOIN office_hour_slots s ON s.id = b.slot_id
-          LEFT JOIN cohorts c ON c.id = s.cohort_id
-          WHERE b.student_id = ${user.id} AND b.status = 'booked' AND s.is_cancelled = false;
-        `;
+    const [liveRes, assignRes, officeRes] = await Promise.all([
+      cohortIds.length > 0
+        ? sql`
+            SELECT lc.id, lc.scheduled_at, lc.google_meet_link, w.title AS week_title, c.name AS cohort_name
+            FROM live_classes lc
+            JOIN weeks w ON w.id = lc.week_id
+            JOIN cohorts c ON c.id = lc.cohort_id
+            WHERE lc.cohort_id = ANY(${cohortIds});
+          `
+        : Promise.resolve({ rows: [] }),
+      cohortIds.length > 0
+        ? sql`
+            SELECT a.id, a.deadline_at, a.title, c.name AS cohort_name
+            FROM assignments a
+            JOIN cohorts c ON c.id = a.cohort_id
+            WHERE a.cohort_id = ANY(${cohortIds});
+          `
+        : Promise.resolve({ rows: [] }),
+      user.role === 'facilitator'
+        ? sql`
+            SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
+            FROM office_hour_slots s
+            LEFT JOIN cohorts c ON c.id = s.cohort_id
+            WHERE s.facilitator_id = ${user.id} AND s.is_cancelled = false;
+          `
+        : sql`
+            SELECT s.id, s.start_time, s.end_time, s.title, s.meeting_link, s.cohort_id, c.name AS cohort_name
+            FROM office_hour_bookings b
+            JOIN office_hour_slots s ON s.id = b.slot_id
+            LEFT JOIN cohorts c ON c.id = s.cohort_id
+            WHERE b.student_id = ${user.id} AND b.status = 'booked' AND s.is_cancelled = false;
+          `,
+    ]);
 
     const events = [
       ...liveRes.rows.map((lc) => ({
@@ -74,7 +77,8 @@ export async function GET(request) {
 
     return NextResponse.json({ events });
   } catch (e) {
-    console.error('GET /api/calendar:', e);
-    return NextResponse.json({ error: 'Failed to fetch calendar' }, { status: 500 });
+    reportError(e, { route: 'GET /api/calendar' });
+    const message = process.env.NODE_ENV === 'development' ? (e?.message || String(e)) : 'Failed to fetch calendar';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

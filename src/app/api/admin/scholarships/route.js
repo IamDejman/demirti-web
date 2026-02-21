@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { getAllTracks } from '@/lib/db';
 
 // GET - Get scholarship status for all tracks
@@ -38,9 +39,9 @@ export async function GET() {
       scholarships: scholarshipData
     });
   } catch (error) {
-    console.error('Error getting scholarship data:', error);
+    reportError(error, { route: 'GET /api/admin/scholarships' });
     return NextResponse.json(
-      { error: 'Failed to get scholarship data', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get scholarship data' },
       { status: 500 }
     );
   }

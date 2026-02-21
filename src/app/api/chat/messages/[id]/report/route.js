@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { reportChatMessage } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -28,7 +29,7 @@ export async function POST(request, { params }) {
     await reportChatMessage(id, user.id, reason);
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('POST /api/chat/messages/[id]/report:', e);
+    reportError(e, { route: 'POST /api/chat/messages/[id]/report' });
     return NextResponse.json({ error: 'Failed to report message' }, { status: 500 });
   }
 }

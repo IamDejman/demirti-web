@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllDiscounts, createDiscount, updateDiscount, deleteDiscount } from '@/lib/db';
+import { reportError } from '@/lib/logger';
 
 // GET - Get all discounts
 export async function GET() {
@@ -11,9 +12,9 @@ export async function GET() {
       discounts: discounts
     });
   } catch (error) {
-    console.error('Error getting discounts:', error);
+    reportError(error, { route: 'GET /api/admin/discounts' });
     return NextResponse.json(
-      { error: 'Failed to get discounts', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to get discounts' },
       { status: 500 }
     );
   }
@@ -49,9 +50,9 @@ export async function POST(request) {
       discount: discount
     });
   } catch (error) {
-    console.error('Error creating discount:', error);
+    reportError(error, { route: 'POST /api/admin/discounts' });
     return NextResponse.json(
-      { error: 'Failed to create discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to create discount' },
       { status: 500 }
     );
   }
@@ -100,9 +101,9 @@ export async function PUT(request) {
       discount: discount
     });
   } catch (error) {
-    console.error('Error updating discount:', error);
+    reportError(error, { route: 'PUT /api/admin/discounts' });
     return NextResponse.json(
-      { error: 'Failed to update discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update discount' },
       { status: 500 }
     );
   }
@@ -135,9 +136,9 @@ export async function DELETE(request) {
       message: 'Discount deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting discount:', error);
+    reportError(error, { route: 'DELETE /api/admin/discounts' });
     return NextResponse.json(
-      { error: 'Failed to delete discount', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to delete discount' },
       { status: 500 }
     );
   }

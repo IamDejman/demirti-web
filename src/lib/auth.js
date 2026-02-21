@@ -89,7 +89,7 @@ export async function getUserByToken(token) {
   if (!token || typeof token !== 'string') return null;
   await ensureLmsSchema();
   const result = await sql`
-    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.phone, u.address, u.years_experience, u.is_active, u.suspended_until, u.must_change_password
+    SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.profile_picture_url, u.phone, u.is_active, u.suspended_until, u.must_change_password
     FROM users u
     JOIN user_sessions s ON s.user_id = u.id
     WHERE s.token = ${token}
@@ -105,6 +105,12 @@ export async function deleteUserSession(token) {
   if (!token) return;
   await ensureLmsSchema();
   await sql`DELETE FROM user_sessions WHERE token = ${token}`;
+}
+
+export async function deleteAllUserSessions(userId) {
+  if (!userId) return;
+  await ensureLmsSchema();
+  await sql`DELETE FROM user_sessions WHERE user_id = ${userId}`;
 }
 
 export async function verifyUserCredentials(email, password) {

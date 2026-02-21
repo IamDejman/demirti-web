@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPendingSubmissionsForFacilitator } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request) {
@@ -12,7 +13,7 @@ export async function GET(request) {
     const submissions = await getPendingSubmissionsForFacilitator(user.id);
     return NextResponse.json({ submissions });
   } catch (e) {
-    console.error('GET /api/facilitator/grading-queue:', e);
+    reportError(e, { route: 'GET /api/facilitator/grading-queue' });
     return NextResponse.json({ error: 'Failed to fetch grading queue' }, { status: 500 });
   }
 }

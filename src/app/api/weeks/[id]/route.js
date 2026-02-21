@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { reportError } from '@/lib/logger';
 import {
   getWeekById,
   getContentItemsByWeek,
@@ -12,34 +13,35 @@ import {
   isStudentInCohort,
 } from '@/lib/db-lms';
 import { requireAdminOrUser } from '@/lib/adminAuth';
+import { isValidUuid } from '@/lib/validation';
 
 export async function GET(request, { params }) {
   try {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
-    const cohort = await getCohortById(week.cohort_id);
-    const facilitators = await getCohortFacilitators(week.cohort_id);
-    const isAdmin = user.role === 'admin';
-    const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
-    const isStudent = await isStudentInCohort(week.cohort_id, user.id);
-    if (!isAdmin && !isFacilitator && !isStudent) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    if ((user.role === 'student' || user.role === 'alumni') && week.is_locked && week.unlock_date && new Date(week.unlock_date) > new Date()) {
-      return NextResponse.json({ error: 'Week is locked' }, { status: 403 });
-    }
-    const liveClass = await getLiveClassByWeekId(id);
-    const [contentItems, materials, checklistItems] = await Promise.all([
+    const [cohort, facilitators, isStudent, liveClass, contentItems, materials, checklistItems] = await Promise.all([
+      getCohortById(week.cohort_id),
+      getCohortFacilitators(week.cohort_id),
+      isStudentInCohort(week.cohort_id, user.id),
+      getLiveClassByWeekId(id),
       getContentItemsByWeek(id),
       getMaterialsByWeek(id),
       (user.role === 'student' || user.role === 'alumni')
         ? getStudentChecklistProgress(user.id, id)
         : getChecklistItemsByWeek(id),
     ]);
+    const isAdmin = user.role === 'admin';
+    const isFacilitator = user.role === 'facilitator' && facilitators.some((f) => f.id === user.id);
+    if (!isAdmin && !isFacilitator && !isStudent) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if ((user.role === 'student' || user.role === 'alumni') && week.is_locked && week.unlock_date && new Date(week.unlock_date) > new Date()) {
+      return NextResponse.json({ error: 'Week is locked' }, { status: 403 });
+    }
     return NextResponse.json({
       week: {
         ...week,
@@ -54,7 +56,7 @@ export async function GET(request, { params }) {
       checklistItems,
     });
   } catch (e) {
-    console.error('GET /api/weeks/[id]:', e);
+    reportError(e, { route: 'GET /api/weeks/[id]' });
     return NextResponse.json({ error: 'Failed to fetch week' }, { status: 500 });
   }
 }
@@ -64,7 +66,7 @@ export async function PUT(request, { params }) {
     const [user, errorRes] = await requireAdminOrUser(request);
     if (errorRes) return errorRes;
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Week ID required' }, { status: 400 });
     const week = await getWeekById(id);
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 });
     const facilitators = await getCohortFacilitators(week.cohort_id);
@@ -83,7 +85,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ week: updated });
   } catch (e) {
-    console.error('PUT /api/weeks/[id]:', e);
+    reportError(e, { route: 'PUT /api/weeks/[id]' });
     return NextResponse.json({ error: 'Failed to update week' }, { status: 500 });
   }
 }

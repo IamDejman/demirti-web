@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 import {
   getSponsoredApplicationById,
   updateSponsoredApplicationReviewStatus,
@@ -74,9 +75,9 @@ export async function PATCH(request, { params }) {
 
     return NextResponse.json({ success: true, application: updated });
   } catch (error) {
-    console.error('Error updating sponsored application:', error);
+    reportError(error, { route: 'PATCH /api/admin/sponsored-applications/[id]' });
     return NextResponse.json(
-      { error: 'Failed to update application', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to update application' },
       { status: 500 }
     );
   }

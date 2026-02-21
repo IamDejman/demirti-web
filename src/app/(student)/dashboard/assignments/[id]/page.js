@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { LmsCard, LmsEmptyState, LmsPageHeader, LmsBadge } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 export default function AssignmentDetailPage() {
   const params = useParams();
@@ -131,7 +132,7 @@ export default function AssignmentDetailPage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+  const formatDate = (d) => formatTimeLagos(d);
   const deadlinePassed = assignment?.deadline_at && new Date(assignment.deadline_at) < new Date();
   const hasLink = linkUrl?.trim();
   const hasText = textContent?.trim();
@@ -146,9 +147,10 @@ export default function AssignmentDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
-        <div className="h-8 w-48 lms-skeleton rounded-lg" />
-        <div className="h-64 lms-skeleton rounded-xl" />
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+        <div className="h-24 lms-skeleton rounded-xl" />
+        <div className="lms-skeleton rounded-xl" style={{ height: 160 }} />
+        <div className="lms-skeleton rounded-xl" style={{ height: 280 }} />
       </div>
     );
   }
@@ -159,7 +161,7 @@ export default function AssignmentDetailPage() {
         <LmsEmptyState
           icon={LmsIcons.inbox}
           title="Assignment not found"
-          action={<Link href="/dashboard/assignments" className="text-primary font-medium hover:underline">Back to assignments</Link>}
+          action={<Link href="/dashboard/assignments" className="lms-link">Back to assignments</Link>}
         />
       </LmsCard>
     );
@@ -175,9 +177,9 @@ export default function AssignmentDetailPage() {
       />
       <LmsCard title="Details" hoverable={false}>
         {assignment.description && (
-          <div className="prose prose-sm max-w-none" style={{ color: 'var(--neutral-600)' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(assignment.description, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'code', 'pre'] }) }} />
+          <div className="prose prose-sm max-w-none text-[var(--neutral-600)]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(assignment.description) }} />
         )}
-        <p className="mt-4 text-sm" style={{ color: 'var(--neutral-500)' }}>Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
+        <p className="mt-4 text-sm text-[var(--neutral-500)]">Due {formatDate(assignment.deadline_at)} · Max score: {assignment.max_score ?? 100}</p>
       </LmsCard>
 
       {submission ? (
@@ -189,24 +191,24 @@ export default function AssignmentDetailPage() {
               <LmsBadge variant="info" dot>Submitted</LmsBadge>
             )}
           </div>
-          {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open link</a></p>}
-          {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
-          {submission.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{submission.text_content}</p>}
+          {submission.link_url && <p className="mt-2"><a href={submission.link_url} target="_blank" rel="noopener noreferrer" className="lms-link">Open link</a></p>}
+          {submission.file_url && <p className="mt-2"><a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="lms-link">Open file</a></p>}
+          {submission.text_content && <p className="mt-2 text-[var(--neutral-700)]">{submission.text_content}</p>}
           {submission.status === 'graded' && (
-            <div className="mt-4 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.04), rgba(0, 166, 126, 0.04))', border: '1px solid var(--neutral-100)' }}>
+            <div className="lms-score-card">
               <div className="flex items-center gap-4">
-                <div className="flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary-color), #00a67e)', color: 'white' }}>
-                  <span className="text-xl font-bold">{submission.score}</span>
+                <div className="lms-score-card-fill">
+                  <span>{submission.score}</span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--neutral-500)' }}>Your score</p>
-                  <p className="text-lg font-bold" style={{ color: 'var(--neutral-900)' }}>{submission.score} / {assignment.max_score ?? 100}</p>
+                  <p className="text-sm font-medium text-[var(--neutral-500)]">Your score</p>
+                  <p className="text-lg font-bold text-[var(--neutral-900)]">{submission.score} / {assignment.max_score ?? 100}</p>
                 </div>
               </div>
               {submission.feedback && (
-                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--neutral-200)' }}>
-                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--neutral-700)' }}>Facilitator feedback</p>
-                  <p className="text-sm" style={{ color: 'var(--neutral-600)' }}>{submission.feedback}</p>
+                <div className="mt-4 pt-4 border-t border-[var(--neutral-200)]">
+                  <p className="text-sm font-medium mb-1 text-[var(--neutral-700)]">Facilitator feedback</p>
+                  <p className="text-sm text-[var(--neutral-600)]">{submission.feedback}</p>
                 </div>
               )}
             </div>
@@ -214,43 +216,54 @@ export default function AssignmentDetailPage() {
         </LmsCard>
       ) : !deadlinePassed && (
         <LmsCard title="Submit">
-          {message && <p className={`mt-2 text-sm ${message.startsWith('Submit') ? 'text-red-600' : 'text-green-600'}`}>{message}</p>}
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {message && (
+            <div className={`lms-alert mb-4 ${message.startsWith('Submit') || message.includes('fail') || message.includes('wrong') ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+              {message}
+            </div>
+          )}
+          {uploadError && (
+            <div className="lms-alert lms-alert-error mb-4" role="alert">{uploadError}</div>
+          )}
+          {uploadedFileUrl && !uploading && (
+            <div className="lms-alert lms-alert-success mb-4" role="alert">File uploaded.</div>
+          )}
+          <form onSubmit={handleSubmit} className="flex flex-col mt-4" style={{ gap: 'var(--lms-space-4)' }}>
             {(assignment.submission_type === 'link' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="lms-form-label block">Link</label>
+                <label className="lms-form-label block mb-1.5">Link</label>
                 <input
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  className="lms-form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="lms-form-input border-token block w-full px-3 py-2 rounded-lg"
                   placeholder="https://..."
                 />
               </div>
             )}
             {(assignment.submission_type === 'text' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="lms-form-label block">Text</label>
+                <label className="lms-form-label block mb-1.5">Text</label>
                 <textarea
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
-                rows={6}
-                className="lms-form-textarea mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  rows={6}
+                  className="lms-form-textarea border-token block w-full px-3 py-2 rounded-lg"
                   placeholder="Your response..."
                 />
               </div>
             )}
             {(assignment.submission_type === 'file_upload' || assignment.submission_type === 'multiple') && (
               <div>
-                <label className="lms-form-label block">File upload</label>
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  className="mt-1 block w-full"
-                />
-                {uploading && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>Uploading...</p>}
-                {uploadedFileUrl && !uploading && <p className="text-sm text-green-600 mt-2">File uploaded.</p>}
-                {uploadError && <p className="text-sm text-red-600 mt-2">{uploadError}</p>}
+                <span className="lms-form-label block mb-1.5">File upload</span>
+                <label className="file-upload-area">
+                  <input type="file" onChange={handleFileChange} style={{ display: 'none' }} />
+                  <span className="file-upload-area-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </span>
+                  <span className="file-upload-area-text">
+                    {uploading ? 'Uploading…' : <><strong>Click to upload</strong> your file</>}
+                  </span>
+                </label>
               </div>
             )}
             <button
@@ -268,7 +281,7 @@ export default function AssignmentDetailPage() {
         <LmsCard hoverable={false}>
           <div className="flex items-center gap-2">
             <LmsBadge variant="danger">Deadline passed</LmsBadge>
-            <span className="text-sm" style={{ color: 'var(--neutral-500)' }}>The deadline for this assignment has passed.</span>
+            <span className="text-sm text-[var(--neutral-500)]">The deadline for this assignment has passed.</span>
           </div>
         </LmsCard>
       )}

@@ -72,7 +72,7 @@ export default function PushToggle() {
       type="button"
       onClick={handleToggle}
       disabled={loading}
-      className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
+      className="lms-btn lms-btn-primary min-h-[44px] px-5 py-2.5 rounded-xl font-medium"
     >
       {loading ? 'Updating...' : enabled ? 'Disable push notifications' : 'Enable push notifications'}
     </button>

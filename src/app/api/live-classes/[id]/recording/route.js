@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLiveClassById, updateLiveClass, getCohortFacilitators } from '@/lib/db-lms';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 
@@ -24,7 +25,7 @@ export async function POST(request, { params }) {
     });
     return NextResponse.json({ liveClass: updated });
   } catch (e) {
-    console.error('POST /api/live-classes/[id]/recording:', e);
+    reportError(e, { route: 'POST /api/live-classes/[id]/recording' });
     return NextResponse.json({ error: 'Failed to set recording' }, { status: 500 });
   }
 }

@@ -177,3 +177,130 @@ export function createPresignedUploadUrl({ key, contentType, expiresInSeconds = 
     method: 'PUT',
   };
 }
+
+function createPresignedDeleteUrl(key, expiresInSeconds = 60) {
+  const { bucket, region, accessKey, secretKey, endpoint, forcePathStyle } = getStorageConfig();
+  if (!bucket || !region || !accessKey || !secretKey) {
+    throw new Error('Storage not configured');
+  }
+
+  const now = new Date();
+  const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const dateStamp = amzDate.slice(0, 8);
+  const service = 's3';
+  const algorithm = 'AWS4-HMAC-SHA256';
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+
+  let host;
+  let canonicalUri;
+  let baseUrl;
+  if (endpoint) {
+    const url = new URL(endpoint);
+    host = url.host;
+    const basePath = url.pathname.replace(/\/$/, '');
+    const keyPath = encodeKeyPath(key);
+    if (forcePathStyle || !url.host.includes(bucket)) {
+      canonicalUri = `${basePath}/${bucket}/${keyPath}`.replace(/\/{2,}/g, '/');
+      baseUrl = `${url.protocol}//${host}${basePath}`;
+    } else {
+      canonicalUri = `${basePath}/${keyPath}`.replace(/\/{2,}/g, '/');
+      baseUrl = `${url.protocol}//${host}${basePath}`;
+    }
+  } else {
+    host = `${bucket}.s3.${region}.amazonaws.com`;
+    canonicalUri = `/${encodeKeyPath(key)}`;
+    baseUrl = `https://${host}`;
+  }
+
+  const queryParams = {
+    'X-Amz-Algorithm': algorithm,
+    'X-Amz-Credential': `${accessKey}/${credentialScope}`,
+    'X-Amz-Date': amzDate,
+    'X-Amz-Expires': `${expiresInSeconds}`,
+    'X-Amz-SignedHeaders': 'host',
+  };
+
+  const canonicalQuerystring = Object.keys(queryParams)
+    .sort()
+    .map((k) => `${encodeRfc3986(k)}=${encodeRfc3986(queryParams[k])}`)
+    .join('&');
+
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = 'host';
+  const payloadHash = 'UNSIGNED-PAYLOAD';
+  const canonicalRequest = [
+    'DELETE',
+    canonicalUri,
+    canonicalQuerystring,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join('\n');
+
+  const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    hashSha256(canonicalRequest),
+  ].join('\n');
+
+  const signingKey = getSignatureKey(secretKey, dateStamp, region, service);
+  const signature = crypto.createHmac('sha256', signingKey).update(stringToSign, 'utf8').digest('hex');
+
+  return `${baseUrl}${canonicalUri}?${canonicalQuerystring}&X-Amz-Signature=${signature}`;
+}
+
+export async function deleteFile(key) {
+  if (!isStorageConfigured()) {
+    return { success: false, error: 'Storage not configured' };
+  }
+  try {
+    const deleteUrl = createPresignedDeleteUrl(key);
+    const res = await fetch(deleteUrl, { method: 'DELETE' });
+    if (!res.ok) {
+      const text = await res.text();
+      return { success: false, error: text || `HTTP ${res.status}` };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+function decodeKeyPath(encoded) {
+  return encoded.split('/').map((s) => decodeURIComponent(s)).join('/');
+}
+
+export function extractKeyFromUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = trimmed.startsWith('/') ? new URL(trimmed, 'https://x') : new URL(trimmed);
+    const path = parsed.pathname;
+
+    const apiMatch = path.match(/\/api\/uploads\/(.+)/);
+    if (apiMatch) return decodeKeyPath(apiMatch[1]);
+
+    const { bucket } = getStorageConfig();
+    if (bucket) {
+      const bucketPrefix = `/${bucket}/`;
+      const idx = path.indexOf(bucketPrefix);
+      if (idx !== -1) {
+        const rest = path.slice(idx + bucketPrefix.length);
+        return rest ? decodeKeyPath(rest) : null;
+      }
+    }
+
+    const keyPart = path.replace(/^\//, '');
+    return keyPart ? decodeKeyPath(keyPart) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteFileByUrl(url) {
+  const key = extractKeyFromUrl(url);
+  if (!key) return { success: false, error: 'Could not extract key from URL' };
+  return deleteFile(key);
+}

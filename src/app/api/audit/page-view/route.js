@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { recordAuditLog } from '@/lib/audit';
 
@@ -29,7 +30,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('POST /api/audit/page-view:', e);
+    reportError(e, { route: 'POST /api/audit/page-view' });
     return NextResponse.json({ error: 'Failed to record page view' }, { status: 500 });
   }
 }

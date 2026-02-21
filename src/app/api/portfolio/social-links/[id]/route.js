@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
+import { isValidUuid } from '@/lib/validation';
 
 async function ensureOwnership(linkId, userId) {
   const res = await sql`
@@ -19,7 +21,7 @@ export async function PUT(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
     const body = await request.json();
     const { platform, url } = body;
     if (!platform?.trim() || !url?.trim()) {
@@ -38,7 +40,7 @@ export async function PUT(request, { params }) {
     `;
     return NextResponse.json({ link: result.rows[0] });
   } catch (e) {
-    console.error('PUT /api/portfolio/social-links/[id]:', e);
+    reportError(e, { route: 'PUT /api/portfolio/social-links/[id]' });
     return NextResponse.json({ error: 'Failed to update social link' }, { status: 500 });
   }
 }
@@ -48,7 +50,7 @@ export async function DELETE(request, { params }) {
     const user = await getUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    if (!id) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
+    if (!id || !isValidUuid(id)) return NextResponse.json({ error: 'Link ID required' }, { status: 400 });
     await ensureLmsSchema();
     if (!(await ensureOwnership(id, user.id))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -56,7 +58,7 @@ export async function DELETE(request, { params }) {
     await sql`DELETE FROM portfolio_social_links WHERE id = ${id}`;
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('DELETE /api/portfolio/social-links/[id]:', e);
+    reportError(e, { route: 'DELETE /api/portfolio/social-links/[id]' });
     return NextResponse.json({ error: 'Failed to delete social link' }, { status: 500 });
   }
 }

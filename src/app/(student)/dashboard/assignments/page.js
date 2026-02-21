@@ -6,6 +6,7 @@ import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatDateLagos } from '@/lib/dateUtils';
 
 function deadlineStatus(dateStr) {
   if (!dateStr) return { label: '—', color: 'neutral' };
@@ -40,13 +41,18 @@ export default function StudentAssignmentsPage() {
     })();
   }, []);
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '');
+  const formatDate = (d) => formatDateLagos(d);
 
   if (loading) {
     return (
-      <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
-        <div className="h-8 w-48 lms-skeleton rounded-lg" />
-        <div className="h-64 lms-skeleton rounded-xl" />
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+        <div className="h-24 lms-skeleton rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 'var(--lms-space-4)' }}>
+          <div className="h-24 lms-skeleton rounded-xl" />
+          <div className="h-24 lms-skeleton rounded-xl" />
+          <div className="h-24 lms-skeleton rounded-xl" />
+        </div>
+        <div className="lms-skeleton rounded-xl" style={{ height: 320 }} />
       </div>
     );
   }
@@ -63,13 +69,13 @@ export default function StudentAssignmentsPage() {
             <div className="lms-stat-label">Total</div>
           </div>
           <div className="lms-stat-card">
-            <div className="lms-stat-value" style={{ color: 'var(--red-600, #dc2626)' }}>
+            <div className="lms-stat-value lms-stat-value-danger">
               {assignments.filter(a => a.deadline_at && new Date(a.deadline_at) < new Date()).length}
             </div>
             <div className="lms-stat-label">Past deadline</div>
           </div>
           <div className="lms-stat-card">
-            <div className="lms-stat-value" style={{ color: 'var(--green-600, #16a34a)' }}>
+            <div className="lms-stat-value lms-stat-value-success">
               {assignments.filter(a => !a.deadline_at || new Date(a.deadline_at) >= new Date()).length}
             </div>
             <div className="lms-stat-label">Upcoming</div>
@@ -98,13 +104,13 @@ export default function StudentAssignmentsPage() {
                   const ds = deadlineStatus(a.deadline_at);
                   return (
                     <tr key={a.id}>
-                      <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{a.title}</td>
-                      <td style={{ color: 'var(--neutral-600)' }}>{a.week_title ?? a.week_number}</td>
-                      <td style={{ color: 'var(--neutral-600)' }}>{formatDate(a.deadline_at)}</td>
+                      <td className="font-medium text-[var(--neutral-900)]">{a.title}</td>
+                      <td className="text-[var(--neutral-600)]">{a.week_title ?? a.week_number}</td>
+                      <td className="text-[var(--neutral-600)]">{formatDate(a.deadline_at)}</td>
                       <td>
                         <span className={`lms-badge lms-badge-${ds.color}`}>{ds.label}</span>
                       </td>
-                      <td style={{ color: 'var(--neutral-600)' }}>{a.max_score ?? 100}</td>
+                      <td className="text-[var(--neutral-600)]">{a.max_score ?? 100}</td>
                       <td>
                         <Link href={`/dashboard/assignments/${a.id}`} className="lms-btn lms-btn-sm lms-btn-primary">
                           View

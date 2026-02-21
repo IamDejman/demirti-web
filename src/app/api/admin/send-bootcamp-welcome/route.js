@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { reportError } from '@/lib/logger';
 import { getAllApplications, getAllSponsoredApplications } from '@/lib/db';
 import { sendBootcampWelcomeEmail } from '@/lib/bootcampWelcomeEmails';
 import { recordAuditLog } from '@/lib/audit';
@@ -46,8 +47,9 @@ export async function POST(request) {
       }
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const recipients = [...new Set(emails.map((e) => (e || '').trim().toLowerCase()).filter(Boolean))]
-      .filter((email) => email.includes('@'))
+      .filter((email) => emailRegex.test(email) && !/[\r\n]/.test(email))
       .map((email) => {
         const names = nameMap.get(email) || { firstName: '', lastName: '' };
         return { email, firstName: names.firstName, lastName: names.lastName };
@@ -100,9 +102,9 @@ export async function POST(request) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('POST /api/admin/send-bootcamp-welcome:', error);
+    reportError(error, { route: 'POST /api/admin/send-bootcamp-welcome' });
     return NextResponse.json(
-      { error: 'Failed to send bootcamp welcome emails', details: process.env.NODE_ENV === 'development' ? error?.message : undefined },
+      { error: 'Failed to send bootcamp welcome emails' },
       { status: 500 }
     );
   }

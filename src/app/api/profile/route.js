@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
@@ -70,10 +71,7 @@ export async function PATCH(request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('PATCH /api/profile:', e);
-    return NextResponse.json(
-      { error: 'Failed to update profile', detail: process.env.NODE_ENV === 'development' ? e?.message : undefined },
-      { status: 500 }
-    );
+    reportError(e, { route: 'PATCH /api/profile' });
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }

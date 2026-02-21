@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { LmsCard, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [email, setEmail] = useState('');
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -30,7 +32,9 @@ export default function ProfilePage() {
   });
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState('');
-  const [showPasswords, setShowPasswords] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -39,6 +43,7 @@ export default function ProfilePage() {
         const data = await res.json();
         if (res.ok && data.profile) {
           const p = data.profile;
+          setEmail(p.email ?? '');
           setForm({
             firstName: p.firstName ?? '',
             lastName: p.lastName ?? '',
@@ -183,41 +188,42 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="h-10 w-64 lms-skeleton rounded-lg" />
-        <div className="h-64 lms-skeleton rounded-xl" />
+      <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+        <div className="h-24 lms-skeleton rounded-xl" />
+        <div className="lms-skeleton rounded-xl" style={{ height: 320 }} />
+        <div className="lms-skeleton rounded-xl" style={{ height: 280 }} />
       </div>
     );
   }
 
-  const inputCls = 'w-full px-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-primary';
-  const inputSty = { border: '1px solid var(--neutral-200)', color: 'var(--neutral-900)', backgroundColor: 'white' };
-  const labelCls = 'block text-sm font-medium mb-1.5';
-  const labelSty = { color: 'var(--neutral-700)' };
+  const isMessageError = message && (message.includes('fail') || message.includes('Failed'));
+  const inputCls = 'lms-form-input border-token w-full px-4 py-3';
+  const textareaCls = 'lms-form-textarea border-token w-full px-4 py-3 resize-y';
 
   return (
-    <div className="space-y-8">
+    <div className="profile-page flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title="Profile"
         subtitle="Update your name, contact details, and photo."
         icon={LmsIcons.users}
-        breadcrumb={{ href: '/dashboard', label: 'Dashboard' }}
       />
 
-      {/* Photo + Identity Card */}
       <LmsCard accent="primary" hoverable={false}>
         {message && (
-          <div className="mb-5 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: message.includes('fail') || message.includes('Failed') ? 'rgba(220,38,38,0.06)' : 'rgba(0,82,163,0.06)', color: message.includes('fail') || message.includes('Failed') ? '#dc2626' : 'var(--primary-color)' }} role="alert">
+          <div className={`lms-alert mb-6 ${isMessageError ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
             {message}
           </div>
         )}
-        <form onSubmit={handleSave} className="space-y-8">
-          {/* Photo section */}
-          <div className="flex flex-col sm:flex-row items-start gap-8 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.03), rgba(0, 166, 126, 0.02))', border: '1px solid var(--neutral-100)' }}>
-            <div className="flex flex-col items-center gap-3">
+        <form onSubmit={handleSave} className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
+          {/* Photo + Identity */}
+          <div className="profile-hero">
+            <div className="profile-hero-avatar-wrap">
               <div
-                className="w-28 h-28 rounded-2xl flex items-center justify-center text-3xl font-bold overflow-hidden shadow-sm"
-                style={{ background: form.profilePictureUrl ? 'transparent' : 'linear-gradient(135deg, var(--primary-color), #00a67e)', color: 'white', border: '3px solid white', boxShadow: '0 4px 12px rgba(0,82,163,0.15)' }}
+                className="profile-hero-avatar"
+                style={{
+                  background: form.profilePictureUrl ? 'transparent' : 'linear-gradient(135deg, var(--primary-color), #00a67e)',
+                  color: 'white',
+                }}
               >
                 {form.profilePictureUrl ? (
                   <img src={form.profilePictureUrl} alt="" className="w-full h-full object-cover" />
@@ -226,58 +232,68 @@ export default function ProfilePage() {
                 )}
               </div>
               <input ref={fileInputRef} type="file" accept={PROFILE_IMAGE_TYPES.join(',')} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
-              <button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()} className="lms-btn lms-btn-sm lms-btn-outline">
-                {uploading ? 'Uploading...' : 'Change photo'}
+              <button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()} className="profile-hero-change-btn">
+                {uploading ? 'Uploading…' : 'Change photo'}
               </button>
-              <p className="text-xs text-center" style={{ color: 'var(--neutral-400)' }}>JPG, PNG or WebP. Max {PROFILE_IMAGE_MAX_MB}MB</p>
+              <span className="profile-hero-hint">JPG, PNG or WebP · Max {PROFILE_IMAGE_MAX_MB}MB</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold" style={{ color: 'var(--neutral-900)' }}>
+            <div className="profile-hero-details">
+              <h2 className="profile-hero-name" title={form.firstName || form.lastName ? `${form.firstName} ${form.lastName}`.trim() : 'Your Name'}>
                 {form.firstName || form.lastName ? `${form.firstName} ${form.lastName}`.trim() : 'Your Name'}
-              </h3>
-              <p className="text-sm mt-1" style={{ color: 'var(--neutral-500)' }}>
+              </h2>
+              {email && <p className="profile-hero-meta truncate" title={email}>{email}</p>}
+              <p className="profile-hero-meta">
                 {form.yearsExperience ? `${form.yearsExperience} years experience` : 'Student at CVERSE Academy'}
               </p>
-              {form.phone && <p className="text-sm mt-2" style={{ color: 'var(--neutral-500)' }}>{form.phone}</p>}
+              {form.phone && <p className="profile-hero-meta">{form.phone}</p>}
+              <Link
+                href="/dashboard/certificates"
+                className="profile-hero-certificates-btn inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--neutral-700)] bg-[var(--neutral-100)] border-2 border-[var(--neutral-300)] no-underline hover:bg-[color:color-mix(in_srgb,var(--primary-color)_8%,var(--neutral-100))] hover:border-[color:color-mix(in_srgb,var(--primary-color)_30%,var(--neutral-300))] transition-colors"
+              >
+                <span className="shrink-0 text-[var(--primary-color)]" aria-hidden>{LmsIcons.trophy}</span>
+                View certificates
+              </Link>
             </div>
           </div>
 
           {/* Personal Info */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--neutral-400)' }}>Personal Information</h3>
-            <div className="grid gap-5 sm:grid-cols-2">
+          <div className="profile-section">
+            <h3 className="lms-section-title">Personal Information</h3>
+            <div className="grid sm:grid-cols-2" style={{ gap: 'var(--lms-space-5)' }}>
               <div>
-                <label htmlFor="profile-firstName" className={labelCls} style={labelSty}>First name</label>
-                <input id="profile-firstName" type="text" value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} className={inputCls} style={inputSty} />
+                <label htmlFor="profile-firstName" className="lms-form-label block mb-1.5">First name</label>
+                <input id="profile-firstName" type="text" value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} className={inputCls} />
               </div>
               <div>
-                <label htmlFor="profile-lastName" className={labelCls} style={labelSty}>Last name</label>
-                <input id="profile-lastName" type="text" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} className={inputCls} style={inputSty} />
+                <label htmlFor="profile-lastName" className="lms-form-label block mb-1.5">Last name</label>
+                <input id="profile-lastName" type="text" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} className={inputCls} />
               </div>
             </div>
           </div>
 
           {/* Contact */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--neutral-400)' }}>Contact Details</h3>
-            <div className="grid gap-5 sm:grid-cols-2">
+          <div className="profile-section">
+            <h3 className="lms-section-title">Contact Details</h3>
+            <div className="grid sm:grid-cols-2" style={{ gap: 'var(--lms-space-5)' }}>
               <div>
-                <label htmlFor="profile-phone" className={labelCls} style={labelSty}>Phone number</label>
-                <input id="profile-phone" type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={inputCls} style={inputSty} />
+                <label htmlFor="profile-phone" className="lms-form-label block mb-1.5">Phone number</label>
+                <input id="profile-phone" type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={inputCls} />
               </div>
               <div>
-                <label htmlFor="profile-yearsExperience" className={labelCls} style={labelSty}>Years of experience</label>
-                <input id="profile-yearsExperience" type="number" min={0} max={100} value={form.yearsExperience} onChange={(e) => setForm((f) => ({ ...f, yearsExperience: e.target.value }))} className={inputCls} style={inputSty} />
+                <label htmlFor="profile-yearsExperience" className="lms-form-label block mb-1.5">Years of experience</label>
+                <input id="profile-yearsExperience" type="number" min={0} max={100} value={form.yearsExperience} onChange={(e) => setForm((f) => ({ ...f, yearsExperience: e.target.value }))} className={inputCls} />
               </div>
             </div>
-            <div className="mt-5">
-              <label htmlFor="profile-address" className={labelCls} style={labelSty}>Address</label>
-              <textarea id="profile-address" rows={2} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} className={`${inputCls} resize-y`} style={inputSty} />
+            <div style={{ marginTop: 'var(--lms-space-5)' }}>
+              <label htmlFor="profile-address" className="lms-form-label block mb-1.5">Address</label>
+              <textarea id="profile-address" rows={3} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} className={textareaCls} />
             </div>
           </div>
 
-          <div className="pt-2">
-            <button type="submit" disabled={saving} className="lms-btn lms-btn-primary">{saving ? 'Saving...' : 'Save profile'}</button>
+          <div className="profile-section pt-2">
+            <button type="submit" disabled={saving} className="lms-btn lms-btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', minHeight: '48px', borderRadius: '12px' }}>
+              {saving ? 'Saving...' : 'Save profile'}
+            </button>
           </div>
         </form>
       </LmsCard>
@@ -285,30 +301,54 @@ export default function ProfilePage() {
       {/* Security */}
       <LmsCard title="Security" subtitle="Change your account password" accent="warning" hoverable={false}>
         {passwordMessage && (
-          <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: passwordMessage.includes('success') ? 'rgba(22,163,74,0.06)' : 'rgba(220,38,38,0.06)', color: passwordMessage.includes('success') ? '#16a34a' : '#dc2626' }} role="alert">
+          <div className={`lms-alert mb-6 ${passwordMessage.includes('success') ? 'lms-alert-success' : 'lms-alert-error'}`} role="alert" aria-live="polite">
             {passwordMessage}
           </div>
         )}
-        <form onSubmit={handleChangePassword} className="space-y-5 max-w-md">
+        <form onSubmit={handleChangePassword} className="flex flex-col max-w-md" style={{ gap: 'var(--lms-space-6)' }}>
           <div>
-            <label htmlFor="current-password" className={labelCls} style={labelSty}>Current password</label>
-            <input id="current-password" type={showPasswords ? 'text' : 'password'} value={passwordForm.currentPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))} className={inputCls} style={inputSty} autoComplete="current-password" />
+            <label htmlFor="current-password" className="lms-form-label block mb-1.5">Current password</label>
+            <div className="relative">
+              <input id="current-password" type={showCurrentPw ? 'text' : 'password'} value={passwordForm.currentPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))} className={`${inputCls} profile-pw-input`} autoComplete="current-password" />
+              <button type="button" onClick={() => setShowCurrentPw((s) => !s)} className="profile-pw-toggle" aria-label={showCurrentPw ? 'Hide password' : 'Show password'} tabIndex={-1}>
+                {showCurrentPw ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                )}
+              </button>
+            </div>
           </div>
           <div>
-            <label htmlFor="new-password" className={labelCls} style={labelSty}>New password</label>
-            <input id="new-password" type={showPasswords ? 'text' : 'password'} value={passwordForm.newPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))} className={inputCls} style={inputSty} autoComplete="new-password" />
+            <label htmlFor="new-password" className="lms-form-label block mb-1.5">New password</label>
+            <div className="relative">
+              <input id="new-password" type={showNewPw ? 'text' : 'password'} value={passwordForm.newPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))} className={`${inputCls} profile-pw-input`} autoComplete="new-password" />
+              <button type="button" onClick={() => setShowNewPw((s) => !s)} className="profile-pw-toggle" aria-label={showNewPw ? 'Hide password' : 'Show password'} tabIndex={-1}>
+                {showNewPw ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                )}
+              </button>
+            </div>
             <p className="text-xs mt-1.5" style={{ color: 'var(--neutral-400)' }}>At least 8 characters.</p>
           </div>
           <div>
-            <label htmlFor="confirm-password" className={labelCls} style={labelSty}>Confirm new password</label>
-            <input id="confirm-password" type={showPasswords ? 'text' : 'password'} value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))} className={inputCls} style={inputSty} autoComplete="new-password" />
+            <label htmlFor="confirm-password" className="lms-form-label block mb-1.5">Confirm new password</label>
+            <div className="relative">
+              <input id="confirm-password" type={showConfirmPw ? 'text' : 'password'} value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))} className={`${inputCls} profile-pw-input`} autoComplete="new-password" />
+              <button type="button" onClick={() => setShowConfirmPw((s) => !s)} className="profile-pw-toggle" aria-label={showConfirmPw ? 'Hide password' : 'Show password'} tabIndex={-1}>
+                {showConfirmPw ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                )}
+              </button>
+            </div>
           </div>
-          <label className="lms-toggle">
-            <input type="checkbox" checked={showPasswords} onChange={(e) => setShowPasswords(e.target.checked)} />
-            <span className="lms-toggle-track" />
-            <span className="text-sm" style={{ color: 'var(--neutral-600)' }}>Show passwords</span>
-          </label>
-          <button type="submit" disabled={passwordSaving} className="lms-btn lms-btn-primary">{passwordSaving ? 'Updating...' : 'Update password'}</button>
+          <button type="submit" disabled={passwordSaving} className="lms-btn lms-btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', minHeight: '48px', borderRadius: '12px' }}>
+            {passwordSaving ? 'Updating...' : 'Update password'}
+          </button>
         </form>
       </LmsCard>
     </div>

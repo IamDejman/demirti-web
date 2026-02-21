@@ -257,9 +257,9 @@ export default function PortfolioPage() {
               placeholder="https://... or upload below"
               value={form.resumeUrl}
               onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
-              className={inputCls}
+              className={`${inputCls} mb-4`}
             />
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <label className="portfolio-upload-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--neutral-700)] bg-[var(--neutral-100)] border-2 border-[var(--neutral-300)] cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--primary-color)_8%,var(--neutral-100))] hover:border-[color:color-mix(in_srgb,var(--primary-color)_35%,var(--neutral-300))] focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--primary-color)] focus-within:ring-offset-2 transition-colors">
                 <span className="portfolio-upload-icon" aria-hidden>
                   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13V3M10 3L6 7M10 3l4 4" /><path d="M3 14v2a2 2 0 002 2h10a2 2 0 002-2v-2" /></svg>
@@ -322,8 +322,8 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Projects" subtitle="Showcase work with title, description, link and image" icon={LmsIcons.book}>
-        <form onSubmit={saveProject} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
-          <div className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={saveProject} className="flex flex-col gap-4 pb-10 mb-8 border-b border-[var(--neutral-200)]">
+          <div className="grid gap-6 md:grid-cols-2">
             <input
               type="text"
               placeholder="Project title"
@@ -371,7 +371,7 @@ export default function PortfolioPage() {
             </label>
             {uploading && <span className="text-xs text-[var(--neutral-500)]">Uploading...</span>}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-3">
             <button type="submit" className="lms-btn lms-btn-primary">
               {editingProjectId ? 'Update project' : 'Add project'}
             </button>
@@ -384,7 +384,7 @@ export default function PortfolioPage() {
         </form>
 
         {projects.length === 0 ? (
-          <div className="text-center py-10 text-[var(--neutral-600)]">
+          <div className="text-center pt-8 pb-10 text-[var(--neutral-600)]">
             <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 bg-[var(--neutral-100)] text-[var(--neutral-400)]">
               {LmsIcons.book}
             </div>
@@ -441,8 +441,8 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Social links" subtitle="LinkedIn, GitHub, Twitter, etc." icon={LmsIcons.chat}>
-        <form onSubmit={saveLink} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
-          <div className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={saveLink} className="flex flex-col gap-4 pb-10 mb-8 border-b border-[var(--neutral-200)]">
+          <div className="grid gap-6 md:grid-cols-2">
             <input
               type="text"
               placeholder="Platform (e.g. LinkedIn, GitHub)"
@@ -471,7 +471,7 @@ export default function PortfolioPage() {
         </form>
 
         {links.length === 0 ? (
-          <p className="text-sm text-center text-[var(--neutral-500)] py-4">No social links added.</p>
+          <p className="text-sm text-center text-[var(--neutral-500)] pt-8 pb-4">No social links added.</p>
         ) : (
           <ul className="space-y-2">
             {links.map((link) => (

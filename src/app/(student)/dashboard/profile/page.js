@@ -248,7 +248,7 @@ export default function ProfilePage() {
               {form.phone && <p className="profile-hero-meta">{form.phone}</p>}
               <Link
                 href="/dashboard/certificates"
-                className="profile-hero-certificates-btn inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--neutral-700)] bg-[var(--neutral-100)] border-2 border-[var(--neutral-300)] no-underline hover:bg-[color:color-mix(in_srgb,var(--primary-color)_8%,var(--neutral-100))] hover:border-[color:color-mix(in_srgb,var(--primary-color)_30%,var(--neutral-300))] transition-colors"
+                className="profile-hero-certificates-btn inline-flex items-center gap-2 mt-8 px-3 py-1.5 rounded-lg text-[0.8125rem] font-medium text-[var(--primary-color)] bg-transparent border border-[var(--neutral-300)] no-underline hover:bg-[var(--neutral-50)] hover:border-[var(--primary-color)] transition-[border-color,background] duration-200"
               >
                 <span className="shrink-0 text-[var(--primary-color)]" aria-hidden>{LmsIcons.trophy}</span>
                 View certificates

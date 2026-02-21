@@ -90,13 +90,18 @@ export async function POST(request) {
       .map((recipient) => {
         if (typeof recipient === 'string') {
           return recipient.trim() && recipient.includes('@')
-            ? { email: recipient.trim(), name: '' }
+            ? { email: recipient.trim(), name: '', firstName: '', lastName: '' }
             : null;
         }
         if (recipient && recipient.email && recipient.email.includes('@')) {
+          const firstName = (recipient.firstName != null && recipient.firstName !== undefined) ? String(recipient.firstName).trim() : '';
+          const lastName = (recipient.lastName != null && recipient.lastName !== undefined) ? String(recipient.lastName).trim() : '';
+          const name = recipient.name ? recipient.name.trim() : [firstName, lastName].filter(Boolean).join(' ');
           return {
             email: recipient.email.trim(),
-            name: recipient.name ? recipient.name.trim() : '',
+            name: name || '',
+            firstName,
+            lastName,
           };
         }
         return null;
@@ -110,7 +115,7 @@ export async function POST(request) {
       );
     }
 
-    const hasNames = recipientList.some((r) => r.name && r.name.trim());
+    const hasPlaceholders = recipientList.some((r) => r.name || r.firstName || r.lastName);
     const resendAttachments = attachments?.length
       ? attachments.map((a) => ({ filename: a.name || 'attachment', content: a.content }))
       : undefined;
@@ -137,9 +142,18 @@ export async function POST(request) {
           .replace(/&gt;/g, '>')
           .trim();
       }
-      if (hasNames && recipient.name) {
-        html = html.replace(/\{\{name\}\}|\{name\}/gi, recipient.name);
-        text = text.replace(/\{\{name\}\}|\{name\}/gi, recipient.name);
+      if (hasPlaceholders) {
+        const firstName = recipient.firstName || '';
+        const lastName = recipient.lastName || '';
+        const fullName = recipient.name || [firstName, lastName].filter(Boolean).join(' ');
+        html = html
+          .replace(/\{\{First_Name\}\}|\{First_Name\}/gi, firstName)
+          .replace(/\{\{Last_Name\}\}|\{Last_Name\}/gi, lastName)
+          .replace(/\{\{name\}\}|\{name\}/gi, fullName);
+        text = text
+          .replace(/\{\{First_Name\}\}|\{First_Name\}/gi, firstName)
+          .replace(/\{\{Last_Name\}\}|\{Last_Name\}/gi, lastName)
+          .replace(/\{\{name\}\}|\{name\}/gi, fullName);
       }
 
       const payload = {

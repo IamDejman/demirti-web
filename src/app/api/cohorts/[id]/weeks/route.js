@@ -71,6 +71,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({ week });
   } catch (e) {
     reportError(e, { route: 'POST /api/cohorts/[id]/weeks' });
-    return NextResponse.json({ error: 'Failed to create week' }, { status: 500 });
+    const message = process.env.NODE_ENV === 'development' && e?.message ? e.message : 'Failed to create week';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

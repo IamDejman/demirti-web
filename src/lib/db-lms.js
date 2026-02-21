@@ -288,8 +288,18 @@ export async function initializeLmsSchema() {
       UNIQUE(cohort_id, week_number)
     );
   `;
-  await sql`ALTER TABLE weeks ADD COLUMN IF NOT EXISTS week_start_date DATE;`.catch(() => {});
-  await sql`ALTER TABLE weeks ADD COLUMN IF NOT EXISTS week_end_date DATE;`.catch(() => {});
+  // Add week date range columns for existing DBs (works on all PG versions)
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'weeks' AND column_name = 'week_start_date') THEN
+        ALTER TABLE weeks ADD COLUMN week_start_date DATE;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'weeks' AND column_name = 'week_end_date') THEN
+        ALTER TABLE weeks ADD COLUMN week_end_date DATE;
+      END IF;
+    END $$;
+  `.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_weeks_cohort_id ON weeks(cohort_id);`.catch(() => {});
 
   // --- weekly_checklist_items ---

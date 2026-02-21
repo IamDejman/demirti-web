@@ -4,7 +4,7 @@ import { reportError } from '@/lib/logger';
 import { getUserFromRequest, updateUserPassword } from '@/lib/auth';
 import { validatePassword } from '@/lib/passwordPolicy';
 import { rateLimit } from '@/lib/rateLimit';
-import { validateBody, changePasswordSchema } from '@/lib/schemas';
+import { validateBody, forcedChangePasswordSchema } from '@/lib/schemas';
 import { recordAuditLog } from '@/lib/audit';
 
 export async function POST(request) {
@@ -26,7 +26,7 @@ export async function POST(request) {
       );
     }
 
-    const [data, validationErr] = await validateBody(request, changePasswordSchema);
+    const [data, validationErr] = await validateBody(request, forcedChangePasswordSchema);
     if (validationErr) return validationErr;
     const { newPassword } = data;
 

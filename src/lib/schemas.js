@@ -41,6 +41,12 @@ export const changePasswordSchema = z.object({
   confirmPassword: z.string().optional(),
 });
 
+/** For forced password change (must_change_password): no current password required */
+export const forcedChangePasswordSchema = z.object({
+  newPassword: password,
+  confirmPassword: z.string().optional(),
+});
+
 export const updatePasswordSchema = z.object({
   currentPassword: z.string().min(1).optional(),
   newPassword: password,

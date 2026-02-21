@@ -7,6 +7,9 @@ import { AdminPageHeader } from '@/app/components/admin';
 import { Modal } from '@/app/components/ui';
 import { getAuthHeaders } from '@/lib/authClient';
 
+// Simple URL regex for linkifying (http(s) and common patterns)
+const URL_REGEX = /(https?:\/\/[^\s<]+)/gi;
+
 // Convert plain text to simple HTML with email-style design. Uses inline styles only
 // so the sent email matches the preview (many clients strip <style> in head).
 function plainToHtml(plain) {
@@ -17,7 +20,11 @@ function plainToHtml(plain) {
     .replace(/>/g, '&gt;');
   const paragraphs = escaped.trim().split(/\n\n+/);
   const bodyContent = paragraphs
-    .map((p) => '<p style="font-size:16px;color:#444;margin:0 0 16px;line-height:1.7;">' + p.replace(/\n/g, '<br>') + '</p>')
+    .map((p) => {
+      const withBr = p.replace(/\n/g, '<br>');
+      const withLinks = withBr.replace(URL_REGEX, (url) => `<a href="${url}" style="color:#0066cc;text-decoration:underline;">${url}</a>`);
+      return '<p style="font-size:16px;color:#444;margin:0 0 16px;line-height:1.7;">' + withLinks + '</p>';
+    })
     .join('\n');
   return `<!DOCTYPE html>
 <html>
@@ -39,6 +46,20 @@ ${bodyContent}
   </div>
 </body>
 </html>`;
+}
+
+// Detect if content is plain text (no HTML) so we can apply the design in preview/send
+function looksLikePlainText(str) {
+  if (!str || !str.trim()) return true;
+  const trimmed = str.trim();
+  // Has no opening tag, or only very short fragment – treat as plain text
+  if (!trimmed.includes('<')) return true;
+  if (!trimmed.includes('>') || !trimmed.includes('</')) return true;
+  // Starts with a known HTML document prefix – treat as HTML
+  if (/^\s*<!DOCTYPE\s+/i.test(trimmed) || /^\s*<html[\s>]/i.test(trimmed) || /^\s*<head[\s>]/i.test(trimmed) || /^\s*<body[\s>]/i.test(trimmed)) return false;
+  // Has substantial HTML (e.g. <p>, <div>) – treat as HTML
+  if (/<([a-z][a-z0-9]*)\b[\s>]/i.test(trimmed)) return false;
+  return true;
 }
 
 // Strip HTML tags to get approximate plain text (for switching to plain mode)
@@ -73,9 +94,10 @@ export default function BulkEmailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const { showToast } = useToast();
 
-  // Single source of truth for "body" when in plain mode
+  // Single source of truth for preview and send: apply design when content is plain text
   const effectiveHtml = useMemo(() => {
     if (contentMode === 'plain') return plainToHtml(plainTextContent);
+    if (looksLikePlainText(htmlContent)) return plainToHtml(htmlContent);
     return htmlContent;
   }, [contentMode, plainTextContent, htmlContent]);
 
@@ -115,6 +137,22 @@ export default function BulkEmailPage() {
     showToast({ type: 'success', message: `Added ${newOnes.length} recipient(s) from paste.` });
   };
 
+  const downloadSampleCSV = () => {
+    const header = 'First Name,Last Name,Email';
+    const rows = [
+      'Jane,Doe,jane.doe@example.com',
+      'John,Smith,john.smith@example.com',
+    ];
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'bulk-email-recipients-sample.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast({ type: 'success', message: 'Sample CSV downloaded. Use {{First_Name}} and {{Last_Name}} in your email.' });
+  };
+
   const handleCSVUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -130,7 +168,9 @@ export default function BulkEmailPage() {
           return;
         }
 
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ' '));
+        const firstNameIndex = headers.findIndex(h => h === 'first name' || h === 'first_name' || h === 'firstname');
+        const lastNameIndex = headers.findIndex(h => h === 'last name' || h === 'last_name' || h === 'lastname');
         const nameIndex = headers.findIndex(h => h === 'name' || h === 'full name' || h === 'fullname');
         const emailIndex = headers.findIndex(h => h === 'email' || h === 'e-mail' || h === 'email address');
 
@@ -143,10 +183,13 @@ export default function BulkEmailPage() {
         for (let i = 1; i < lines.length; i++) {
           const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
           const email = values[emailIndex];
-          const name = nameIndex !== -1 ? values[nameIndex] : '';
+          const firstName = firstNameIndex !== -1 ? (values[firstNameIndex] || '') : '';
+          const lastName = lastNameIndex !== -1 ? (values[lastNameIndex] || '') : '';
+          const fullName = nameIndex !== -1 ? (values[nameIndex] || '') : '';
+          const name = fullName || [firstName, lastName].filter(Boolean).join(' ').trim();
 
           if (email && email.includes('@')) {
-            newRecipients.push({ name: name || '', email: email });
+            newRecipients.push({ email, name, firstName, lastName });
           }
         }
 
@@ -353,7 +396,12 @@ export default function BulkEmailPage() {
           ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          recipients: validRecipients.map(r => ({ name: r.name, email: r.email })),
+          recipients: validRecipients.map(r => ({
+            name: r.name || [r.firstName, r.lastName].filter(Boolean).join(' ').trim(),
+            email: r.email,
+            firstName: r.firstName || '',
+            lastName: r.lastName || '',
+          })),
           subject: effectiveSubject,
           htmlContent: effectiveHtml.trim(),
           attachments: attachments.length > 0 ? attachments : undefined,
@@ -418,14 +466,20 @@ export default function BulkEmailPage() {
                 <button type="button" onClick={addFromPaste} disabled={isSubmitting || !pasteEmailsInput.trim()} style={{ padding: '0.5rem 1rem', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: (!pasteEmailsInput.trim() || isSubmitting) ? 0.5 : 1 }}>Add from paste</button>
               </div>
               <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload CSV (Name, Email columns)</label>
-                <input type="file" accept=".csv" onChange={handleCSVUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload CSV (First Name, Last Name, Email)</label>
+                <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '0.5rem' }}>
+                  Use <strong>First Name</strong>, <strong>Last Name</strong>, and <strong>Email</strong> columns. In your email use <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{First_Name}}'}</code>, <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{Last_Name}}'}</code>, or <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{name}}'}</code> for personalization.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                  <button type="button" onClick={downloadSampleCSV} disabled={isSubmitting} style={{ padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>Download sample CSV</button>
+                  <input type="file" accept=".csv" onChange={handleCSVUpload} disabled={isSubmitting} style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
+                </div>
               </div>
               <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f9f9f9' }}>
                 {recipients.length === 0 ? <p style={{ color: '#999', fontStyle: 'italic' }}>No recipients yet.</p> : (
                   recipients.map((r, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'white', marginBottom: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}>
-                      <span>{r.name || r.email}</span>
+                      <span>{(r.firstName || r.lastName) ? [r.firstName, r.lastName].filter(Boolean).join(' ') : (r.name || r.email)}</span>
                       <button type="button" onClick={() => removeRecipient(i)} disabled={isSubmitting} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
                     </div>
                   ))

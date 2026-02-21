@@ -36,6 +36,8 @@ export async function POST(request) {
     if (!title?.trim() || !deadlineAt) {
       return NextResponse.json({ error: 'title and deadlineAt are required' }, { status: 400 });
     }
+    // created_by references users(id) UUID; legacy admins have integer id, so pass null for them
+    const createdBy = user.id != null && /^[0-9a-f-]{36}$/i.test(String(user.id)) ? user.id : null;
     const assignment = await createAssignment({
       weekId: wId || weekId,
       cohortId: cohortId || week.cohort_id,
@@ -48,9 +50,9 @@ export async function POST(request) {
       maxScore: maxScore ?? 100,
       isPublished: isPublished ?? false,
       publishAt: publishAt || null,
-      createdBy: user.id,
+      createdBy,
     });
-    await recordLmsEvent(user.id, 'assignment_created', { assignmentId: assignment.id, cohortId: assignment.cohort_id });
+    await recordLmsEvent(createdBy ?? null, 'assignment_created', { assignmentId: assignment.id, cohortId: assignment.cohort_id });
     const publishNow = assignment.is_published && (!assignment.publish_at || new Date(assignment.publish_at) <= new Date());
     if (publishNow) {
       const recipientsResult = await createAssignmentNotifications(assignment, 'assignment_posted');

@@ -52,7 +52,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     const body = await request.json();
-    const { weekNumber, title, description, unlockDate, liveClassDatetime, googleMeetLink, isLocked } = body;
+    const { weekNumber, title, description, unlockDate, liveClassDatetime, googleMeetLink, weekStartDate, weekEndDate, isLocked } = body;
     if (!weekNumber || !title?.trim()) {
       return NextResponse.json({ error: 'weekNumber and title are required' }, { status: 400 });
     }
@@ -64,6 +64,8 @@ export async function POST(request, { params }) {
       unlockDate: unlockDate || null,
       liveClassDatetime: liveClassDatetime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
+      weekStartDate: weekStartDate || null,
+      weekEndDate: weekEndDate || null,
       isLocked: isLocked ?? true,
     });
     return NextResponse.json({ week });

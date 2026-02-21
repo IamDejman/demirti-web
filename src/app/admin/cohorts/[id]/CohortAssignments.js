@@ -1,6 +1,6 @@
 'use client';
 
-import { formatTimeLagos } from '@/lib/dateUtils';
+import { formatTimeLagos, formatDateLagos } from '@/lib/dateUtils';
 
 export default function CohortAssignments({
   weeks,
@@ -20,6 +20,10 @@ export default function CohortAssignments({
   liveClassForm,
   setLiveClassForm,
   liveClasses,
+  assignmentForm,
+  setAssignmentForm,
+  savingAssignment,
+  handleCreateAssignment,
   lmsMessage,
   savingWeek,
   savingContent,
@@ -45,23 +49,32 @@ export default function CohortAssignments({
             <h3 className="admin-card-title">Create week</h3>
             <form onSubmit={handleCreateWeek} className="admin-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div className="admin-form-field">
-                <input type="number" placeholder="Week number" value={weekForm.weekNumber} onChange={(e) => setWeekForm((f) => ({ ...f, weekNumber: e.target.value }))} />
+                <label className="admin-form-label">Week number</label>
+                <input type="number" placeholder="e.g. 1" value={weekForm.weekNumber} onChange={(e) => setWeekForm((f) => ({ ...f, weekNumber: e.target.value }))} />
               </div>
               <div className="admin-form-field">
-                <input type="text" placeholder="Week title" value={weekForm.title} onChange={(e) => setWeekForm((f) => ({ ...f, title: e.target.value }))} />
+                <label className="admin-form-label">Week title</label>
+                <input type="text" placeholder="e.g. Introduction" value={weekForm.title} onChange={(e) => setWeekForm((f) => ({ ...f, title: e.target.value }))} />
               </div>
               <div className="admin-form-field">
-                <textarea placeholder="Description (optional)" value={weekForm.description} onChange={(e) => setWeekForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+                <label className="admin-form-label">Description (optional)</label>
+                <textarea placeholder="Brief description of the week" value={weekForm.description} onChange={(e) => setWeekForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
               </div>
               <div className="admin-form-field">
-                <input type="datetime-local" value={weekForm.unlockDate} onChange={(e) => setWeekForm((f) => ({ ...f, unlockDate: e.target.value }))} />
+                <label className="admin-form-label">Week start (Saturday)</label>
+                <input type="date" value={weekForm.weekStartDate} onChange={(e) => setWeekForm((f) => ({ ...f, weekStartDate: e.target.value }))} />
               </div>
               <div className="admin-form-field">
-                <input type="datetime-local" value={weekForm.liveClassDatetime} onChange={(e) => setWeekForm((f) => ({ ...f, liveClassDatetime: e.target.value }))} />
+                <label className="admin-form-label">Week end (Friday)</label>
+                <input type="date" value={weekForm.weekEndDate} onChange={(e) => setWeekForm((f) => ({ ...f, weekEndDate: e.target.value }))} />
               </div>
               <div className="admin-form-field">
-                <input type="text" placeholder="Google Meet link (optional)" value={weekForm.googleMeetLink} onChange={(e) => setWeekForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+                <label className="admin-form-label">Unlock date & time (optional)</label>
+                <input type="datetime-local" value={weekForm.unlockDate} onChange={(e) => setWeekForm((f) => ({ ...f, unlockDate: e.target.value }))} title="When week content becomes visible; can differ from week start" />
               </div>
+              <p className="admin-form-hint" style={{ margin: 0, fontSize: '0.8125rem' }}>
+                Add 2–3 live classes for this week in the <strong>Live classes</strong> section below (each with its own date/time and meeting link).
+              </p>
               <label className="admin-form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={!weekForm.isLocked} onChange={(e) => setWeekForm((f) => ({ ...f, isLocked: !e.target.checked }))} />
                 Unlock immediately
@@ -89,6 +102,10 @@ export default function CohortAssignments({
             {weekDetails && (
               <div className="admin-form-hint" style={{ marginTop: '1rem' }}>
                 <p><strong>Title:</strong> {weekDetails.week.title}</p>
+                <p><strong>Week:</strong> {weekDetails.week.week_start_date && weekDetails.week.week_end_date
+                  ? `${formatDateLagos(weekDetails.week.week_start_date)} – ${formatDateLagos(weekDetails.week.week_end_date)}`
+                  : '—'}
+                </p>
                 <p><strong>Unlock:</strong> {weekDetails.week.unlock_date ? formatTimeLagos(weekDetails.week.unlock_date) : '—'}</p>
               </div>
             )}
@@ -139,6 +156,48 @@ export default function CohortAssignments({
                 <div className="admin-form-field"><input type="text" placeholder="URL (optional)" value={materialForm.url} onChange={(e) => setMaterialForm((f) => ({ ...f, url: e.target.value }))} /></div>
                 <div className="admin-form-field"><input type="text" placeholder="File URL (optional)" value={materialForm.fileUrl} onChange={(e) => setMaterialForm((f) => ({ ...f, fileUrl: e.target.value }))} /></div>
                 <button type="submit" disabled={savingMaterial} className="admin-btn admin-btn-primary">{savingMaterial ? 'Saving...' : editingMaterialId ? 'Update material' : 'Add material'}</button>
+              </form>
+            </div>
+
+            <div className="admin-cohort-section-card">
+              <h3 className="admin-card-title">Add assignment</h3>
+              <form onSubmit={handleCreateAssignment} className="admin-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="admin-form-field">
+                  <select
+                    value={assignmentForm.weekId}
+                    onChange={(e) => setAssignmentForm((f) => ({ ...f, weekId: e.target.value }))}
+                  >
+                    <option value="">Select week</option>
+                    {weeks.map((w) => (
+                      <option key={w.id} value={w.id}>Week {w.week_number} · {w.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="admin-form-field">
+                  <input type="text" placeholder="Title (required)" value={assignmentForm.title} onChange={(e) => setAssignmentForm((f) => ({ ...f, title: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <textarea placeholder="Description (optional)" value={assignmentForm.description} onChange={(e) => setAssignmentForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+                </div>
+                <div className="admin-form-field">
+                  <input type="datetime-local" placeholder="Deadline" value={assignmentForm.deadlineAt} onChange={(e) => setAssignmentForm((f) => ({ ...f, deadlineAt: e.target.value }))} />
+                </div>
+                <div className="admin-form-field">
+                  <select value={assignmentForm.submissionType} onChange={(e) => setAssignmentForm((f) => ({ ...f, submissionType: e.target.value }))}>
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                    <option value="file_upload">File upload</option>
+                    <option value="multiple">Multiple</option>
+                  </select>
+                </div>
+                <div className="admin-form-field">
+                  <input type="number" placeholder="Max score" min={0} value={assignmentForm.maxScore} onChange={(e) => setAssignmentForm((f) => ({ ...f, maxScore: e.target.value }))} />
+                </div>
+                <label className="admin-form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={assignmentForm.isPublished} onChange={(e) => setAssignmentForm((f) => ({ ...f, isPublished: e.target.checked }))} />
+                  Publish immediately (notify students)
+                </label>
+                <button type="submit" disabled={savingAssignment} className="admin-btn admin-btn-primary">{savingAssignment ? 'Creating...' : 'Add assignment'}</button>
               </form>
             </div>
           </div>

@@ -48,6 +48,8 @@ export default function AdminCohortDetailPage() {
   const [enrollEmail, setEnrollEmail] = useState('');
   const [enrollMessage, setEnrollMessage] = useState('');
   const [enrolling, setEnrolling] = useState(false);
+  const APPLICATIONS_PAGE_SIZE = 10;
+  const [applicationsPage, setApplicationsPage] = useState(1);
   const [facilitatorEmail, setFacilitatorEmail] = useState('');
   const [facilitatorMessage, setFacilitatorMessage] = useState('');
   const [assigningFacilitator, setAssigningFacilitator] = useState(false);
@@ -56,8 +58,8 @@ export default function AdminCohortDetailPage() {
     title: '',
     description: '',
     unlockDate: '',
-    liveClassDatetime: '',
-    googleMeetLink: '',
+    weekStartDate: '',
+    weekEndDate: '',
     isLocked: true,
   });
   const [contentForm, setContentForm] = useState({
@@ -88,6 +90,16 @@ export default function AdminCohortDetailPage() {
   const [savingContent, setSavingContent] = useState(false);
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [savingLiveClass, setSavingLiveClass] = useState(false);
+  const [assignmentForm, setAssignmentForm] = useState({
+    weekId: '',
+    title: '',
+    description: '',
+    deadlineAt: '',
+    submissionType: 'text',
+    maxScore: 100,
+    isPublished: true,
+  });
+  const [savingAssignment, setSavingAssignment] = useState(false);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
@@ -132,6 +144,7 @@ export default function AdminCohortDetailPage() {
       setEditingMaterialId(null);
       return;
     }
+    setAssignmentForm((f) => ({ ...f, weekId: selectedWeekId }));
     fetch(`/api/weeks/${selectedWeekId}`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
@@ -276,8 +289,8 @@ export default function AdminCohortDetailPage() {
           title: weekForm.title.trim(),
           description: weekForm.description?.trim() || null,
           unlockDate: weekForm.unlockDate || null,
-          liveClassDatetime: weekForm.liveClassDatetime || null,
-          googleMeetLink: weekForm.googleMeetLink?.trim() || null,
+          weekStartDate: weekForm.weekStartDate || null,
+          weekEndDate: weekForm.weekEndDate || null,
           isLocked: weekForm.isLocked,
         }),
       });
@@ -289,8 +302,8 @@ export default function AdminCohortDetailPage() {
           title: '',
           description: '',
           unlockDate: '',
-          liveClassDatetime: '',
-          googleMeetLink: '',
+          weekStartDate: '',
+          weekEndDate: '',
           isLocked: true,
         });
         setLmsMessage('Week created.');
@@ -448,6 +461,52 @@ export default function AdminCohortDetailPage() {
     }
   };
 
+  const handleCreateAssignment = async (e) => {
+    e.preventDefault();
+    const weekId = assignmentForm.weekId || selectedWeekId;
+    if (!weekId || !assignmentForm.title?.trim() || !assignmentForm.deadlineAt) {
+      setLmsMessage('Select a week, enter title and deadline.');
+      return;
+    }
+    setSavingAssignment(true);
+    setLmsMessage('');
+    try {
+      const res = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          weekId,
+          cohortId: id,
+          title: assignmentForm.title.trim(),
+          description: assignmentForm.description?.trim() || null,
+          deadlineAt: assignmentForm.deadlineAt,
+          submissionType: assignmentForm.submissionType || 'text',
+          maxScore: Number(assignmentForm.maxScore) || 100,
+          isPublished: assignmentForm.isPublished ?? true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.assignment) {
+        setAssignmentForm({
+          weekId: '',
+          title: '',
+          description: '',
+          deadlineAt: '',
+          submissionType: 'text',
+          maxScore: 100,
+          isPublished: true,
+        });
+        setLmsMessage('Assignment created.');
+      } else {
+        setLmsMessage(data.error || 'Failed to create assignment');
+      }
+    } catch {
+      setLmsMessage('Failed to create assignment');
+    } finally {
+      setSavingAssignment(false);
+    }
+  };
+
   const formatDate = (d) => (d ? formatDateLagos(d) : '');
 
   // Must be before any conditional return (rules of hooks)
@@ -459,6 +518,12 @@ export default function AdminCohortDetailPage() {
         return sameTrack;
       })
     : [];
+  const applicationsTotalPages = Math.max(1, Math.ceil(applicationsNotEnrolled.length / APPLICATIONS_PAGE_SIZE));
+  const applicationsPageSafe = Math.min(applicationsPage, applicationsTotalPages);
+  const applicationsPaginated = applicationsNotEnrolled.slice(
+    (applicationsPageSafe - 1) * APPLICATIONS_PAGE_SIZE,
+    applicationsPageSafe * APPLICATIONS_PAGE_SIZE
+  );
 
   if (loading) {
     return (
@@ -544,7 +609,7 @@ export default function AdminCohortDetailPage() {
             <h2 className="admin-card-title">Enroll from applications</h2>
             <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Applicants for this track not yet in this cohort (paid or unpaid). Click Enroll to add them as a student user and enroll in the cohort:</p>
             <ul className="admin-cohort-app-list">
-              {applicationsNotEnrolled.slice(0, 20).map((app) => (
+              {applicationsPaginated.map((app) => (
                 <li key={app.id} className="admin-cohort-app-card">
                   <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                     <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{app.first_name} {app.last_name}</span>
@@ -567,7 +632,34 @@ export default function AdminCohortDetailPage() {
                 </li>
               ))}
             </ul>
-            {applicationsNotEnrolled.length > 20 && <p className="admin-form-hint" style={{ marginTop: '1rem' }}>Showing first 20. Use email field above for others.</p>}
+            {applicationsTotalPages > 1 && (
+              <div className="admin-cohort-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color, #e5e7eb)' }}>
+                <span className="admin-form-hint" style={{ margin: 0 }}>
+                  Showing {(applicationsPageSafe - 1) * APPLICATIONS_PAGE_SIZE + 1}–{Math.min(applicationsPageSafe * APPLICATIONS_PAGE_SIZE, applicationsNotEnrolled.length)} of {applicationsNotEnrolled.length}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setApplicationsPage((p) => Math.max(1, p - 1))}
+                    disabled={applicationsPageSafe <= 1}
+                    className="admin-btn admin-btn-ghost admin-btn-sm"
+                  >
+                    Previous
+                  </button>
+                  <span className="admin-form-hint" style={{ margin: 0, minWidth: '5rem', textAlign: 'center' }}>
+                    Page {applicationsPageSafe} of {applicationsTotalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setApplicationsPage((p) => Math.min(applicationsTotalPages, p + 1))}
+                    disabled={applicationsPageSafe >= applicationsTotalPages}
+                    className="admin-btn admin-btn-ghost admin-btn-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -589,6 +681,10 @@ export default function AdminCohortDetailPage() {
           liveClassForm={liveClassForm}
           setLiveClassForm={setLiveClassForm}
           liveClasses={liveClasses}
+          assignmentForm={assignmentForm}
+          setAssignmentForm={setAssignmentForm}
+          savingAssignment={savingAssignment}
+          handleCreateAssignment={handleCreateAssignment}
           lmsMessage={lmsMessage}
           savingWeek={savingWeek}
           savingContent={savingContent}

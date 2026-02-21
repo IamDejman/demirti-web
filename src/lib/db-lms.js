@@ -65,6 +65,20 @@ export async function ensureLmsSchema() {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience SMALLINT;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;`.catch(() => {});
       }
+      // Migrations: add week date range columns (weeks table exists but init only runs when required tables are missing)
+      if (existing.has('weeks')) {
+        await sql`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'weeks' AND column_name = 'week_start_date') THEN
+              ALTER TABLE weeks ADD COLUMN week_start_date DATE;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'weeks' AND column_name = 'week_end_date') THEN
+              ALTER TABLE weeks ADD COLUMN week_end_date DATE;
+            END IF;
+          END $$;
+        `.catch((e) => console.error('Weeks migration error:', e));
+      }
       lmsInitialized = true;
     } catch (e) {
       console.error('LMS schema init error:', e);
@@ -292,10 +306,10 @@ export async function initializeLmsSchema() {
   await sql`
     DO $$
     BEGIN
-      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'weeks' AND column_name = 'week_start_date') THEN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = COALESCE(current_schema(), 'public') AND table_name = 'weeks' AND column_name = 'week_start_date') THEN
         ALTER TABLE weeks ADD COLUMN week_start_date DATE;
       END IF;
-      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'weeks' AND column_name = 'week_end_date') THEN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = COALESCE(current_schema(), 'public') AND table_name = 'weeks' AND column_name = 'week_end_date') THEN
         ALTER TABLE weeks ADD COLUMN week_end_date DATE;
       END IF;
     END $$;

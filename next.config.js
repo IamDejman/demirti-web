@@ -55,6 +55,7 @@ const nextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self' https://fonts.gstatic.com",
               "connect-src 'self'",
+              "frame-src 'self' https://assessments.skilladder.ai",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'"
@@ -62,7 +63,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(self "https://assessments.skilladder.ai"), microphone=(self "https://assessments.skilladder.ai"), geolocation=()'
           }
         ],
       },

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { useToast } from '../components/ToastProvider';
+import { validatePassword } from '@/lib/passwordPolicy';
+
+const PASSWORD_GUIDE = 'Use at least 8 characters with letters, numbers, and a special character.';
 
 function redirectByRole(router, role) {
   if (role === 'admin') router.push('/admin');
@@ -13,6 +17,7 @@ function redirectByRole(router, role) {
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -42,11 +47,17 @@ export default function ChangePasswordPage() {
       .catch(() => router.push('/login'));
   }, [router]);
 
+  useEffect(() => {
+    if (!error) return;
+    showToast({ type: 'error', message: error });
+  }, [error, showToast]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
+    const policy = validatePassword(newPassword);
+    if (!policy.valid) {
+      setError(policy.message);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -97,11 +108,6 @@ export default function ChangePasswordPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="auth-error" role="alert">
-              {error}
-            </div>
-          )}
           <div className="auth-field auth-field-tight">
             <label htmlFor="new-password" className="auth-label">New password</label>
             <div style={{ position: 'relative' }}>
@@ -109,7 +115,6 @@ export default function ChangePasswordPage() {
                 id="new-password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="auth-input"
@@ -141,6 +146,9 @@ export default function ChangePasswordPage() {
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
+            <p style={{ marginTop: '0.375rem', fontSize: '0.8125rem', color: 'var(--text-light, #6b7280)' }}>
+              {PASSWORD_GUIDE}
+            </p>
           </div>
           <div className="auth-field auth-field-tight">
             <label htmlFor="confirm-password" className="auth-label">Confirm password</label>
@@ -149,7 +157,6 @@ export default function ChangePasswordPage() {
                 id="confirm-password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={8}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="auth-input"

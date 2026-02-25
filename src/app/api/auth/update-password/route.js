@@ -6,6 +6,9 @@ import {
   getPasswordHashByUserId,
   verifyPassword,
   updateUserPassword,
+  deleteAllUserSessions,
+  createUserSession,
+  generateSessionToken,
 } from '@/lib/auth';
 import { validatePassword } from '@/lib/passwordPolicy';
 import { rateLimit } from '@/lib/rateLimit';
@@ -27,7 +30,15 @@ export async function POST(request) {
 
     const [data, validationErr] = await validateBody(request, updatePasswordSchema);
     if (validationErr) return validationErr;
-    const { currentPassword, newPassword } = data;
+    const { currentPassword, newPassword, confirmPassword } = data;
+
+    if (!currentPassword) {
+      return NextResponse.json({ error: 'Current password is required' }, { status: 400 });
+    }
+
+    if (confirmPassword != null && confirmPassword !== '' && newPassword !== confirmPassword) {
+      return NextResponse.json({ error: 'New password and confirm password do not match' }, { status: 400 });
+    }
 
     const pw = validatePassword(newPassword);
     if (!pw.valid) {
@@ -42,7 +53,17 @@ export async function POST(request) {
       );
     }
 
+    if (currentPassword === newPassword) {
+      return NextResponse.json(
+        { error: 'New password must be different from current password' },
+        { status: 400 }
+      );
+    }
+
     await updateUserPassword(user.id, newPassword);
+    await deleteAllUserSessions(user.id);
+    const token = generateSessionToken();
+    await createUserSession(user.id, token);
     recordAuditLog({
       userId: user.id,
       action: 'user.password_updated',
@@ -52,7 +73,15 @@ export async function POST(request) {
       ipAddress: ip,
       actorEmail: user.email,
     }).catch(() => {});
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+    res.cookies.set('lms_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return res;
   } catch (e) {
     reportError(e, { route: 'POST /api/auth/update-password' });
     return NextResponse.json({ error: 'Failed to update password' }, { status: 500 });

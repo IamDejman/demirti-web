@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
-import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { useFetch } from '@/hooks/useFetch';
 
 export default function StudentWeeksPage() {
@@ -33,21 +32,19 @@ export default function StudentWeeksPage() {
       <LmsPageHeader
         title="Week"
         subtitle="All weeks in your cohort. Open any unlocked week to view content, materials, and assignments."
-        icon={LmsIcons.book}
         breadcrumb={{ href: '/dashboard', label: 'Home' }}
       />
 
       {weeks.length === 0 ? (
         <LmsCard hoverable={false}>
           <LmsEmptyState
-            icon={LmsIcons.book}
             title="No weeks yet"
             description="Weeks will appear here when your cohort curriculum is set up."
             action={<Link href="/dashboard" className="lms-link">Back to Home</Link>}
           />
         </LmsCard>
       ) : (
-        <LmsCard title="Course outline" subtitle="All weeks in your cohort." icon={LmsIcons.book}>
+        <LmsCard title="Course outline" subtitle="All weeks in your cohort.">
           <div className="space-y-1 mt-2">
             {weeks.map((w) => {
               const isCurrent = currentWeek?.id === w.id;

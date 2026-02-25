@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { useToast } from '@/app/components/ToastProvider';
 
 const emptyForm = {
   title: '',
@@ -16,6 +17,7 @@ const emptyForm = {
 };
 
 export default function FacilitatorOfficeHoursPage() {
+  const { showToast } = useToast();
   const [slots, setSlots] = useState([]);
   const [cohorts, setCohorts] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -54,12 +56,16 @@ export default function FacilitatorOfficeHoursPage() {
       setForm(emptyForm);
       await loadSlots();
     } else {
-      setMessage(data.error || 'Failed to create slot.');
+      showToast({ type: 'error', message: data.error || 'Failed to create slot.' });
     }
   };
 
   const handleCancel = async (slotId) => {
-    await fetch(`/api/office-hours/slots/${slotId}/cancel`, { method: 'POST', headers: getLmsAuthHeaders() });
+    const res = await fetch(`/api/office-hours/slots/${slotId}/cancel`, { method: 'POST', headers: getLmsAuthHeaders() });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast({ type: 'error', message: data.error || 'Failed to cancel slot.' });
+    }
     await loadSlots();
   };
 
@@ -71,13 +77,11 @@ export default function FacilitatorOfficeHoursPage() {
     }
   };
 
-  const isMessageError = message && (message.includes('Failed') || message.includes('fail'));
-
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Office Hours" subtitle="Create slots and manage bookings." icon={LmsIcons.clock} />
       {message && (
-        <div className={`lms-alert ${isMessageError ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+        <div className="lms-alert lms-alert-success" role="alert" aria-live="polite">
           {message}
         </div>
       )}

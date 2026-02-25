@@ -116,7 +116,7 @@ export async function deleteAllUserSessions(userId) {
 export async function verifyUserCredentials(email, password) {
   const user = await getUserByEmail(email);
   if (!user || !user.password_hash) return null;
-  if (!user.is_active) throw new Error('Account is disabled');
+  if (!user.is_active) return null;
   const valid = await verifyPassword(password, user.password_hash);
   if (!valid) return null;
   await sql`UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ${user.id}`;

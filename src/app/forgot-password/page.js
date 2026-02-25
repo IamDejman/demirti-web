@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useToast } from '@/app/components/ToastProvider';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 const STEPS = { email: 1, otp: 2, password: 3 };
 const RESEND_COOLDOWN_SECONDS = 3 * 60; // 3 minutes
 const STEP_LABELS = {
   [STEPS.email]: 'Enter your email to receive a reset code.',
   [STEPS.otp]: 'Enter the 6-digit code we sent to your email.',
-  [STEPS.password]: 'Choose a new password. Must be at least 8 characters.',
+  [STEPS.password]: 'Choose a new password with letters, numbers, and a special character.',
 };
+const PASSWORD_GUIDE = 'Use at least 8 characters with letters, numbers, and a special character.';
 
 function formatCountdown(seconds) {
   const m = Math.floor(seconds / 60);
@@ -125,8 +127,9 @@ export default function ForgotPasswordPage() {
       showToast({ type: 'error', message: 'Passwords do not match.' });
       return;
     }
-    if (newPassword.length < 8) {
-      showToast({ type: 'error', message: 'Password must be at least 8 characters.' });
+    const policy = validatePassword(newPassword);
+    if (!policy.valid) {
+      showToast({ type: 'error', message: policy.message });
       return;
     }
     setIsSubmitting(true);
@@ -249,7 +252,6 @@ export default function ForgotPasswordPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  minLength={8}
                   disabled={isSubmitting}
                   className="auth-input pr-14"
                   placeholder="••••••••"
@@ -264,6 +266,7 @@ export default function ForgotPasswordPage() {
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
+              <p className="text-xs mt-1.5" style={{ color: 'var(--neutral-500)' }}>{PASSWORD_GUIDE}</p>
             </div>
             <div className="auth-field auth-field-tight">
               <label htmlFor="confirmPassword" className="auth-label">Confirm password</label>
@@ -274,7 +277,6 @@ export default function ForgotPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  minLength={8}
                   disabled={isSubmitting}
                   className="auth-input pr-14"
                   placeholder="••••••••"

@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
+import { useToast } from '../components/ToastProvider';
 
 export default function ConfirmSpotPage() {
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [linkedinPostUrl, setLinkedinPostUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -29,11 +31,13 @@ export default function ConfirmSpotPage() {
         setMessage(data.message);
       } else {
         setSuccess(false);
-        setMessage(data.error || 'Something went wrong.');
+        setMessage(null);
+        showToast({ type: 'error', message: data.error || 'Something went wrong.' });
       }
     } catch {
       setSuccess(false);
-      setMessage('Something went wrong. Please try again.');
+      setMessage(null);
+      showToast({ type: 'error', message: 'Something went wrong. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -83,9 +87,6 @@ export default function ConfirmSpotPage() {
                   className="auth-input"
                 />
               </div>
-              {message && !success && (
-                <div className="auth-error" role="alert">{message}</div>
-              )}
               <button
                 type="submit"
                 disabled={submitting}

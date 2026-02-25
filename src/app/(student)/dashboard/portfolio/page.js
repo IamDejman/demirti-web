@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LmsCard, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { useToast } from '@/app/components/ToastProvider';
 
 const emptyPortfolioForm = {
   slug: '',
@@ -36,6 +37,7 @@ const PORTFOLIO_GAP_6_STYLE = { gap: 'var(--lms-space-6)' };
 const PORTFOLIO_GRID_GAP_STYLE = { gap: 'var(--lms-space-4)' };
 
 export default function PortfolioPage() {
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [portfolio, setPortfolio] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -89,7 +91,7 @@ export default function PortfolioPage() {
       setPortfolio(data.portfolio);
       setMessage('Portfolio saved.');
     } else {
-      setMessage(data.error || 'Failed to save portfolio.');
+      showToast({ type: 'error', message: data.error || 'Failed to save portfolio.' });
     }
   };
 
@@ -120,7 +122,8 @@ export default function PortfolioPage() {
       onComplete?.(presignData.fileUrl);
       setUploadMessage('Upload complete.');
     } catch (e) {
-      setUploadMessage(e.message || 'Upload failed. You can paste a URL instead.');
+      setUploadMessage('');
+      showToast({ type: 'error', message: e.message || 'Upload failed. You can paste a URL instead.' });
     } finally {
       setUploading(false);
     }
@@ -190,7 +193,7 @@ export default function PortfolioPage() {
       {(message || publicUrl || portfolio?.custom_domain) && (
         <div className="lms-info-banner flex flex-col gap-3 text-sm">
           {message && (
-            <div className={`lms-alert ${message.includes('Failed') ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert">
+            <div className="lms-alert lms-alert-success" role="alert">
               {message}
             </div>
           )}

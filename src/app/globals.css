@@ -4645,6 +4645,39 @@ textarea.lms-form-textarea.border-token {
   word-break: break-word;
 }
 
+.profile-page .profile-hero-certificates-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.85rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--neutral-300);
+  background: #ffffff;
+  color: var(--primary-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-page .profile-hero-certificates-btn:visited {
+  color: var(--primary-color);
+}
+
+.profile-page .profile-hero-certificates-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--neutral-50);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+.profile-page .profile-hero-certificates-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .profile-page .profile-section {
   padding-top: var(--lms-space-8);
   margin-top: var(--lms-space-6);

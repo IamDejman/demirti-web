@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '@/app/components/admin';
 import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 import { getAuthHeaders } from '@/lib/authClient';
+import { useToast } from '@/app/components/ToastProvider';
 
 export default function SendBootcampWelcomePage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [selectedEmails, setSelectedEmails] = useState(new Set());
@@ -101,6 +103,11 @@ export default function SendBootcampWelcomePage() {
         participants.length > 0 && selectedEmails.size > 0 && selectedEmails.size < participants.length;
     }
   }, [selectedEmails.size, participants.length]);
+
+  useEffect(() => {
+    if (message.type !== 'error' || !message.text) return;
+    showToast({ type: 'error', message: message.text });
+  }, [message, showToast]);
 
   const sendToSelected = () => sendEmails([...selectedEmails]);
   const sendToAll = () => sendEmails(participants.map((p) => p.email));
@@ -263,7 +270,7 @@ export default function SendBootcampWelcomePage() {
               )}
             </div>
 
-            {message.text && (
+            {message.text && message.type !== 'error' && (
               <div
                 style={{
                   padding: '1rem',

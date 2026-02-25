@@ -24,8 +24,18 @@ describe.skipIf(!validatePassword)('validatePassword', () => {
     expect(result.valid).toBe(false);
   });
 
+  it('rejects password without special character', () => {
+    const result = validatePassword('MyStrongPass1');
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects password without number', () => {
+    const result = validatePassword('My$trongPass');
+    expect(result.valid).toBe(false);
+  });
+
   it('rejects password longer than 128 chars', () => {
-    const result = validatePassword('A'.repeat(200));
+    const result = validatePassword(`A1!${'a'.repeat(130)}`);
     expect(result.valid).toBe(false);
   });
 });

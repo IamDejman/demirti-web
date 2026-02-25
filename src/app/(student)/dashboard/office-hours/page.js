@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
+import { useToast } from '@/app/components/ToastProvider';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos, formatTimeLagos } from '@/lib/dateUtils';
@@ -13,6 +14,7 @@ function formatTimeOnly(d) {
 }
 
 export default function StudentOfficeHoursPage() {
+  const { showToast } = useToast();
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -39,26 +41,28 @@ export default function StudentOfficeHoursPage() {
     if (res.ok) {
       setMessage('Slot booked.');
     } else {
-      setMessage(data.error || 'Failed to book slot.');
+      showToast({ type: 'error', message: data.error || 'Failed to book slot.' });
     }
     await loadSlots();
   };
 
   const handleCancel = async (slotId) => {
-    await fetch(`/api/office-hours/slots/${slotId}/cancel`, {
+    const res = await fetch(`/api/office-hours/slots/${slotId}/cancel`, {
       method: 'POST',
       headers: getLmsAuthHeaders(),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast({ type: 'error', message: data.error || 'Failed to cancel slot.' });
+    }
     await loadSlots();
   };
-
-  const isMessageError = message && (message.includes('Failed') || message.includes('fail'));
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader title="Office Hours" subtitle="Book time with facilitators for extra support." icon={LmsIcons.clock} />
       {message && (
-        <div className={`lms-alert ${isMessageError ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+        <div className="lms-alert lms-alert-success" role="alert" aria-live="polite">
           {message}
         </div>
       )}

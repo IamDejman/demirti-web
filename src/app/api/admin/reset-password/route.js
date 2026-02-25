@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { getClientIp } from '@/lib/api-helpers';
 import { reportError } from '@/lib/logger';
 import { ensureDatabaseInitialized } from '@/lib/db';
-import { getAdminByEmail, getValidPasswordReset, deletePasswordReset, updateAdmin, createAdminSession } from '@/lib/admin';
+import { getAdminByEmail, getValidPasswordReset, deletePasswordReset, updateAdmin, createAdminSession, deleteAllAdminSessions } from '@/lib/admin';
 import { validatePassword } from '@/lib/passwordPolicy';
 import { rateLimit } from '@/lib/rateLimit';
 
@@ -57,7 +57,10 @@ export async function POST(request) {
     }
 
     await updateAdmin(admin.id, { password: newPassword });
-    await deletePasswordReset(normalizedEmail);
+    await Promise.all([
+      deletePasswordReset(normalizedEmail),
+      deleteAllAdminSessions(admin.id),
+    ]);
 
     const token = crypto.randomBytes(32).toString('hex');
     await createAdminSession(admin.id, token);

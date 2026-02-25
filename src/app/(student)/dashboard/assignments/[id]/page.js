@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { LmsCard, LmsEmptyState, LmsPageHeader, LmsBadge } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
+import { useToast } from '@/app/components/ToastProvider';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatTimeLagos } from '@/lib/dateUtils';
 
 export default function AssignmentDetailPage() {
+  const { showToast } = useToast();
   const params = useParams();
   const id = params?.id;
   const [assignment, setAssignment] = useState(null);
@@ -22,7 +24,6 @@ export default function AssignmentDetailPage() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFileUrl, setUploadedFileUrl] = useState('');
-  const [uploadError, setUploadError] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -48,7 +49,6 @@ export default function AssignmentDetailPage() {
     const selected = e.target.files?.[0];
     if (!selected) return;
     setFile(selected);
-    setUploadError('');
     setUploadedFileUrl('');
     if (!assignment) return;
     try {
@@ -67,7 +67,7 @@ export default function AssignmentDetailPage() {
       });
       const presignData = await presignRes.json();
       if (!presignRes.ok) {
-        setUploadError(presignData.error || 'Failed to get upload URL');
+        showToast({ type: 'error', message: presignData.error || 'Failed to get upload URL' });
         return;
       }
       const uploadRes = await fetch(presignData.uploadUrl, {
@@ -79,12 +79,12 @@ export default function AssignmentDetailPage() {
         body: selected,
       });
       if (!uploadRes.ok) {
-        setUploadError('Upload failed. Please try again.');
+        showToast({ type: 'error', message: 'Upload failed. Please try again.' });
         return;
       }
       setUploadedFileUrl(presignData.fileUrl);
     } catch {
-      setUploadError('Upload failed. Please try again.');
+      showToast({ type: 'error', message: 'Upload failed. Please try again.' });
     } finally {
       setUploading(false);
     }
@@ -97,12 +97,12 @@ export default function AssignmentDetailPage() {
     setMessage('');
     try {
       if ((assignment.submission_type === 'file_upload' || assignment.submission_type === 'multiple') && file && !uploadedFileUrl) {
-        setMessage('Please wait for the file upload to finish.');
+        showToast({ type: 'error', message: 'Please wait for the file upload to finish.' });
         setSubmitting(false);
         return;
       }
       if (assignment.submission_type === 'file_upload' && !uploadedFileUrl) {
-        setMessage('Please upload a file before submitting.');
+        showToast({ type: 'error', message: 'Please upload a file before submitting.' });
         setSubmitting(false);
         return;
       }
@@ -123,10 +123,10 @@ export default function AssignmentDetailPage() {
         setSubmission(data.submission);
         setMessage('Submitted successfully.');
       } else {
-        setMessage(data.error || 'Submit failed');
+        showToast({ type: 'error', message: data.error || 'Submit failed' });
       }
     } catch {
-      setMessage('Something went wrong');
+      showToast({ type: 'error', message: 'Something went wrong' });
     } finally {
       setSubmitting(false);
     }
@@ -217,12 +217,9 @@ export default function AssignmentDetailPage() {
       ) : !deadlinePassed && (
         <LmsCard title="Submit">
           {message && (
-            <div className={`lms-alert mb-4 ${message.startsWith('Submit') || message.includes('fail') || message.includes('wrong') ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+            <div className="lms-alert lms-alert-success mb-4" role="alert" aria-live="polite">
               {message}
             </div>
-          )}
-          {uploadError && (
-            <div className="lms-alert lms-alert-error mb-4" role="alert">{uploadError}</div>
           )}
           {uploadedFileUrl && !uploading && (
             <div className="lms-alert lms-alert-success mb-4" role="alert">File uploaded.</div>

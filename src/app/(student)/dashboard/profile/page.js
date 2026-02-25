@@ -3,14 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { LmsCard, LmsPageHeader } from '@/app/components/lms';
-import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { useToast } from '@/app/components/ToastProvider';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 const PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PROFILE_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 const PROFILE_IMAGE_MAX_MB = 2;
+const PASSWORD_GUIDE = 'Use at least 8 characters with letters, numbers, and a special character.';
 
 export default function ProfilePage() {
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -62,11 +65,11 @@ export default function ProfilePage() {
 
   const uploadPhoto = async (file) => {
     if (!file || !PROFILE_IMAGE_TYPES.includes(file.type)) {
-      setMessage('Please choose a JPG, PNG, or WebP image (max 2MB).');
+      showToast({ type: 'error', message: 'Please choose a JPG, PNG, or WebP image (max 2MB).' });
       return;
     }
     if (file.size > PROFILE_IMAGE_MAX_MB * 1024 * 1024) {
-      setMessage(`Image must be under ${PROFILE_IMAGE_MAX_MB}MB.`);
+      showToast({ type: 'error', message: `Image must be under ${PROFILE_IMAGE_MAX_MB}MB.` });
       return;
     }
     setUploading(true);
@@ -99,9 +102,9 @@ export default function ProfilePage() {
         body: JSON.stringify({ profilePictureUrl: fileUrl }),
       });
       if (patchRes.ok) setMessage('Photo updated.');
-      else setMessage('Photo uploaded but save failed. Click Save to retry.');
+      else showToast({ type: 'error', message: 'Photo uploaded but save failed. Click Save to retry.' });
     } catch (e) {
-      setMessage(e?.message || 'Upload failed. Try again or use a smaller image.');
+      showToast({ type: 'error', message: e?.message || 'Upload failed. Try again or use a smaller image.' });
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -135,10 +138,10 @@ export default function ProfilePage() {
       if (res.ok) {
         setMessage('Profile saved.');
       } else {
-        setMessage(data.error || 'Failed to save profile.');
+        showToast({ type: 'error', message: data.error || 'Failed to save profile.' });
       }
     } catch {
-      setMessage('Failed to save profile.');
+      showToast({ type: 'error', message: 'Failed to save profile.' });
     } finally {
       setSaving(false);
     }
@@ -149,15 +152,20 @@ export default function ProfilePage() {
     setPasswordMessage('');
     const { currentPassword, newPassword, confirmPassword } = passwordForm;
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordMessage('Please fill in all password fields.');
+      showToast({ type: 'error', message: 'Please fill in all password fields.' });
       return;
     }
-    if (newPassword.length < 8) {
-      setPasswordMessage('New password must be at least 8 characters.');
+    if (currentPassword === newPassword) {
+      showToast({ type: 'error', message: 'New password must be different from current password.' });
+      return;
+    }
+    const policy = validatePassword(newPassword);
+    if (!policy.valid) {
+      showToast({ type: 'error', message: policy.message });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage('New password and confirm password do not match.');
+      showToast({ type: 'error', message: 'New password and confirm password do not match.' });
       return;
     }
     setPasswordSaving(true);
@@ -177,10 +185,10 @@ export default function ProfilePage() {
         setPasswordMessage('Password updated successfully.');
         setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       } else {
-        setPasswordMessage(data.error || 'Failed to update password.');
+        showToast({ type: 'error', message: data.error || 'Failed to update password.' });
       }
     } catch {
-      setPasswordMessage('Something went wrong. Please try again.');
+      showToast({ type: 'error', message: 'Something went wrong. Please try again.' });
     } finally {
       setPasswordSaving(false);
     }
@@ -196,7 +204,6 @@ export default function ProfilePage() {
     );
   }
 
-  const isMessageError = message && (message.includes('fail') || message.includes('Failed'));
   const inputCls = 'lms-form-input border-token w-full px-4 py-3';
   const textareaCls = 'lms-form-textarea border-token w-full px-4 py-3 resize-y';
 
@@ -205,12 +212,11 @@ export default function ProfilePage() {
       <LmsPageHeader
         title="Profile"
         subtitle="Update your name, contact details, and photo."
-        icon={LmsIcons.users}
       />
 
       <LmsCard accent="primary" hoverable={false}>
         {message && (
-          <div className={`lms-alert mb-6 ${isMessageError ? 'lms-alert-error' : 'lms-alert-success'}`} role="alert" aria-live="polite">
+          <div className="lms-alert mb-6 lms-alert-success" role="alert" aria-live="polite">
             {message}
           </div>
         )}
@@ -248,9 +254,24 @@ export default function ProfilePage() {
               {form.phone && <p className="profile-hero-meta">{form.phone}</p>}
               <Link
                 href="/dashboard/certificates"
-                className="profile-hero-certificates-btn inline-flex items-center gap-2 mt-8 px-3 py-1.5 rounded-lg text-[0.8125rem] font-medium text-[var(--primary-color)] bg-transparent border border-[var(--neutral-300)] no-underline hover:bg-[var(--neutral-50)] hover:border-[var(--primary-color)] transition-[border-color,background] duration-200"
+                className="profile-hero-certificates-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  alignSelf: 'flex-start',
+                  marginTop: '0.85rem',
+                  padding: '0.5rem 0.95rem',
+                  borderRadius: '999px',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#ffffff',
+                  color: '#0f172a',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  lineHeight: 1.2,
+                  textDecoration: 'none',
+                }}
               >
-                <span className="shrink-0 text-[var(--primary-color)]" aria-hidden>{LmsIcons.trophy}</span>
                 View certificates
               </Link>
             </div>
@@ -301,7 +322,7 @@ export default function ProfilePage() {
       {/* Security */}
       <LmsCard title="Security" subtitle="Change your account password" accent="warning" hoverable={false}>
         {passwordMessage && (
-          <div className={`lms-alert mb-6 ${passwordMessage.includes('success') ? 'lms-alert-success' : 'lms-alert-error'}`} role="alert" aria-live="polite">
+          <div className="lms-alert mb-6 lms-alert-success" role="alert" aria-live="polite">
             {passwordMessage}
           </div>
         )}
@@ -331,7 +352,7 @@ export default function ProfilePage() {
                 )}
               </button>
             </div>
-            <p className="text-xs mt-1.5" style={{ color: 'var(--neutral-400)' }}>At least 8 characters.</p>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--neutral-400)' }}>{PASSWORD_GUIDE}</p>
           </div>
           <div>
             <label htmlFor="confirm-password" className="lms-form-label block mb-1.5">Confirm new password</label>

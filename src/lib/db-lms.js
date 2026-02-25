@@ -16,6 +16,15 @@ export async function ensureLmsSchema() {
   if (lmsInitPromise) return lmsInitPromise;
   lmsInitPromise = (async () => {
     try {
+      const getExistingTables = async () => {
+        const tableCheck = await sql`
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+        `;
+        return new Set(tableCheck.rows.map((r) => r.table_name));
+      };
+
       const requiredTables = [
         'users',
         'tracks',
@@ -46,18 +55,22 @@ export async function ensureLmsSchema() {
         'job_applications',
         'ai_settings',
       ];
-      const tableCheck = await sql`
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = 'public'
-      `;
-      const existing = new Set(tableCheck.rows.map((r) => r.table_name));
+      let existing = await getExistingTables();
       const hasAll = requiredTables.every((t) => existing.has(t));
       if (!hasAll) {
         await initializeLmsSchema();
+        existing = await getExistingTables();
       }
       // Migrations: add columns to users if missing (e.g. DB created before these were in schema)
       if (existing.has('users')) {
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture_url VARCHAR(500);`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(100);`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS language_preference VARCHAR(20) DEFAULT 'en';`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;`.catch(() => {});
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_until TIMESTAMP;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_shadowbanned BOOLEAN DEFAULT false;`.catch(() => {});
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;`.catch(() => {});

@@ -26,11 +26,20 @@ export async function GET(request) {
       DELETE FROM user_password_resets WHERE expires_at < NOW() RETURNING id;
     `;
 
+    // Clean up expired MFA challenges (table may not exist yet)
+    let mfaChallenges = { rowCount: 0 };
+    try {
+      mfaChallenges = await sql`
+        DELETE FROM admin_mfa_challenges WHERE expires_at < NOW() RETURNING id;
+      `;
+    } catch { /* table may not exist yet */ }
+
     return NextResponse.json({
       cleaned: {
         user_sessions: userSessions.rowCount,
         admin_sessions: adminSessions.rowCount,
         password_resets: passwordResets.rowCount,
+        mfa_challenges: mfaChallenges.rowCount,
       },
     });
   } catch (error) {

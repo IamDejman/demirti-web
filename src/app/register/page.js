@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useToast } from '../components/ToastProvider';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,6 +16,11 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!error) return;
+    showToast({ type: 'error', message: error });
+  }, [error, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,8 +75,6 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="auth-error">{error}</div>}
-
           <div className="auth-field">
             <label htmlFor="email" className="auth-label">Email</label>
             <input

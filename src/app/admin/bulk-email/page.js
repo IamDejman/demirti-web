@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
 import { AdminPageHeader } from '@/app/components/admin';
-import { Modal } from '@/app/components/ui';
 import { getAuthHeaders } from '@/lib/authClient';
 
 // Simple URL regex for linkifying (http(s) and common patterns)

@@ -12,6 +12,7 @@ import {
   AdminTable,
   AdminEmptyState,
 } from '../../components/admin';
+import { useToast } from '../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
 
@@ -26,6 +27,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm';
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState('');
@@ -127,10 +129,12 @@ export default function AdminUsersPage() {
         await loadUsers(true);
         setShowCreateForm(false);
       } else {
-        setCreateMessage(data.error || 'Create failed');
+        setCreateMessage('');
+        showToast({ type: 'error', message: data.error || 'Create failed' });
       }
     } catch {
-      setCreateMessage('Something went wrong');
+      setCreateMessage('');
+      showToast({ type: 'error', message: 'Something went wrong' });
     } finally {
       setCreating(false);
     }
@@ -305,7 +309,7 @@ export default function AdminUsersPage() {
               </AdminButton>
             </AdminFormField>
           </form>
-          {createMessage && <p className="admin-form-hint" style={{ marginTop: '0.75rem', color: createMessage.startsWith('User created') ? '#059669' : 'inherit' }}>{createMessage}</p>}
+          {createMessage && <p className="admin-form-hint" style={{ marginTop: '0.75rem', color: '#059669' }}>{createMessage}</p>}
         </AdminCard>
       )}
 

@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '../../components/ToastProvider';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 const STEPS = { email: 1, otp: 2, password: 3 };
 const RESEND_COOLDOWN_SECONDS = 3 * 60; // 3 minutes
+const PASSWORD_GUIDE = 'Use at least 8 characters with letters, numbers, and a special character.';
 
 function formatCountdown(seconds) {
   const m = Math.floor(seconds / 60);
@@ -146,8 +148,9 @@ export default function AdminForgotPassword() {
       showToast({ type: 'error', message: 'Passwords do not match.' });
       return;
     }
-    if (newPassword.length < 8) {
-      showToast({ type: 'error', message: 'Password must be at least 8 characters.' });
+    const policy = validatePassword(newPassword);
+    if (!policy.valid) {
+      showToast({ type: 'error', message: policy.message });
       return;
     }
     setIsSubmitting(true);
@@ -189,7 +192,7 @@ export default function AdminForgotPassword() {
           <p style={{ color: '#666', fontSize: '0.95rem' }}>
             {step === STEPS.email && 'Enter your admin email to receive a code.'}
             {step === STEPS.otp && 'Enter the code we sent to your email.'}
-            {step === STEPS.password && 'Set a new password.'}
+            {step === STEPS.password && 'Set a new password with letters, numbers, and a special character.'}
           </p>
         </div>
 
@@ -268,7 +271,6 @@ export default function AdminForgotPassword() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  minLength={8}
                   disabled={isSubmitting}
                   style={{ ...inputStyle, paddingRight: '4.5rem' }}
                 />
@@ -293,6 +295,7 @@ export default function AdminForgotPassword() {
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
+              <p style={{ marginTop: '0.4rem', fontSize: '0.8125rem', color: '#64748b' }}>{PASSWORD_GUIDE}</p>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
               <label htmlFor="confirmPassword" style={labelStyle}>Confirm password</label>
@@ -303,7 +306,6 @@ export default function AdminForgotPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  minLength={8}
                   disabled={isSubmitting}
                   style={{ ...inputStyle, paddingRight: '4.5rem' }}
                 />

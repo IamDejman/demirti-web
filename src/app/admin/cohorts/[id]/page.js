@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AdminPageHeader } from '../../../components/admin';
+import { useToast } from '../../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos } from '@/lib/dateUtils';
@@ -11,6 +12,24 @@ import CohortStudentList from './CohortStudentList';
 import CohortAssignments from './CohortAssignments';
 
 const STATUS_COLORS = { upcoming: '#6b7280', active: '#059669', completed: '#2563eb' };
+
+function isSuccessFeedback(message) {
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  if (lower.includes('failed') || lower.includes('error') || lower.includes('wrong') || lower.includes('select ')) {
+    return false;
+  }
+  return (
+    lower.includes('success') ||
+    lower.includes('created') ||
+    lower.includes('updated') ||
+    lower.includes('added') ||
+    lower.includes('scheduled') ||
+    lower.includes('assigned') ||
+    lower.includes('removed') ||
+    lower.includes('enrolled')
+  );
+}
 
 function StatusBadge({ status }) {
   const color = STATUS_COLORS[status] || '#6b7280';
@@ -35,6 +54,7 @@ function StatusBadge({ status }) {
 export default function AdminCohortDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const id = params?.id;
   const [cohort, setCohort] = useState(null);
   const [students, setStudents] = useState([]);
@@ -155,6 +175,21 @@ export default function AdminCohortDetailPage() {
     setEditingContentId(null);
     setEditingMaterialId(null);
   }, [selectedWeekId]);
+
+  useEffect(() => {
+    if (!enrollMessage || isSuccessFeedback(enrollMessage)) return;
+    showToast({ type: 'error', message: enrollMessage });
+  }, [enrollMessage, showToast]);
+
+  useEffect(() => {
+    if (!facilitatorMessage || isSuccessFeedback(facilitatorMessage)) return;
+    showToast({ type: 'error', message: facilitatorMessage });
+  }, [facilitatorMessage, showToast]);
+
+  useEffect(() => {
+    if (!lmsMessage || isSuccessFeedback(lmsMessage)) return;
+    showToast({ type: 'error', message: lmsMessage });
+  }, [lmsMessage, showToast]);
 
   const handleEnrollByEmail = async (e) => {
     e.preventDefault();
@@ -570,10 +605,10 @@ export default function AdminCohortDetailPage() {
                   if (res.ok && data.deleted) {
                     router.push('/admin/cohorts');
                   } else {
-                    alert(data.error || 'Failed to delete cohort');
+                    showToast({ type: 'error', message: data.error || 'Failed to delete cohort' });
                   }
                 } catch {
-                  alert('Failed to delete cohort');
+                  showToast({ type: 'error', message: 'Failed to delete cohort' });
                 }
               }}
               className="admin-btn admin-btn-danger admin-btn-sm"
@@ -601,7 +636,7 @@ export default function AdminCohortDetailPage() {
               {enrolling ? 'Enrolling...' : 'Enroll'}
             </button>
           </form>
-          {enrollMessage && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: enrollMessage.includes('success') ? '#059669' : 'inherit' }}>{enrollMessage}</p>}
+          {isSuccessFeedback(enrollMessage) && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: '#059669' }}>{enrollMessage}</p>}
         </div>
 
         {applicationsNotEnrolled.length > 0 && (
@@ -711,7 +746,7 @@ export default function AdminCohortDetailPage() {
             </div>
             <button type="submit" disabled={assigningFacilitator} className="admin-btn admin-btn-primary">{assigningFacilitator ? 'Assigning...' : 'Assign'}</button>
           </form>
-          {facilitatorMessage && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: facilitatorMessage.includes('assigned') || facilitatorMessage.includes('removed') ? '#059669' : 'inherit' }}>{facilitatorMessage}</p>}
+          {isSuccessFeedback(facilitatorMessage) && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: '#059669' }}>{facilitatorMessage}</p>}
 
           {facilitators.length === 0 ? (
             <p className="admin-form-hint" style={{ marginTop: '1rem' }}>No facilitators assigned yet.</p>

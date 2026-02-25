@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { reportError } from '@/lib/logger';
+import { reportError, safeErrorMessage } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
@@ -9,16 +9,24 @@ export async function GET(request) {
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
+  await ensureLmsSchema();
+  const profileResult = await sql`
+    SELECT id, email, first_name, last_name, profile_picture_url, phone, address, years_experience
+    FROM users
+    WHERE id = ${user.id}
+    LIMIT 1;
+  `;
+  const profileRow = profileResult.rows[0];
   return NextResponse.json({
     profile: {
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name ?? '',
-      lastName: user.last_name ?? '',
-      profilePictureUrl: user.profile_picture_url ?? null,
-      phone: user.phone ?? '',
-      address: user.address ?? '',
-      yearsExperience: user.years_experience != null ? user.years_experience : null,
+      id: profileRow?.id ?? user.id,
+      email: profileRow?.email ?? user.email,
+      firstName: profileRow?.first_name ?? user.first_name ?? '',
+      lastName: profileRow?.last_name ?? user.last_name ?? '',
+      profilePictureUrl: profileRow?.profile_picture_url ?? user.profile_picture_url ?? null,
+      phone: profileRow?.phone ?? user.phone ?? '',
+      address: profileRow?.address ?? '',
+      yearsExperience: profileRow?.years_experience != null ? profileRow.years_experience : null,
     },
   });
 }
@@ -72,6 +80,6 @@ export async function PATCH(request) {
     return NextResponse.json({ ok: true });
   } catch (e) {
     reportError(e, { route: 'PATCH /api/profile' });
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    return NextResponse.json({ error: safeErrorMessage(e, 'Failed to update profile') }, { status: 500 });
   }
 }

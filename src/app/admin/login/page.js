@@ -9,6 +9,10 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // MFA state
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
@@ -22,6 +26,14 @@ export default function AdminLogin() {
     }
   }, [router]);
 
+  useEffect(() => {
+    if (!sessionMessage) return;
+    const decodedMessage = sessionMessage === 'Session timed out'
+      ? 'Your session timed out. Please log in again.'
+      : decodeURIComponent(sessionMessage);
+    showToast({ type: 'error', message: decodedMessage });
+  }, [sessionMessage, showToast]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -29,52 +41,178 @@ export default function AdminLogin() {
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       let data = {};
-      try {
-        data = await response.json();
-      } catch {
-        data = { error: 'Invalid response from server' };
+      try { data = await response.json(); } catch { data = { error: 'Invalid response from server' }; }
+
+      if (data.requiresMfa) {
+        setMfaToken(data.mfaToken);
+        setMfaRequired(true);
+        setIsSubmitting(false);
+        return;
       }
 
       if (response.ok && data.success) {
-        // Store authentication token
         localStorage.setItem('admin_authenticated', 'true');
-        
-        showToast({
-          type: 'success',
-          message: 'Login successful! Redirecting...'
-        });
-
-        // Redirect to admin dashboard
-        setTimeout(() => {
-          router.push('/admin');
-        }, 500);
+        showToast({ type: 'success', message: 'Login successful! Redirecting...' });
+        setTimeout(() => { router.push('/admin'); }, 500);
       } else {
-        // Show server error message (401 = invalid credentials, etc.)
-        const errorMessage = data.details 
-          ? `${data.error}\n\n${data.details}` 
-          : (data.error || (response.status === 401 ? 'Invalid email or password.' : 'Login failed. Please try again.'));
-        
         showToast({
           type: 'error',
-          message: errorMessage
+          message: data.error || (response.status === 401 ? 'Invalid email or password.' : 'Login failed. Please try again.'),
         });
         setIsSubmitting(false);
       }
     } catch {
-      showToast({
-        type: 'error',
-        message: 'An error occurred during login. Please try again.'
-      });
+      showToast({ type: 'error', message: 'An error occurred during login. Please try again.' });
       setIsSubmitting(false);
     }
   };
+
+  const handleMfaSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/admin/mfa/verify-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mfaToken, code: mfaCode }),
+      });
+
+      let data = {};
+      try { data = await response.json(); } catch { data = { error: 'Invalid response from server' }; }
+
+      if (response.ok && data.success) {
+        localStorage.setItem('admin_authenticated', 'true');
+        showToast({ type: 'success', message: 'Login successful! Redirecting...' });
+        setTimeout(() => { router.push('/admin'); }, 500);
+      } else {
+        showToast({ type: 'error', message: data.error || 'Verification failed. Please try again.' });
+        setMfaCode('');
+        setIsSubmitting(false);
+        if (data.code === 'MFA_EXPIRED') {
+          setMfaRequired(false);
+          setMfaToken('');
+        }
+      }
+    } catch {
+      showToast({ type: 'error', message: 'An error occurred. Please try again.' });
+      setIsSubmitting(false);
+    }
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '0.875rem',
+    border: '2px solid #e1e4e8',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    transition: 'all 0.3s ease',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: '0.5rem',
+    fontSize: '0.9rem',
+  };
+
+  if (mfaRequired) {
+    return (
+      <main>
+        <div className="admin-auth-page">
+          <div className="admin-auth-card">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1a1a1a', marginBottom: '0.5rem' }}>
+                Two-Factor Authentication
+              </h1>
+              <p style={{ color: '#666', fontSize: '0.95rem' }}>
+                Enter the 6-digit code from your authenticator app
+              </p>
+            </div>
+
+            <form onSubmit={handleMfaSubmit}>
+              <div style={{ marginBottom: '2rem' }}>
+                <label htmlFor="mfaCode" style={labelStyle}>Authentication Code</label>
+                <input
+                  type="text"
+                  id="mfaCode"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  autoFocus
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  disabled={isSubmitting}
+                  placeholder="000000"
+                  style={{
+                    ...inputStyle,
+                    textAlign: 'center',
+                    letterSpacing: '0.5em',
+                    fontSize: '1.5rem',
+                    fontFamily: 'monospace',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.outline = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#e1e4e8'; }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || mfaCode.length !== 6}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: isSubmitting || mfaCode.length !== 6 ? '#999' : '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: isSubmitting || mfaCode.length !== 6 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  marginBottom: '1rem',
+                }}
+              >
+                {isSubmitting ? 'Verifying...' : 'Verify'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMfaRequired(false);
+                  setMfaToken('');
+                  setMfaCode('');
+                  setPassword('');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  backgroundColor: 'transparent',
+                  color: '#666',
+                  border: '1px solid #e1e4e8',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Back to login
+              </button>
+            </form>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -95,37 +233,11 @@ export default function AdminLogin() {
             }}>
               Enter your credentials to access the admin dashboard
             </p>
-            {sessionMessage && (
-              <p
-                role="alert"
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                  color: '#b02a37',
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  fontWeight: 500
-                }}
-              >
-                {sessionMessage === 'Session timed out'
-                  ? 'Your session timed out. Please log in again.'
-                  : decodeURIComponent(sessionMessage)}
-              </p>
-            )}
           </div>
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="email" style={{
-                display: 'block',
-                fontWeight: '600',
-                color: '#1a1a1a',
-                marginBottom: '0.5rem',
-                fontSize: '0.9rem'
-              }}>
-                Email Address
-              </label>
+              <label htmlFor="email" style={labelStyle}>Email Address</label>
               <input
                 type="email"
                 id="email"
@@ -133,35 +245,14 @@ export default function AdminLogin() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  border: '2px solid #e1e4e8',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  boxSizing: 'border-box'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0066cc';
-                  e.target.style.outline = 'none';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e1e4e8';
-                }}
+                style={inputStyle}
+                onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.outline = 'none'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#e1e4e8'; }}
               />
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
-              <label htmlFor="password" style={{
-                display: 'block',
-                fontWeight: '600',
-                color: '#1a1a1a',
-                marginBottom: '0.5rem',
-                fontSize: '0.9rem'
-              }}>
-                Password
-              </label>
+              <label htmlFor="password" style={labelStyle}>Password</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -170,30 +261,13 @@ export default function AdminLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 4.5rem 0.875rem 0.875rem',
-                    border: '2px solid #e1e4e8',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#0066cc';
-                    e.target.style.outline = 'none';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e1e4e8';
-                  }}
+                  style={{ ...inputStyle, paddingRight: '4.5rem' }}
+                  onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.outline = 'none'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#e1e4e8'; }}
                 />
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowPassword(!showPassword);
-                  }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPassword(!showPassword); }}
                   disabled={isSubmitting}
                   style={{
                     position: 'absolute',
@@ -216,35 +290,12 @@ export default function AdminLogin() {
                     WebkitTapHighlightColor: 'transparent',
                     userSelect: 'none',
                     zIndex: 10,
-                    pointerEvents: isSubmitting ? 'none' : 'auto'
+                    pointerEvents: isSubmitting ? 'none' : 'auto',
                   }}
-                  onMouseEnter={(e) => {
-                    if (!isSubmitting) {
-                      e.target.style.color = '#0066cc';
-                      e.target.style.backgroundColor = '#f0f0f0';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSubmitting) {
-                      e.target.style.color = '#666';
-                      e.target.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (!isSubmitting) {
-                      e.target.style.color = '#0066cc';
-                      e.target.style.backgroundColor = '#f0f0f0';
-                    }
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    if (!isSubmitting) {
-                      setShowPassword(!showPassword);
-                      e.target.style.color = '#666';
-                      e.target.style.backgroundColor = 'transparent';
-                    }
-                  }}
+                  onMouseEnter={(e) => { if (!isSubmitting) { e.target.style.color = '#0066cc'; e.target.style.backgroundColor = '#f0f0f0'; } }}
+                  onMouseLeave={(e) => { if (!isSubmitting) { e.target.style.color = '#666'; e.target.style.backgroundColor = 'transparent'; } }}
+                  onTouchStart={(e) => { e.preventDefault(); if (!isSubmitting) { e.target.style.color = '#0066cc'; e.target.style.backgroundColor = '#f0f0f0'; } }}
+                  onTouchEnd={(e) => { e.preventDefault(); if (!isSubmitting) { setShowPassword(!showPassword); e.target.style.color = '#666'; e.target.style.backgroundColor = 'transparent'; } }}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -273,20 +324,10 @@ export default function AdminLogin() {
                 fontWeight: '600',
                 fontSize: '1rem',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
               }}
-              onMouseEnter={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.backgroundColor = '#004d99';
-                  e.target.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.backgroundColor = '#0066cc';
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
+              onMouseEnter={(e) => { if (!isSubmitting) { e.target.style.backgroundColor = '#004d99'; e.target.style.transform = 'translateY(-2px)'; } }}
+              onMouseLeave={(e) => { if (!isSubmitting) { e.target.style.backgroundColor = '#0066cc'; e.target.style.transform = 'translateY(0)'; } }}
             >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
@@ -296,4 +337,3 @@ export default function AdminLogin() {
     </main>
   );
 }
-

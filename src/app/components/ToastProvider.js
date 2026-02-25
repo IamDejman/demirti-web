@@ -52,15 +52,15 @@ export function ToastProvider({ children }) {
               boxShadow: '0 10px 25px rgba(15, 23, 42, 0.25)',
               fontSize: '0.95rem',
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: '0.5rem',
               pointerEvents: 'auto',
             }}
           >
-            <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>
+            <span style={{ fontSize: '1.1rem', lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}>
               {toast.type === 'success' ? '✅' : '⚠️'}
             </span>
-            <span style={{ flex: 1 }}>{toast.message}</span>
+            <span style={{ flex: 1, lineHeight: 1.35 }}>{toast.message}</span>
           </div>
         ))}
       </div>
@@ -75,5 +75,4 @@ export function useToast() {
   }
   return ctx;
 }
-
 

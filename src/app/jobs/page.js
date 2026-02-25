@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
+import { useToast } from '../components/ToastProvider';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
 export default function JobsPage() {
+  const { showToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,7 @@ export default function JobsPage() {
     coverLetter: '',
   });
   const [applyMessage, setApplyMessage] = useState('');
+  const [applyMessageType, setApplyMessageType] = useState('success');
   const [uploading, setUploading] = useState(false);
 
   const loadJobs = async () => {
@@ -57,9 +60,11 @@ export default function JobsPage() {
         body: file,
       });
       setApplyForm((prev) => ({ ...prev, resumeUrl: presignData.fileUrl }));
+      setApplyMessageType('success');
       setApplyMessage('Resume uploaded.');
     } catch (e) {
-      setApplyMessage(e.message || 'Upload failed. Add a resume URL instead.');
+      setApplyMessage('');
+      showToast({ type: 'error', message: e.message || 'Upload failed. Add a resume URL instead.' });
     } finally {
       setUploading(false);
     }
@@ -74,11 +79,13 @@ export default function JobsPage() {
     });
     const data = await res.json();
     if (res.ok) {
+      setApplyMessageType('success');
       setApplyMessage('Application submitted.');
       setApplyJobId(null);
       setApplyForm({ name: '', email: '', resumeUrl: '', portfolioUrl: '', coverLetter: '' });
     } else {
-      setApplyMessage(data.error || 'Failed to submit application.');
+      setApplyMessage('');
+      showToast({ type: 'error', message: data.error || 'Failed to submit application.' });
     }
   };
 
@@ -182,7 +189,7 @@ export default function JobsPage() {
 
                 {applyJobId === job.id && (
                   <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
-                    {applyMessage && (
+                    {applyMessage && applyMessageType === 'success' && (
                       <p className="lms-alert lms-alert-info" style={{ marginBottom: '0.75rem' }}>{applyMessage}</p>
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>

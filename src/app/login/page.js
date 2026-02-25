@@ -4,29 +4,38 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useToast } from '../components/ToastProvider';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !password) {
+      showToast({ type: 'error', message: 'Email and password are required.' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      showToast({ type: 'error', message: 'Enter a valid email address.' });
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: normalizedEmail, password }),
         credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Login failed');
+        showToast({ type: 'error', message: data.error || 'Login failed' });
         return;
       }
       localStorage.setItem('lms_authenticated', 'true');
@@ -39,7 +48,7 @@ export default function LoginPage() {
       else if (role === 'facilitator') router.push('/facilitator');
       else router.push('/dashboard');
     } catch {
-      setError('Something went wrong');
+      showToast({ type: 'error', message: 'Something went wrong' });
     } finally {
       setLoading(false);
     }
@@ -54,18 +63,12 @@ export default function LoginPage() {
           <p className="auth-subtitle">CVERSE Academy</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="auth-error" role="alert">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="auth-field">
             <label htmlFor="email" className="auth-label">Email</label>
             <input
               id="email"
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="auth-input"
@@ -79,7 +82,6 @@ export default function LoginPage() {
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="auth-input"

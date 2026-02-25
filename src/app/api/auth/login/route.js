@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyUserCredentials, createUserSession, generateSessionToken } from '@/lib/auth';
-import { rateLimit } from '@/lib/rateLimit';
+import { rateLimit, getLoginBackoff, recordLoginFailure, clearLoginFailures } from '@/lib/rateLimit';
 import { recordAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/api-helpers';
 import { loginSchema, validateBody } from '@/lib/schemas';
@@ -18,8 +18,25 @@ export async function POST(request) {
     const [data, validationErr] = await validateBody(request, loginSchema);
     if (validationErr) return validationErr;
     const { email, password } = data;
+
+    // Per-email rate limit
+    const emailLimiter = await rateLimit(`auth_login_email_${email}`, { windowMs: 60_000, limit: 5 });
+    if (!emailLimiter.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
+    }
+
+    // Exponential backoff on repeated failures
+    const backoff = await getLoginBackoff(`login_${email}`);
+    if (!backoff.allowed) {
+      const retryAfter = Math.ceil(backoff.retryAfterMs / 1000);
+      const res = NextResponse.json({ error: 'Too many failed attempts. Try again later.' }, { status: 429 });
+      res.headers.set('Retry-After', String(retryAfter));
+      return res;
+    }
+
     const user = await verifyUserCredentials(email, password);
     if (!user) {
+      await recordLoginFailure(`login_${email}`);
       recordAuditLog({
         action: 'user.login_failed',
         targetType: 'user',
@@ -32,6 +49,8 @@ export async function POST(request) {
         { status: 401 }
       );
     }
+
+    await clearLoginFailures(`login_${email}`);
     const token = generateSessionToken();
     await Promise.all([
       createUserSession(user.id, token),
@@ -65,9 +84,6 @@ export async function POST(request) {
     });
     return res;
   } catch (e) {
-    if (e.message === 'Account is disabled') {
-      return NextResponse.json({ error: e.message }, { status: 403 });
-    }
     reportError(e, { route: 'POST /api/auth/login' });
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }

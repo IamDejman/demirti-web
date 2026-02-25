@@ -124,9 +124,7 @@ export async function verifyAdminCredentials(email, password) {
   const admin = await getAdminByEmail(normalizedEmail);
   if (!admin) return null;
 
-  if (!admin.is_active) {
-    throw new Error('Admin account is disabled');
-  }
+  if (!admin.is_active) return null;
 
   const passwordMatches = await verifyPassword(password, admin.password_hash);
 
@@ -233,4 +231,10 @@ export async function deleteAdminSession(token) {
   if (!token) return;
   await ensureDatabaseInitialized();
   await sql`DELETE FROM admin_sessions WHERE token = ${token}`;
+}
+
+export async function deleteAllAdminSessions(adminId) {
+  if (!adminId) return;
+  await ensureDatabaseInitialized();
+  await sql`DELETE FROM admin_sessions WHERE admin_id = ${adminId}`;
 }

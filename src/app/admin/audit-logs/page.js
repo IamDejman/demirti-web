@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '../../components/admin';
+import { useToast } from '../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
 import { formatTimeLagos } from '@/lib/dateUtils';
@@ -37,6 +38,7 @@ function renderDetails(row) {
 
 export default function AdminAuditLogsPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [logs, setLogs] = useState([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,11 @@ export default function AdminAuditLogsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!error) return;
+    showToast({ type: 'error', message: error });
+  }, [error, showToast]);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
@@ -100,13 +107,6 @@ export default function AdminAuditLogsPage() {
           }
         />
         <div className="admin-card">
-          {error && (
-            <div style={{ padding: '1rem', marginBottom: '1rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#b91c1c' }}>
-              {error}
-              <br />
-              <a href="/api/init-db" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.875rem', marginTop: '0.5rem', display: 'inline-block' }}>Initialize database →</a>
-            </div>
-          )}
           {loading ? (
             <p className="admin-loading">Loading logs...</p>
           ) : logs.length === 0 && !error ? (

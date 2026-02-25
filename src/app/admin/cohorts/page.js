@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AdminPageHeader, AdminButton } from '../../components/admin';
+import { useToast } from '../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos } from '@/lib/dateUtils';
 
 export default function AdminCohortsPage() {
+  const { showToast } = useToast();
   const [cohorts, setCohorts] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,10 +63,10 @@ export default function AdminCohortsPage() {
         setShowCreate(false);
         setForm({ trackId: '', name: '', startDate: '', endDate: '', status: 'upcoming' });
       } else {
-        alert(data.error || 'Failed to create cohort');
+        showToast({ type: 'error', message: data.error || 'Failed to create cohort' });
       }
     } catch {
-      alert('Failed to create cohort');
+      showToast({ type: 'error', message: 'Failed to create cohort' });
     }
   };
 
@@ -194,10 +196,10 @@ export default function AdminCohortsPage() {
                                 if (res.ok && data.deleted) {
                                   setCohorts((prev) => prev.filter((x) => x.id !== c.id));
                                 } else {
-                                  alert(data.error || 'Failed to delete cohort');
+                                  showToast({ type: 'error', message: data.error || 'Failed to delete cohort' });
                                 }
                               } catch {
-                                alert('Failed to delete cohort');
+                                showToast({ type: 'error', message: 'Failed to delete cohort' });
                               }
                             }}
                           >

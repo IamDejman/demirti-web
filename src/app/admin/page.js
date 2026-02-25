@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader, AdminStatsGrid, AdminButton } from '../components/admin';
 
@@ -200,9 +200,10 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {applications.map((app) => (
-                        <Fragment key={app.id}>
+                      {applications.flatMap((app) => {
+                        const rows = [
                           <tr
+                            key={`${app.id}-main`}
                             className={`admin-table-tr ${expandedId === app.id ? 'admin-table-tr-expanded' : ''}`}
                             onClick={() => toggleExpanded(app.id)}
                             style={{ cursor: 'pointer' }}
@@ -227,9 +228,12 @@ export default function AdminDashboard() {
                               </span>
                             </td>
                             <td className="admin-table-td admin-table-td-strong">{app.amount ? formatCurrency(app.amount) : 'N/A'}</td>
-                          </tr>
-                          {expandedId === app.id && (
-                            <tr className="admin-table-detail-row">
+                          </tr>,
+                        ];
+
+                        if (expandedId === app.id) {
+                          rows.push(
+                            <tr key={`${app.id}-detail`} className="admin-table-detail-row">
                               <td colSpan={6} className="admin-table-detail-cell">
                                 <div className="admin-table-detail-grid">
                                   <div><strong>Phone</strong><span>{app.phone || '—'}</span></div>
@@ -242,9 +246,11 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                             </tr>
-                          )}
-                        </Fragment>
-                      ))}
+                          );
+                        }
+
+                        return rows;
+                      })}
                     </tbody>
                   </table>
                 )}
@@ -274,4 +280,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

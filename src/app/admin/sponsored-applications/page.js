@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DOMPurify from 'isomorphic-dompurify';
 import { AdminPageHeader } from '../../components/admin';
+import { useToast } from '../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
 
@@ -62,6 +63,7 @@ function downloadCsv(content, filename) {
 }
 
 export default function SponsoredApplicationsPage() {
+  const { showToast } = useToast();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -139,9 +141,9 @@ export default function SponsoredApplicationsPage() {
       if (data.success) {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
-      } else alert(data.error || 'Update failed');
+      } else showToast({ type: 'error', message: data.error || 'Update failed' });
     } catch {
-      alert('Request failed');
+      showToast({ type: 'error', message: 'Request failed' });
     } finally {
       setUpdatingId(null);
     }
@@ -161,9 +163,9 @@ export default function SponsoredApplicationsPage() {
       if (data.success) {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
-      } else alert(data.error || 'Failed');
+      } else showToast({ type: 'error', message: data.error || 'Failed' });
     } catch {
-      alert('Request failed');
+      showToast({ type: 'error', message: 'Request failed' });
     } finally {
       setUpdatingId(null);
     }
@@ -183,9 +185,9 @@ export default function SponsoredApplicationsPage() {
       if (data.success) {
         await loadApplications();
         if (viewApp?.id === id) setViewApp(null);
-      } else alert(data.error || 'Failed');
+      } else showToast({ type: 'error', message: data.error || 'Failed' });
     } catch {
-      alert('Request failed');
+      showToast({ type: 'error', message: 'Request failed' });
     } finally {
       setUpdatingId(null);
     }
@@ -208,9 +210,9 @@ export default function SponsoredApplicationsPage() {
         setConfirmSpotUrl('');
         await loadApplications();
         setViewApp(null);
-      } else alert(data.error || 'Failed');
+      } else showToast({ type: 'error', message: data.error || 'Failed' });
     } catch {
-      alert('Request failed');
+      showToast({ type: 'error', message: 'Request failed' });
     } finally {
       setUpdatingId(null);
     }

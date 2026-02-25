@@ -2,6 +2,24 @@
 
 import { formatTimeLagos, formatDateLagos } from '@/lib/dateUtils';
 
+function isSuccessFeedback(message) {
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  if (lower.includes('failed') || lower.includes('error') || lower.includes('wrong') || lower.includes('select ')) {
+    return false;
+  }
+  return (
+    lower.includes('success') ||
+    lower.includes('created') ||
+    lower.includes('updated') ||
+    lower.includes('added') ||
+    lower.includes('scheduled') ||
+    lower.includes('assigned') ||
+    lower.includes('removed') ||
+    lower.includes('enrolled')
+  );
+}
+
 export default function CohortAssignments({
   weeks,
   selectedWeekId,
@@ -42,7 +60,7 @@ export default function CohortAssignments({
     <>
       <div className="admin-card">
         <h2 className="admin-card-title">Weeks and content</h2>
-        {lmsMessage && <p className="admin-form-hint" style={{ marginBottom: '1rem', color: lmsMessage.includes('created') || lmsMessage.includes('added') || lmsMessage.includes('updated') ? '#059669' : 'inherit' }}>{lmsMessage}</p>}
+        {isSuccessFeedback(lmsMessage) && <p className="admin-form-hint" style={{ marginBottom: '1rem', color: '#059669' }}>{lmsMessage}</p>}
 
         <div className="admin-cohort-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           <div className="admin-cohort-section-card">

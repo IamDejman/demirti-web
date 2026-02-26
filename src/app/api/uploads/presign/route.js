@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createPresignedUploadUrl, generateUploadKey, isAllowedFileType, isWithinSizeLimit } from '@/lib/storage';
+import { createPresignedUploadUrl, generateUploadKey, isAllowedFileType, isWithinSizeLimit, isStorageConfigured } from '@/lib/storage';
 import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 
@@ -11,6 +11,13 @@ export async function POST(request) {
   try {
     const [, authError] = await requireAdminOrUser(request);
     if (authError) return authError;
+
+    if (!isStorageConfigured()) {
+      return NextResponse.json(
+        { error: 'File storage is not configured. Set STORAGE_BUCKET, STORAGE_REGION, STORAGE_ACCESS_KEY, and STORAGE_SECRET_KEY in your environment.' },
+        { status: 503 },
+      );
+    }
 
     const body = await request.json();
     const { filename, contentType, prefix, fileSize } = body;

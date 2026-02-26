@@ -418,7 +418,10 @@ export default function CohortContentTab({ cohortId, weeks }) {
                   onUploaded={(url) => setForm((f) => ({ ...f, fileUrl: url }))}
                 />
                 {form.fileUrl && (
-                  <p className="lms-file-success" style={{ wordBreak: 'break-all' }}>File: {form.fileUrl}</p>
+                  <p className="lms-file-success">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg>
+                    File attached
+                  </p>
                 )}
               </div>
 
@@ -478,20 +481,25 @@ export default function CohortContentTab({ cohortId, weeks }) {
               <div>
                 {/* Content items */}
                 {weekContent.map((item) => (
-                  <div key={`c-${item.id}`} className="lms-list-item">
-                    <div className="lms-list-item-info">
-                      <span className="lms-list-item-title">{item.title}</span>
-                      <LmsBadge variant="info">{ALL_TYPES.find((t) => t.value === item.type)?.label || item.type}</LmsBadge>
-                      {item.file_url && <span className="lms-list-item-meta">has file</span>}
+                  <div key={`c-${item.id}`} className="lms-list-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div className="lms-list-item-info">
+                        <span className="lms-list-item-title">{item.title}</span>
+                        <LmsBadge variant="info">{ALL_TYPES.find((t) => t.value === item.type)?.label || item.type}</LmsBadge>
+                        {item.file_url && <span className="lms-list-item-meta">has file</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                        <button type="button" onClick={() => handleStartEdit(item, 'content')} className="lms-btn lms-btn-sm lms-btn-outline">
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => handleDeleteContent(item.id)} className="lms-btn-delete-text">
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                      <button type="button" onClick={() => handleStartEdit(item, 'content')} className="lms-btn lms-btn-sm lms-btn-outline">
-                        Edit
-                      </button>
-                      <button type="button" onClick={() => handleDeleteContent(item.id)} className="lms-btn-delete-text">
-                        Delete
-                      </button>
-                    </div>
+                    {item.description && (
+                      <p style={{ fontSize: '0.8125rem', color: 'var(--neutral-500)', margin: 0, lineHeight: 1.4 }}>{item.description}</p>
+                    )}
                   </div>
                 ))}
 
@@ -501,21 +509,26 @@ export default function CohortContentTab({ cohortId, weeks }) {
                 )}
 
                 {weekMaterials.map((item) => (
-                  <div key={`m-${item.id}`} className="lms-list-item">
-                    <div className="lms-list-item-info">
-                      <span className="lms-list-item-title">{item.title}</span>
-                      <LmsBadge variant="neutral">{ALL_TYPES.find((t) => t.value === item.type)?.label || item.type}</LmsBadge>
-                      {item.file_url && <span className="lms-list-item-meta">has file</span>}
-                      {item.url && <span className="lms-list-item-meta">has link</span>}
+                  <div key={`m-${item.id}`} className="lms-list-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div className="lms-list-item-info">
+                        <span className="lms-list-item-title">{item.title}</span>
+                        <LmsBadge variant="neutral">{ALL_TYPES.find((t) => t.value === item.type)?.label || item.type}</LmsBadge>
+                        {item.file_url && <span className="lms-list-item-meta">has file</span>}
+                        {item.url && <span className="lms-list-item-meta">has link</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                        <button type="button" onClick={() => handleStartEdit(item, 'material')} className="lms-btn lms-btn-sm lms-btn-outline">
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => handleDeleteMaterial(item.id)} className="lms-btn-delete-text">
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                      <button type="button" onClick={() => handleStartEdit(item, 'material')} className="lms-btn lms-btn-sm lms-btn-outline">
-                        Edit
-                      </button>
-                      <button type="button" onClick={() => handleDeleteMaterial(item.id)} className="lms-btn-delete-text">
-                        Delete
-                      </button>
-                    </div>
+                    {item.description && (
+                      <p style={{ fontSize: '0.8125rem', color: 'var(--neutral-500)', margin: 0, lineHeight: 1.4 }}>{item.description}</p>
+                    )}
                   </div>
                 ))}
               </div>

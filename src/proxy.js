@@ -49,12 +49,12 @@ export async function proxy(request) {
 
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.paystack.co${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self'${isDev ? ' ws: wss:' : ''}`,
-    "frame-src 'self' https://assessments.skilladder.ai",
+    `connect-src 'self' https://api.paystack.co${isDev ? ' ws: wss:' : ''}`,
+    "frame-src 'self' https://assessments.skilladder.ai https://checkout.paystack.com https://js.paystack.co",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

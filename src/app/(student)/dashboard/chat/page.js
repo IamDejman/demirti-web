@@ -19,8 +19,8 @@ export default function StudentChatPage() {
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
-      <LmsPageHeader title="Chat" subtitle="Message your cohort and facilitators." icon={LmsIcons.chat} />
-      <ChatPanel currentUserId={currentUserId} />
+      <LmsPageHeader title="Chat" subtitle="Direct messages with facilitators and peers." icon={LmsIcons.chat} />
+      <ChatPanel currentUserId={currentUserId} mode="chat" />
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default function ChatRoomList({
   userResults,
   handleCreateDmWithUser,
   students,
+  mode = 'all',
 }) {
   const [showStudents, setShowStudents] = useState(false);
   const [studentFilter, setStudentFilter] = useState('');
@@ -26,6 +27,15 @@ export default function ChatRoomList({
     `${s.first_name} ${s.last_name} ${s.email}`.toLowerCase().includes(studentFilter.toLowerCase())
   );
 
+  const showDmSearch = mode !== 'community';
+  const listTitle = mode === 'community' ? 'Discussions' : mode === 'chat' ? 'Messages' : 'Conversations';
+  const emptyMessage = mode === 'community'
+    ? 'No community discussions yet. They will appear when you join a cohort.'
+    : mode === 'chat'
+      ? 'No direct messages yet. Search for a user above to start a conversation.'
+      : 'No conversations yet.';
+  const searchPlaceholder = mode === 'community' ? 'Search discussions...' : 'Search conversations...';
+
   return (
     <div className="md:col-span-1 flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
       {/* Search / new conversation */}
@@ -33,39 +43,43 @@ export default function ChatRoomList({
         <div className="flex flex-col" style={{ gap: 'var(--lms-space-3)' }}>
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder={searchPlaceholder}
             value={roomFilter}
             onChange={(e) => setRoomFilter(e.target.value)}
             className="lms-input"
           />
 
-          {/* User search for starting new DMs */}
-          <input
-            type="text"
-            placeholder="Find user by name or email..."
-            value={userSearch}
-            onChange={(e) => setUserSearch(e.target.value)}
-            className="lms-input"
-          />
-          {userResults.length > 0 && (
-            <div style={{ borderRadius: '8px', border: '1px solid var(--neutral-200)', overflow: 'hidden' }}>
-              {userResults.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => handleCreateDmWithUser(u.id)}
-                  className="lms-chat-user-result"
-                >
-                  <div className="lms-chat-avatar">
-                    {(u.first_name?.[0] || u.email[0]).toUpperCase()}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <p className="lms-chat-user-name">{u.first_name || ''} {u.last_name || ''}</p>
-                    <p className="lms-chat-user-email">{u.email}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+          {/* User search for starting new DMs — hidden in community mode */}
+          {showDmSearch && (
+            <>
+              <input
+                type="text"
+                placeholder="Find user by name or email..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="lms-input"
+              />
+              {userResults.length > 0 && (
+                <div style={{ borderRadius: '8px', border: '1px solid var(--neutral-200)', overflow: 'hidden' }}>
+                  {userResults.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => handleCreateDmWithUser(u.id)}
+                      className="lms-chat-user-result"
+                    >
+                      <div className="lms-chat-avatar">
+                        {(u.first_name?.[0] || u.email[0]).toUpperCase()}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p className="lms-chat-user-name">{u.first_name || ''} {u.last_name || ''}</p>
+                        <p className="lms-chat-user-email">{u.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </LmsCard>
@@ -130,10 +144,10 @@ export default function ChatRoomList({
       )}
 
       {/* Room list */}
-      <LmsCard title="Conversations" hoverable={false}>
+      <LmsCard title={listTitle} hoverable={false}>
         {filteredRooms.length === 0 ? (
           <p style={{ fontSize: '0.875rem', color: 'var(--neutral-500)' }}>
-            {roomFilter ? 'No conversations match your search.' : 'No conversations yet.'}
+            {roomFilter ? 'No results match your search.' : emptyMessage}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

@@ -114,7 +114,7 @@ export default function FacilitatorCohortPage() {
 
       <ClassroomTabs tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange}>
         {activeTab === 'overview' && (
-          <CohortOverviewTab cohort={cohort} weeks={weeks} liveClasses={liveClasses} formatDate={formatDate} />
+          <CohortOverviewTab cohort={cohort} weeks={weeks} liveClasses={liveClasses} formatDate={formatDate} onTabChange={handleTabChange} />
         )}
         {activeTab === 'students' && (
           <CohortStudentsTab students={students} />

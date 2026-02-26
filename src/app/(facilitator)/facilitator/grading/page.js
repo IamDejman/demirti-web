@@ -25,9 +25,21 @@ export default function FacilitatorGradingPage() {
     loadQueue().finally(() => setLoading(false));
   }, []);
 
+  const maxScore = grading?.max_score ?? 100;
+
+  const handleScoreChange = (e) => {
+    const val = e.target.value;
+    if (val === '' || val === '-') { setScore(val); return; }
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return;
+    setScore(String(Math.min(Math.max(0, num), maxScore)));
+  };
+
   const handleGrade = async (e) => {
     e.preventDefault();
     if (!grading || score === '') return;
+    const num = parseInt(score, 10);
+    if (isNaN(num) || num < 0 || num > maxScore) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/submissions/${grading.id}/grade`, {
@@ -106,13 +118,13 @@ export default function FacilitatorGradingPage() {
           <form onSubmit={handleGrade} className="lms-form-stack" style={{ marginTop: 'var(--lms-space-5)' }}>
             <div className="lms-form-grid">
               <div className="lms-field">
-                <label className="lms-field-label">Score (0–{grading.max_score ?? 100})</label>
+                <label className="lms-field-label">Score (0–{maxScore})</label>
                 <input
                   type="number"
                   min={0}
-                  max={grading.max_score ?? 100}
+                  max={maxScore}
                   value={score}
-                  onChange={(e) => setScore(e.target.value)}
+                  onChange={handleScoreChange}
                   required
                   className="lms-input lms-input-narrow"
                 />

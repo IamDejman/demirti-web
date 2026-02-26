@@ -79,7 +79,7 @@ export default function FacilitatorDashboardPage() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-6)' }}>
+      <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-6)', alignItems: 'start' }}>
         {/* Cohorts */}
         <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`} accent="primary">
           {cohorts.length === 0 ? (

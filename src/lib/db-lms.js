@@ -1491,15 +1491,23 @@ export async function createSubmission({ assignmentId, studentId, submissionType
 
 export async function gradeSubmission(submissionId, { score, feedback, gradedBy, expectedGradedAt = null }) {
   await ensureLmsSchema();
-  const condition = expectedGradedAt
-    ? sql`id = ${submissionId} AND graded_at = ${expectedGradedAt}`
-    : sql`id = ${submissionId} AND graded_at IS NULL`;
-  const result = await sql`
-    UPDATE assignment_submissions
-    SET score = ${score}, feedback = ${feedback || null}, graded_by = ${gradedBy}, graded_at = CURRENT_TIMESTAMP, status = 'graded'
-    WHERE ${condition}
-    RETURNING id;
-  `;
+  const fb = feedback?.trim() || null;
+  let result;
+  if (expectedGradedAt) {
+    result = await sql`
+      UPDATE assignment_submissions
+      SET score = ${score}, feedback = ${fb}, graded_by = ${gradedBy}, graded_at = CURRENT_TIMESTAMP, status = 'graded'
+      WHERE id = ${submissionId} AND graded_at = ${expectedGradedAt}
+      RETURNING id;
+    `;
+  } else {
+    result = await sql`
+      UPDATE assignment_submissions
+      SET score = ${score}, feedback = ${fb}, graded_by = ${gradedBy}, graded_at = CURRENT_TIMESTAMP, status = 'graded'
+      WHERE id = ${submissionId} AND graded_at IS NULL
+      RETURNING id;
+    `;
+  }
   if (result.rows.length === 0) {
     const err = new Error('Grading conflict: submission was already graded by another facilitator');
     err.code = 'GRADING_CONFLICT';

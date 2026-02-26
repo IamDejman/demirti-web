@@ -45,7 +45,7 @@ export default function FacilitatorGradingPage() {
       const res = await fetch(`/api/submissions/${grading.id}/grade`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-        body: JSON.stringify({ score: parseInt(score, 10), feedback: feedback.trim() || null }),
+        body: JSON.stringify({ grade: parseInt(score, 10), feedback: feedback.trim() || null }),
       });
       if (res.ok) {
         setGrading(null);

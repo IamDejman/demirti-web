@@ -55,17 +55,32 @@ export default function FacilitatorAttendancePage() {
     setAttendance((prev) => prev.map((r) => (r.student_id === studentId ? { ...r, status } : r)));
   };
 
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   const handleSave = async () => {
     if (!selectedClass) return;
     setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
     try {
       const updates = attendance.map((r) => ({ studentId: r.student_id, status: r.status }));
-      await fetch(`/api/live-classes/${selectedClass}/attendance`, {
+      const res = await fetch(`/api/live-classes/${selectedClass}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
         body: JSON.stringify({ updates }),
       });
-    } catch {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || `Save failed (${res.status})`);
+      } else {
+        setSaveSuccess(true);
+        const data = await res.json();
+        if (data.attendance) setAttendance(data.attendance);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      setSaveError(err.message || 'Network error');
     } finally {
       setSaving(false);
     }
@@ -156,7 +171,7 @@ export default function FacilitatorAttendancePage() {
               </tbody>
             </table>
           </div>
-          <div className="mt-6">
+          <div className="mt-6" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={handleSave}
@@ -165,6 +180,8 @@ export default function FacilitatorAttendancePage() {
             >
               {saving ? 'Saving...' : 'Save attendance'}
             </button>
+            {saveSuccess && <span style={{ fontSize: '0.8125rem', color: '#16a34a', fontWeight: 500 }}>✓ Attendance saved</span>}
+            {saveError && <span style={{ fontSize: '0.8125rem', color: '#dc2626', fontWeight: 500 }}>{saveError}</span>}
           </div>
         </LmsCard>
       )}

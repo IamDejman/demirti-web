@@ -62,8 +62,8 @@ export default function FacilitatorGradingPage() {
       <LmsPageHeader title="Grading queue" subtitle="Review and grade student submissions." icon={LmsIcons.grading} />
 
       {grading ? (
-        <LmsCard title="Grade submission" subtitle={`${grading.assignment_title} · ${grading.first_name} ${grading.last_name}`}>
-          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>Submitted {formatDate(grading.submitted_at)}</p>
+        <LmsCard title="Grade submission" subtitle={`${grading.assignment_title}${grading.week_number ? ` · Week ${grading.week_number}` : ''} · ${grading.first_name} ${grading.last_name}`}>
+          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>Submitted {formatDate(grading.submitted_at)}{grading.cohort_name ? ` · ${grading.cohort_name}` : ''}</p>
           <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--neutral-50)' }}>
             {grading.link_url && <p><a href={grading.link_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open submission link</a></p>}
             {grading.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{grading.text_content}</p>}
@@ -79,7 +79,7 @@ export default function FacilitatorGradingPage() {
                 value={score}
                 onChange={(e) => setScore(e.target.value)}
                 required
-                className="lms-form-input mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-input mt-1 block w-full sm:max-w-xs"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ export default function FacilitatorGradingPage() {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="lms-form-textarea mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="lms-input mt-1 block w-full"
                 placeholder="Optional feedback..."
               />
             </div>
@@ -113,7 +113,9 @@ export default function FacilitatorGradingPage() {
             <thead>
               <tr>
                 <th>Assignment</th>
+                <th>Week</th>
                 <th>Student</th>
+                <th>Cohort</th>
                 <th>Submitted</th>
                 <th>Action</th>
               </tr>
@@ -122,7 +124,9 @@ export default function FacilitatorGradingPage() {
               {submissions.map((s) => (
                 <tr key={s.id}>
                   <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{s.assignment_title}</td>
+                  <td style={{ color: 'var(--neutral-600)' }}>{s.week_number ? `Week ${s.week_number}` : '\u2014'}</td>
                   <td style={{ color: 'var(--neutral-600)' }}>{s.first_name} {s.last_name}</td>
+                  <td style={{ color: 'var(--neutral-600)' }}>{s.cohort_name || '\u2014'}</td>
                   <td style={{ color: 'var(--neutral-600)' }}>{formatDate(s.submitted_at)}</td>
                   <td>
                     <button

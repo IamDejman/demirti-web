@@ -95,7 +95,7 @@ export default function FacilitatorOfficeHoursPage() {
               placeholder="Office hour title"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
+              className="lms-input w-full"
             />
           </div>
           <div>
@@ -105,7 +105,7 @@ export default function FacilitatorOfficeHoursPage() {
               placeholder="What will be covered..."
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="lms-form-textarea border-token w-full px-3 py-2 rounded-lg"
+              className="lms-input w-full"
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -115,7 +115,7 @@ export default function FacilitatorOfficeHoursPage() {
                 type="datetime-local"
                 value={form.startTime}
                 onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
+                className="lms-input w-full"
               />
             </div>
             <div>
@@ -124,7 +124,7 @@ export default function FacilitatorOfficeHoursPage() {
                 type="datetime-local"
                 value={form.endTime}
                 onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
+                className="lms-input w-full"
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function FacilitatorOfficeHoursPage() {
                 placeholder="https://..."
                 value={form.meetingLink}
                 onChange={(e) => setForm((f) => ({ ...f, meetingLink: e.target.value }))}
-                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
+                className="lms-input w-full"
               />
             </div>
             <div>
@@ -146,7 +146,7 @@ export default function FacilitatorOfficeHoursPage() {
                 min="1"
                 value={form.capacity}
                 onChange={(e) => setForm((f) => ({ ...f, capacity: parseInt(e.target.value, 10) || 1 }))}
-                className="lms-form-input border-token w-full px-3 py-2 rounded-lg"
+                className="lms-input w-full"
               />
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function FacilitatorOfficeHoursPage() {
             <select
               value={form.cohortId}
               onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-              className="lms-form-select border-token w-full px-3 py-2 rounded-lg"
+              className="lms-input w-full"
             >
               <option value="">Open to all cohorts</option>
               {cohorts.map((c) => (
@@ -176,15 +176,15 @@ export default function FacilitatorOfficeHoursPage() {
           <ul className="space-y-3">
             {slots.map((slot) => (
               <li key={slot.id} className="border-b border-[var(--neutral-100)] pb-3 last:border-0">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="font-medium text-[var(--neutral-900)]">{slot.title || 'Office hour slot'}</p>
                     <p className="text-xs text-[var(--neutral-500)]">
                       {new Date(slot.start_time).toLocaleString()} - {new Date(slot.end_time).toLocaleTimeString()}
                     </p>
                     {slot.cohort_name && <p className="text-xs text-[var(--neutral-500)]">Cohort: {slot.cohort_name}</p>}
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3 flex-shrink-0">
                     <button
                       type="button"
                       onClick={() => loadBookings(slot.id)}

@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { LmsLayoutShell } from '@/app/components/lms';
-import ThemeToggle from '@/app/components/ThemeToggle';
 import { getLmsAuthHeaders, installLms401Interceptor } from '@/lib/authClient';
 import { useVisibilityPolling } from '@/hooks/useVisibilityPolling';
 import ErrorBoundary from '@/app/components/ErrorBoundary';
@@ -78,7 +77,7 @@ export default function FacilitatorLayout({ children }) {
   if (!user) return null;
 
   return (
-    <LmsLayoutShell variant="facilitator" user={user} pendingCount={pendingCount} topBarContent={<ThemeToggle compact />}>
+    <LmsLayoutShell variant="facilitator" user={user} pendingCount={pendingCount}>
       <AuditPageViewTracker />
       <ErrorBoundary>
         {children}

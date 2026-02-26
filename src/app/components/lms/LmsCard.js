@@ -10,7 +10,7 @@ export default function LmsCard({ title, subtitle, icon, action, children, class
       } ${className}`}
     >
       {(title || action) && (
-        <div className="flex items-start justify-between" style={{ gap: 'var(--lms-space-4)', padding: 'var(--lms-space-6) var(--lms-space-6) 0' }}>
+        <div className="lms-card-header">
           <div className="flex items-center" style={{ gap: 'var(--lms-space-3)' }}>
             {icon && (
               <div

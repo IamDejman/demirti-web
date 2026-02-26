@@ -6,12 +6,11 @@ import { useVisibilityPolling } from '@/hooks/useVisibilityPolling';
 import ChatRoomList from '@/app/components/chat/ChatRoomList';
 import ChatMessageList from '@/app/components/chat/ChatMessageList';
 
-export default function ChatPanel() {
+export default function ChatPanel({ students, currentUserId }) {
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
-  const [dmEmail, setDmEmail] = useState('');
   const [roomFilter, setRoomFilter] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userResults, setUserResults] = useState([]);
@@ -90,21 +89,6 @@ export default function ChatPanel() {
     setLoadingOlder(false);
   };
 
-  const handleCreateDm = async (e) => {
-    e.preventDefault();
-    if (!dmEmail.trim()) return;
-    const res = await fetch('/api/chat/rooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-      body: JSON.stringify({ type: 'dm', email: dmEmail.trim() }),
-    });
-    const data = await res.json();
-    if (res.ok && data.room) {
-      await loadRooms();
-      setDmEmail('');
-    }
-  };
-
   const handleCreateDmWithUser = async (userId) => {
     const res = await fetch('/api/chat/rooms', {
       method: 'POST',
@@ -122,7 +106,7 @@ export default function ChatPanel() {
 
   if (loading) {
     return (
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-3 md:gap-6 md:grid-cols-3">
         <div className="h-96 lms-skeleton rounded-xl md:col-span-1" />
         <div className="h-96 lms-skeleton rounded-xl md:col-span-2" />
       </div>
@@ -130,20 +114,18 @@ export default function ChatPanel() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
+    <div className="grid gap-3 md:gap-6 md:grid-cols-3">
       <ChatRoomList
         rooms={rooms}
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
         roomFilter={roomFilter}
         setRoomFilter={setRoomFilter}
-        dmEmail={dmEmail}
-        setDmEmail={setDmEmail}
         userSearch={userSearch}
         setUserSearch={setUserSearch}
         userResults={userResults}
-        handleCreateDm={handleCreateDm}
         handleCreateDmWithUser={handleCreateDmWithUser}
+        students={students}
       />
       <ChatMessageList
         messages={messages}
@@ -155,6 +137,7 @@ export default function ChatPanel() {
         loadingOlder={loadingOlder}
         loadRooms={loadRooms}
         setSelectedRoom={setSelectedRoom}
+        currentUserId={currentUserId}
       />
     </div>
   );

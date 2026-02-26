@@ -131,40 +131,74 @@ export default function PortfolioPage() {
 
   const saveProject = async (e) => {
     e.preventDefault();
-    const endpoint = editingProjectId ? `/api/portfolio/projects/${editingProjectId}` : '/api/portfolio/projects';
-    const method = editingProjectId ? 'PUT' : 'POST';
-    await fetch(endpoint, {
-      method,
-      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-      body: JSON.stringify(projectForm),
-    });
-    setProjectForm(emptyProjectForm);
-    setEditingProjectId(null);
-    await loadData();
+    try {
+      const endpoint = editingProjectId ? `/api/portfolio/projects/${editingProjectId}` : '/api/portfolio/projects';
+      const method = editingProjectId ? 'PUT' : 'POST';
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+        body: JSON.stringify(projectForm),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast({ type: 'error', message: data.error || 'Failed to save project.' });
+        return;
+      }
+      setProjectForm(emptyProjectForm);
+      setEditingProjectId(null);
+      await loadData();
+    } catch {
+      showToast({ type: 'error', message: 'Network error saving project.' });
+    }
   };
 
   const deleteProject = async (id) => {
-    await fetch(`/api/portfolio/projects/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
-    await loadData();
+    try {
+      const res = await fetch(`/api/portfolio/projects/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
+      if (!res.ok) {
+        showToast({ type: 'error', message: 'Failed to delete project.' });
+        return;
+      }
+      await loadData();
+    } catch {
+      showToast({ type: 'error', message: 'Network error deleting project.' });
+    }
   };
 
   const saveLink = async (e) => {
     e.preventDefault();
-    const endpoint = editingLinkId ? `/api/portfolio/social-links/${editingLinkId}` : '/api/portfolio/social-links';
-    const method = editingLinkId ? 'PUT' : 'POST';
-    await fetch(endpoint, {
-      method,
-      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-      body: JSON.stringify(linkForm),
-    });
-    setLinkForm(emptyLinkForm);
-    setEditingLinkId(null);
-    await loadData();
+    try {
+      const endpoint = editingLinkId ? `/api/portfolio/social-links/${editingLinkId}` : '/api/portfolio/social-links';
+      const method = editingLinkId ? 'PUT' : 'POST';
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+        body: JSON.stringify(linkForm),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast({ type: 'error', message: data.error || 'Failed to save link.' });
+        return;
+      }
+      setLinkForm(emptyLinkForm);
+      setEditingLinkId(null);
+      await loadData();
+    } catch {
+      showToast({ type: 'error', message: 'Network error saving link.' });
+    }
   };
 
   const deleteLink = async (id) => {
-    await fetch(`/api/portfolio/social-links/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
-    await loadData();
+    try {
+      const res = await fetch(`/api/portfolio/social-links/${id}`, { method: 'DELETE', headers: getLmsAuthHeaders() });
+      if (!res.ok) {
+        showToast({ type: 'error', message: 'Failed to delete link.' });
+        return;
+      }
+      await loadData();
+    } catch {
+      showToast({ type: 'error', message: 'Network error deleting link.' });
+    }
   };
 
   if (loading) {

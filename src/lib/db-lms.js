@@ -570,6 +570,8 @@ export async function initializeLmsSchema() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON chat_messages(room_id);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);`.catch(() => {});
+  await sql`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_shadowbanned BOOLEAN DEFAULT false;`.catch(() => {});
+  await sql`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;`.catch(() => {});
 
   await sql`
     CREATE TABLE IF NOT EXISTS message_reports (
@@ -924,13 +926,20 @@ export function generateReferralCode() {
 // --- Tracks (LMS columns) ---
 export async function getTracksLms(activeOnly = true) {
   await ensureLmsSchema();
-  const result = await sql`
-    SELECT id, track_name, course_price, scholarship_limit, scholarship_discount_percentage,
-           slug, description, duration_weeks, thumbnail_url, is_active, created_at, updated_at
-    FROM tracks
-    ${activeOnly ? sql`WHERE is_active = true` : sql``}
-    ORDER BY track_name;
-  `;
+  let result;
+  if (activeOnly) {
+    result = await sql`
+      SELECT id, track_name, course_price, scholarship_limit, scholarship_discount_percentage,
+             slug, description, duration_weeks, thumbnail_url, is_active, created_at, updated_at
+      FROM tracks WHERE is_active = true ORDER BY track_name;
+    `;
+  } else {
+    result = await sql`
+      SELECT id, track_name, course_price, scholarship_limit, scholarship_discount_percentage,
+             slug, description, duration_weeks, thumbnail_url, is_active, created_at, updated_at
+      FROM tracks ORDER BY track_name;
+    `;
+  }
   return result.rows;
 }
 
@@ -971,17 +980,21 @@ export async function updateTrackLms(id, updates) {
   await ensureLmsSchema();
   const numId = parseInt(id, 10);
   if (Number.isNaN(numId)) return null;
-  const { slug, description, durationWeeks, thumbnailUrl, trackName, isActive } = updates;
-  const sets = [];
-  if (slug !== undefined) sets.push(sql`slug = ${slug}`);
-  if (description !== undefined) sets.push(sql`description = ${description}`);
-  if (durationWeeks !== undefined) sets.push(sql`duration_weeks = ${durationWeeks}`);
-  if (thumbnailUrl !== undefined) sets.push(sql`thumbnail_url = ${thumbnailUrl}`);
-  if (trackName !== undefined) sets.push(sql`track_name = ${trackName}`);
-  if (isActive !== undefined) sets.push(sql`is_active = ${isActive}`);
-  if (sets.length === 0) return await getTrackByIdLms(numId);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE tracks SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${numId}`;
+  const current = await getTrackByIdLms(numId);
+  if (!current) return null;
+  const slug = updates.slug !== undefined ? updates.slug : current.slug;
+  const description = updates.description !== undefined ? updates.description : current.description;
+  const durationWeeks = updates.durationWeeks !== undefined ? updates.durationWeeks : current.duration_weeks;
+  const thumbnailUrl = updates.thumbnailUrl !== undefined ? updates.thumbnailUrl : current.thumbnail_url;
+  const trackName = updates.trackName !== undefined ? updates.trackName : current.track_name;
+  const isActive = updates.isActive !== undefined ? updates.isActive : current.is_active;
+  await sql`
+    UPDATE tracks SET
+      slug = ${slug}, description = ${description}, duration_weeks = ${durationWeeks},
+      thumbnail_url = ${thumbnailUrl}, track_name = ${trackName}, is_active = ${isActive},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${numId}
+  `;
   return getTrackByIdLms(numId);
 }
 
@@ -1028,16 +1041,20 @@ export async function getCohortById(id) {
 
 export async function updateCohort(id, updates) {
   await ensureLmsSchema();
-  const { name, startDate, endDate, currentWeek, status } = updates;
-  const sets = [];
-  if (name !== undefined) sets.push(sql`name = ${name}`);
-  if (startDate !== undefined) sets.push(sql`start_date = ${startDate}`);
-  if (endDate !== undefined) sets.push(sql`end_date = ${endDate}`);
-  if (currentWeek !== undefined) sets.push(sql`current_week = ${currentWeek}`);
-  if (status !== undefined) sets.push(sql`status = ${status}`);
-  if (sets.length === 0) return await getCohortById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE cohorts SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  const current = await getCohortById(id);
+  if (!current) return null;
+  const name = updates.name !== undefined ? updates.name : current.name;
+  const startDate = updates.startDate !== undefined ? updates.startDate : current.start_date;
+  const endDate = updates.endDate !== undefined ? updates.endDate : current.end_date;
+  const currentWeek = updates.currentWeek !== undefined ? updates.currentWeek : current.current_week;
+  const status = updates.status !== undefined ? updates.status : current.status;
+  await sql`
+    UPDATE cohorts SET
+      name = ${name}, start_date = ${startDate}, end_date = ${endDate},
+      current_week = ${currentWeek}, status = ${status},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+  `;
   return getCohortById(id);
 }
 
@@ -1212,20 +1229,26 @@ export async function createWeek({ cohortId, weekNumber, title, description, unl
 
 export async function updateWeek(id, updates) {
   await ensureLmsSchema();
-  const { title, description, unlockDate, liveClassDatetime, googleMeetLink, weekStartDate, weekEndDate, isLocked, weekNumber } = updates;
-  const sets = [];
-  if (title !== undefined) sets.push(sql`title = ${title}`);
-  if (description !== undefined) sets.push(sql`description = ${description}`);
-  if (unlockDate !== undefined) sets.push(sql`unlock_date = ${unlockDate}`);
-  if (liveClassDatetime !== undefined) sets.push(sql`live_class_datetime = ${liveClassDatetime}`);
-  if (googleMeetLink !== undefined) sets.push(sql`google_meet_link = ${googleMeetLink}`);
-  if (weekStartDate !== undefined) sets.push(sql`week_start_date = ${weekStartDate}`);
-  if (weekEndDate !== undefined) sets.push(sql`week_end_date = ${weekEndDate}`);
-  if (isLocked !== undefined) sets.push(sql`is_locked = ${isLocked}`);
-  if (weekNumber !== undefined) sets.push(sql`week_number = ${weekNumber}`);
-  if (sets.length === 0) return await getWeekById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE weeks SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  const current = await getWeekById(id);
+  if (!current) return null;
+  const title = updates.title !== undefined ? updates.title : current.title;
+  const description = updates.description !== undefined ? updates.description : current.description;
+  const unlockDate = updates.unlockDate !== undefined ? updates.unlockDate : current.unlock_date;
+  const liveClassDatetime = updates.liveClassDatetime !== undefined ? updates.liveClassDatetime : current.live_class_datetime;
+  const googleMeetLink = updates.googleMeetLink !== undefined ? updates.googleMeetLink : current.google_meet_link;
+  const weekStartDate = updates.weekStartDate !== undefined ? updates.weekStartDate : current.week_start_date;
+  const weekEndDate = updates.weekEndDate !== undefined ? updates.weekEndDate : current.week_end_date;
+  const isLocked = updates.isLocked !== undefined ? updates.isLocked : current.is_locked;
+  const weekNumber = updates.weekNumber !== undefined ? updates.weekNumber : current.week_number;
+  await sql`
+    UPDATE weeks SET
+      title = ${title}, description = ${description}, unlock_date = ${unlockDate},
+      live_class_datetime = ${liveClassDatetime}, google_meet_link = ${googleMeetLink},
+      week_start_date = ${weekStartDate}, week_end_date = ${weekEndDate},
+      is_locked = ${isLocked}, week_number = ${weekNumber},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+  `;
   return getWeekById(id);
 }
 
@@ -1256,17 +1279,20 @@ export async function getContentItemById(id) {
 
 export async function updateContentItem(id, updates) {
   await ensureLmsSchema();
-  const { title, description, fileUrl, externalUrl, orderIndex, isDownloadable } = updates;
-  const sets = [];
-  if (title !== undefined) sets.push(sql`title = ${title}`);
-  if (description !== undefined) sets.push(sql`description = ${description}`);
-  if (fileUrl !== undefined) sets.push(sql`file_url = ${fileUrl}`);
-  if (externalUrl !== undefined) sets.push(sql`external_url = ${externalUrl}`);
-  if (orderIndex !== undefined) sets.push(sql`order_index = ${orderIndex}`);
-  if (isDownloadable !== undefined) sets.push(sql`is_downloadable = ${isDownloadable}`);
-  if (sets.length === 0) return await getContentItemById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE content_items SET ${setClause} WHERE id = ${id}`;
+  const current = await getContentItemById(id);
+  if (!current) return null;
+  const title = updates.title !== undefined ? updates.title : current.title;
+  const description = updates.description !== undefined ? updates.description : current.description;
+  const fileUrl = updates.fileUrl !== undefined ? updates.fileUrl : current.file_url;
+  const externalUrl = updates.externalUrl !== undefined ? updates.externalUrl : current.external_url;
+  const orderIndex = updates.orderIndex !== undefined ? updates.orderIndex : current.order_index;
+  const isDownloadable = updates.isDownloadable !== undefined ? updates.isDownloadable : current.is_downloadable;
+  await sql`
+    UPDATE content_items SET
+      title = ${title}, description = ${description}, file_url = ${fileUrl},
+      external_url = ${externalUrl}, order_index = ${orderIndex}, is_downloadable = ${isDownloadable}
+    WHERE id = ${id}
+  `;
   return getContentItemById(id);
 }
 
@@ -1303,16 +1329,19 @@ export async function getMaterialById(id) {
 
 export async function updateMaterial(id, updates) {
   await ensureLmsSchema();
-  const { title, description, url, fileUrl, type } = updates;
-  const sets = [];
-  if (title !== undefined) sets.push(sql`title = ${title}`);
-  if (description !== undefined) sets.push(sql`description = ${description}`);
-  if (url !== undefined) sets.push(sql`url = ${url}`);
-  if (fileUrl !== undefined) sets.push(sql`file_url = ${fileUrl}`);
-  if (type !== undefined) sets.push(sql`type = ${type}`);
-  if (sets.length === 0) return await getMaterialById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE materials SET ${setClause} WHERE id = ${id}`;
+  const current = await getMaterialById(id);
+  if (!current) return null;
+  const title = updates.title !== undefined ? updates.title : current.title;
+  const description = updates.description !== undefined ? updates.description : current.description;
+  const url = updates.url !== undefined ? updates.url : current.url;
+  const fileUrl = updates.fileUrl !== undefined ? updates.fileUrl : current.file_url;
+  const type = updates.type !== undefined ? updates.type : current.type;
+  await sql`
+    UPDATE materials SET
+      title = ${title}, description = ${description}, url = ${url},
+      file_url = ${fileUrl}, type = ${type}
+    WHERE id = ${id}
+  `;
   return getMaterialById(id);
 }
 
@@ -1415,17 +1444,21 @@ export async function createAssignment({
 
 export async function updateAssignment(id, updates) {
   await ensureLmsSchema();
-  const { title, description, deadlineAt, maxScore, isPublished, publishAt } = updates;
-  const sets = [];
-  if (title !== undefined) sets.push(sql`title = ${title}`);
-  if (description !== undefined) sets.push(sql`description = ${description}`);
-  if (deadlineAt !== undefined) sets.push(sql`deadline_at = ${deadlineAt}`);
-  if (maxScore !== undefined) sets.push(sql`max_score = ${maxScore}`);
-  if (isPublished !== undefined) sets.push(sql`is_published = ${isPublished}`);
-  if (publishAt !== undefined) sets.push(sql`publish_at = ${publishAt}`);
-  if (sets.length === 0) return await getAssignmentById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE assignments SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  const current = await getAssignmentById(id);
+  if (!current) return null;
+  const title = updates.title !== undefined ? updates.title : current.title;
+  const description = updates.description !== undefined ? updates.description : current.description;
+  const deadlineAt = updates.deadlineAt !== undefined ? updates.deadlineAt : current.deadline_at;
+  const maxScore = updates.maxScore !== undefined ? updates.maxScore : current.max_score;
+  const isPublished = updates.isPublished !== undefined ? updates.isPublished : current.is_published;
+  const publishAt = updates.publishAt !== undefined ? updates.publishAt : current.publish_at;
+  await sql`
+    UPDATE assignments SET
+      title = ${title}, description = ${description}, deadline_at = ${deadlineAt},
+      max_score = ${maxScore}, is_published = ${isPublished}, publish_at = ${publishAt},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+  `;
   return getAssignmentById(id);
 }
 
@@ -1581,14 +1614,17 @@ export async function createLiveClass({ weekId, cohortId, scheduledAt, googleMee
 
 export async function updateLiveClass(id, updates) {
   await ensureLmsSchema();
-  const { recordingUrl, status, googleMeetLink } = updates;
-  const sets = [];
-  if (recordingUrl !== undefined) sets.push(sql`recording_url = ${recordingUrl}`);
-  if (status !== undefined) sets.push(sql`status = ${status}`);
-  if (googleMeetLink !== undefined) sets.push(sql`google_meet_link = ${googleMeetLink}`);
-  if (sets.length === 0) return await getLiveClassById(id);
-  const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-  await sql`UPDATE live_classes SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id}`;
+  const current = await getLiveClassById(id);
+  if (!current) return null;
+  const recordingUrl = updates.recordingUrl !== undefined ? updates.recordingUrl : current.recording_url;
+  const status = updates.status !== undefined ? updates.status : current.status;
+  const googleMeetLink = updates.googleMeetLink !== undefined ? updates.googleMeetLink : current.google_meet_link;
+  await sql`
+    UPDATE live_classes SET
+      recording_url = ${recordingUrl}, status = ${status}, google_meet_link = ${googleMeetLink},
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+  `;
   return getLiveClassById(id);
 }
 

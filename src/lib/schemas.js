@@ -100,7 +100,7 @@ export const adminCreateSchema = z.object({
 export const portfolioProjectSchema = z.object({
   title: nonEmpty,
   description: optStr,
-  projectUrl: z.string().url().optional().or(z.literal('')),
+  linkUrl: z.string().url().optional().or(z.literal('')),
   imageUrl: z.string().url().optional().or(z.literal('')),
   tags: z.union([z.array(z.string()), z.string()]).optional(),
 });

@@ -1,12 +1,18 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { useVisibilityPolling } from '@/hooks/useVisibilityPolling';
 import ChatRoomList from '@/app/components/chat/ChatRoomList';
 import ChatMessageList from '@/app/components/chat/ChatMessageList';
 
-export default function ChatPanel({ students, currentUserId }) {
+/**
+ * @param {'all'|'chat'|'community'} mode
+ *   - 'all'       – show every room (default, used by facilitator)
+ *   - 'chat'      – DM rooms only
+ *   - 'community' – cohort / group rooms only
+ */
+export default function ChatPanel({ students, currentUserId, mode = 'all' }) {
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -22,11 +28,24 @@ export default function ChatPanel({ students, currentUserId }) {
     const data = await res.json();
     if (res.ok && data.rooms) {
       setRooms(data.rooms);
-      if (!selectedRoom && data.rooms.length > 0) {
-        setSelectedRoom(data.rooms[0]);
-      }
     }
-  }, [selectedRoom]);
+  }, []);
+
+  /* Filter rooms by mode */
+  const filteredRooms = useMemo(() => {
+    if (mode === 'chat') return rooms.filter((r) => r.type === 'dm');
+    if (mode === 'community') return rooms.filter((r) => r.type !== 'dm');
+    return rooms;
+  }, [rooms, mode]);
+
+  /* Auto-select first room when filtered list changes */
+  useEffect(() => {
+    if (!selectedRoom && filteredRooms.length > 0) {
+      setSelectedRoom(filteredRooms[0]);
+    } else if (selectedRoom && filteredRooms.length > 0 && !filteredRooms.find((r) => r.id === selectedRoom.id)) {
+      setSelectedRoom(filteredRooms[0]);
+    }
+  }, [filteredRooms, selectedRoom]);
 
   const loadMessages = useCallback(async (roomId) => {
     if (!roomId) return;
@@ -42,6 +61,7 @@ export default function ChatPanel({ students, currentUserId }) {
   useVisibilityPolling(loadRooms, 15000);
 
   useEffect(() => {
+    if (mode === 'community') return; // no DM search in community mode
     const handler = setTimeout(async () => {
       if (!userSearch.trim() || userSearch.trim().length < 2) {
         setUserResults([]);
@@ -52,7 +72,7 @@ export default function ChatPanel({ students, currentUserId }) {
       if (res.ok && data.users) setUserResults(data.users);
     }, 300);
     return () => clearTimeout(handler);
-  }, [userSearch]);
+  }, [userSearch, mode]);
 
   useEffect(() => {
     if (!selectedRoom) return;
@@ -116,7 +136,7 @@ export default function ChatPanel({ students, currentUserId }) {
   return (
     <div className="grid gap-3 md:gap-6 md:grid-cols-3">
       <ChatRoomList
-        rooms={rooms}
+        rooms={filteredRooms}
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
         roomFilter={roomFilter}
@@ -126,6 +146,7 @@ export default function ChatPanel({ students, currentUserId }) {
         userResults={userResults}
         handleCreateDmWithUser={handleCreateDmWithUser}
         students={students}
+        mode={mode}
       />
       <ChatMessageList
         messages={messages}

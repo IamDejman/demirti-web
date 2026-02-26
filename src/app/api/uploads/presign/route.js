@@ -3,7 +3,7 @@ import { createPresignedUploadUrl, generateUploadKey, isAllowedFileType, isWithi
 import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 
-const ALLOWED_PREFIXES = ['assignments', 'profiles', 'portfolios', 'materials', 'certificates'];
+const ALLOWED_PREFIXES = ['assignments', 'profile', 'profiles', 'portfolios', 'materials', 'certificates'];
 const SERVER_ALLOWED_TYPES = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'csv', 'xlsx', 'pptx', 'mp4', 'zip'];
 const SERVER_MAX_SIZE_MB = 50;
 

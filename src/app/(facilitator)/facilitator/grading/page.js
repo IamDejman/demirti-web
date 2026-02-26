@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
+import { useState, useEffect, useMemo } from 'react';
+import { LmsCard, LmsEmptyState, LmsPageHeader, LmsBadge } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
@@ -13,6 +13,7 @@ export default function FacilitatorGradingPage() {
   const [score, setScore] = useState('');
   const [feedback, setFeedback] = useState('');
   const [saving, setSaving] = useState(false);
+  const [expandedAssignment, setExpandedAssignment] = useState(null);
 
   const loadQueue = async () => {
     const res = await fetch('/api/facilitator/grading-queue', { headers: getLmsAuthHeaders() });
@@ -47,6 +48,24 @@ export default function FacilitatorGradingPage() {
   };
 
   const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+
+  /* Group submissions by assignment */
+  const grouped = useMemo(() => {
+    const map = new Map();
+    for (const s of submissions) {
+      const key = s.assignment_id || s.assignment_title;
+      if (!map.has(key)) {
+        map.set(key, {
+          assignmentTitle: s.assignment_title,
+          weekNumber: s.week_number,
+          cohortName: s.cohort_name,
+          submissions: [],
+        });
+      }
+      map.get(key).submissions.push(s);
+    }
+    return [...map.values()];
+  }, [submissions]);
 
   if (loading) {
     return (
@@ -121,46 +140,68 @@ export default function FacilitatorGradingPage() {
         </LmsCard>
       ) : null}
 
-      <LmsCard title="Pending submissions" hoverable={false}>
-        {submissions.length === 0 ? (
+      {submissions.length === 0 ? (
+        <LmsCard hoverable={false}>
           <LmsEmptyState icon={LmsIcons.checkCircle} title="No pending submissions to grade" description="New submissions will appear here when students submit." />
-        ) : (
-          <div className="lms-table-wrapper">
-            <table className="lms-table">
-            <thead>
-              <tr>
-                <th>Assignment</th>
-                <th>Week</th>
-                <th>Student</th>
-                <th>Cohort</th>
-                <th>Submitted</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {submissions.map((s) => (
-                <tr key={s.id}>
-                  <td className="font-medium" style={{ color: 'var(--neutral-900)' }}>{s.assignment_title}</td>
-                  <td style={{ color: 'var(--neutral-600)' }}>{s.week_number ? `Week ${s.week_number}` : '\u2014'}</td>
-                  <td style={{ color: 'var(--neutral-600)' }}>{s.first_name} {s.last_name}</td>
-                  <td style={{ color: 'var(--neutral-600)' }}>{s.cohort_name || '\u2014'}</td>
-                  <td style={{ color: 'var(--neutral-600)' }}>{formatDate(s.submitted_at)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => { setGrading(s); setScore(''); setFeedback(''); }}
-                      className="lms-btn lms-btn-sm lms-btn-primary"
-                    >
-                      Grade
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        )}
-      </LmsCard>
+        </LmsCard>
+      ) : (
+        <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
+          {grouped.map((group, gi) => {
+            const key = `${group.assignmentTitle}-${gi}`;
+            const isExpanded = expandedAssignment === key || expandedAssignment === null;
+            return (
+              <LmsCard key={key} hoverable={false}>
+                <button
+                  type="button"
+                  onClick={() => setExpandedAssignment(isExpanded && expandedAssignment !== null ? null : key)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                    padding: 0, textAlign: 'left', gap: '0.75rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--neutral-900)' }}>{group.assignmentTitle}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
+                      {group.weekNumber ? `Week ${group.weekNumber}` : ''}{group.weekNumber && group.cohortName ? ' · ' : ''}{group.cohortName || ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                    <LmsBadge variant="warning">{group.submissions.length} pending</LmsBadge>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neutral-400)" strokeWidth="2"
+                      style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div style={{ marginTop: 'var(--lms-space-4)' }}>
+                    {group.submissions.map((s) => (
+                      <div key={s.id} className="lms-list-item">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', flex: 1, minWidth: 0 }}>
+                          <span className="lms-list-item-title">{s.first_name} {s.last_name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
+                            Submitted {formatDate(s.submitted_at)}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setGrading(s); setScore(''); setFeedback(''); }}
+                          className="lms-btn lms-btn-sm lms-btn-primary"
+                          style={{ flexShrink: 0 }}
+                        >
+                          Grade
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </LmsCard>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

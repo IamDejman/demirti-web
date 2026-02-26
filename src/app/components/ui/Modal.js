@@ -166,6 +166,31 @@ function Modal({ isOpen, onClose, title, children, footer }) {
           padding: 1rem 1.25rem;
           border-top: 1px solid var(--border-color);
         }
+        @media (max-width: 480px) {
+          .ui-modal {
+            max-width: 100%;
+            border-radius: 0;
+            height: 100%;
+            max-height: 100vh;
+          }
+          .ui-modal-overlay {
+            padding: 0;
+          }
+          .ui-modal__close {
+            width: 44px;
+            height: 44px;
+            font-size: 1.75rem;
+          }
+          .ui-modal__header {
+            padding: 0.75rem 1rem;
+          }
+          .ui-modal__body {
+            padding: 1rem;
+          }
+          .ui-modal__footer {
+            padding: 0.75rem 1rem;
+          }
+        }
       `}</style>
     </div>
   );

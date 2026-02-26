@@ -1429,6 +1429,11 @@ export async function updateAssignment(id, updates) {
   return getAssignmentById(id);
 }
 
+export async function deleteAssignment(id) {
+  await ensureLmsSchema();
+  await sql`DELETE FROM assignments WHERE id = ${id}`;
+}
+
 // --- Submissions ---
 export async function getSubmissionsByAssignment(assignmentId, limit = 500) {
   await ensureLmsSchema();
@@ -1506,9 +1511,14 @@ export async function gradeSubmission(submissionId, { score, feedback, gradedBy,
 export async function getPendingSubmissionsForFacilitator(facilitatorId, limit = 200) {
   await ensureLmsSchema();
   const result = await sql`
-    SELECT s.*, a.title AS assignment_title, a.deadline_at, a.max_score, u.first_name, u.last_name, u.email
+    SELECT s.*, a.title AS assignment_title, a.deadline_at, a.max_score,
+           w.week_number, w.title AS week_title,
+           c.name AS cohort_name,
+           u.first_name, u.last_name, u.email
     FROM assignment_submissions s
     JOIN assignments a ON a.id = s.assignment_id
+    LEFT JOIN weeks w ON w.id = a.week_id
+    LEFT JOIN cohorts c ON c.id = a.cohort_id
     JOIN cohort_facilitators cf ON cf.cohort_id = a.cohort_id AND cf.facilitator_id = ${facilitatorId}
     JOIN users u ON u.id = s.student_id
     WHERE s.status = 'submitted'

@@ -90,7 +90,7 @@ export default function FacilitatorAttendancePage() {
         <select
           value={selectedCohort || ''}
           onChange={(e) => { setSelectedCohort(e.target.value || null); setSelectedClass(null); }}
-          className="lms-form-select mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
+          className="lms-input mt-1 block w-full sm:max-w-md"
         >
           <option value="">Select cohort</option>
           {cohorts.map((c) => (
@@ -104,7 +104,7 @@ export default function FacilitatorAttendancePage() {
           <select
             value={selectedClass || ''}
             onChange={(e) => setSelectedClass(e.target.value || null)}
-            className="lms-form-select mt-1 block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg"
+            className="lms-input mt-1 block w-full sm:max-w-md"
           >
             <option value="">Select class</option>
             {liveClasses.map((lc) => (
@@ -139,7 +139,7 @@ export default function FacilitatorAttendancePage() {
                       <select
                         value={r.status || 'absent'}
                         onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
-                        className="lms-form-select px-3 py-1.5 border rounded-lg text-sm"
+                        className="lms-input text-sm"
                         style={{
                           borderColor: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : 'var(--neutral-300)',
                           color: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : r.status === 'absent' ? '#dc2626' : 'var(--neutral-700)',

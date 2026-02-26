@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ThemeProvider } from './ThemeProvider';
 
 const ToastProvider = dynamic(
   () => import('./ToastProvider').then((m) => ({ default: m.ToastProvider })),
@@ -14,13 +13,11 @@ const CookieConsent = dynamic(() => import('./CookieConsent'), { ssr: false });
 
 export default function ClientAppShell({ children }) {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <PwaRegister />
-        <OfflineIndicator />
-        <CookieConsent />
-        {children}
-      </ToastProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <PwaRegister />
+      <OfflineIndicator />
+      <CookieConsent />
+      {children}
+    </ToastProvider>
   );
 }

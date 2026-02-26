@@ -109,18 +109,36 @@ const ICONS = {
       <polyline points="9 18 15 12 9 6" />
     </svg>
   ),
+  graduation: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+      <path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" />
+    </svg>
+  ),
+  users: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  briefcase: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
 };
 
 const STUDENT_NAV = [
   { href: '/dashboard', label: 'Home', icon: 'home' },
-  { href: '/dashboard/weeks', label: 'Week', icon: 'week' },
-  { href: '/dashboard/profile', label: 'Profile', icon: 'profile' },
-  { href: '/dashboard/assignments', label: 'Assignments', icon: 'assignments' },
+  { href: '/dashboard/classroom', label: 'Classroom', icon: 'graduation' },
   { href: '/dashboard/announcements', label: 'Announcements', icon: 'megaphone' },
-  { href: '/dashboard/office-hours', label: 'Office Hours', icon: 'officeHours' },
+  { href: '/dashboard/communities', label: 'Communities', icon: 'users' },
   { href: '/dashboard/chat', label: 'Chat', icon: 'chat' },
-  { href: '/dashboard/portfolio', label: 'Portfolio', icon: 'portfolio' },
-  { href: '/dashboard/ai-assistant', label: 'AI Assistant', icon: 'ai' },
+  { href: '/dashboard/portfolio', label: 'Portfolio', icon: 'briefcase' },
+  { href: '/dashboard/profile', label: 'Profile', icon: 'profile' },
 ];
 
 const FACILITATOR_NAV = [
@@ -142,7 +160,16 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
 
   const isActive = (href) => {
     if (href === '/dashboard' || href === '/facilitator') return pathname === href;
-    if (href === '/dashboard/weeks') return pathname === '/dashboard/weeks' || pathname.startsWith('/dashboard/week/');
+    if (href === '/dashboard/classroom') {
+      return pathname === '/dashboard/classroom'
+        || pathname.startsWith('/dashboard/classroom/')
+        || pathname === '/dashboard/weeks'
+        || pathname.startsWith('/dashboard/week/')
+        || pathname === '/dashboard/assignments'
+        || pathname.startsWith('/dashboard/assignments/')
+        || pathname === '/dashboard/office-hours'
+        || pathname === '/dashboard/ai-assistant';
+    }
     return pathname === href || pathname.startsWith(href + '/');
   };
 
@@ -179,7 +206,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
             <Link href={variant === 'facilitator' ? '/facilitator' : '/dashboard'} className="flex items-center gap-2 truncate">
               <Image src="/logo.png" alt={brandName} width={160} height={44} style={{ height: '36px', width: 'auto' }} priority />
               {variant === 'facilitator' && (
-                <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>Facilitator</span>
+                <span className="lms-sidebar-badge">Facilitator</span>
               )}
             </Link>
           )}
@@ -278,7 +305,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
         type="button"
         onClick={() => setMobileOpen(true)}
         className={`lg:hidden fixed z-30 p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center ${mobileOpen ? 'hidden' : ''}`}
-        style={{ top: 'var(--lms-space-4)', left: 'var(--lms-space-4)', backgroundColor: 'var(--background-color)', border: '1px solid var(--neutral-200)', boxShadow: 'var(--shadow-sm)', color: 'var(--neutral-600)' }}
+        style={{ top: 'max(var(--lms-space-4), env(safe-area-inset-top, 0px))', left: 'max(var(--lms-space-4), env(safe-area-inset-left, 0px))', backgroundColor: 'var(--background-color)', border: '1px solid var(--neutral-200)', boxShadow: 'var(--shadow-sm)', color: 'var(--neutral-600)' }}
         aria-label="Open menu"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

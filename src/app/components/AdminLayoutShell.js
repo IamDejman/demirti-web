@@ -120,7 +120,10 @@ export default function AdminLayoutShell({ children }) {
           .admin-main {
             margin-left: 0 !important;
             padding: 1rem;
-            padding-top: 60px;
+            padding-top: calc(60px + env(safe-area-inset-top, 0px));
+            padding-left: max(1rem, env(safe-area-inset-left, 0px));
+            padding-right: max(1rem, env(safe-area-inset-right, 0px));
+            padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
           }
         }
       `}</style>

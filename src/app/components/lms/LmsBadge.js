@@ -10,7 +10,7 @@ const VARIANTS = {
 
 export default function LmsBadge({ variant = 'neutral', children, dot }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded-full border ${VARIANTS[variant] || VARIANTS.neutral}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full border whitespace-nowrap ${VARIANTS[variant] || VARIANTS.neutral}`}>
       {dot && <span className={`w-1.5 h-1.5 rounded-full bg-current`} />}
       {children}
     </span>

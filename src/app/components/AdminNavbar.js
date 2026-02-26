@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import ThemeToggle from './ThemeToggle';
 
 const navLinkStyle = (active) => ({
   textDecoration: 'none',
@@ -123,7 +122,6 @@ export default function AdminNavbar() {
                 <Link key={group.id} href={group.href} style={navLinkStyle(isActive(group.href))}>{group.label}</Link>
               )
             ))}
-            <ThemeToggle compact />
             <button
               type="button"
               onClick={handleLogout}

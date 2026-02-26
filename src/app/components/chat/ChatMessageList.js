@@ -1,7 +1,11 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { LmsCard } from '@/app/components/lms';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+
+const formatTime = (d) =>
+  d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '';
 
 export default function ChatMessageList({
   messages,
@@ -13,94 +17,144 @@ export default function ChatMessageList({
   loadingOlder,
   loadRooms,
   setSelectedRoom,
+  currentUserId,
 }) {
-  return (
-    <LmsCard title={selectedRoom?.displayTitle || 'Messages'} className="md:col-span-2 flex flex-col min-h-[400px]" hoverable={false}>
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between mb-2">
-          {selectedRoom && (
-            <div className="flex items-center gap-3 text-xs text-[var(--neutral-500)]">
-              <button
-                type="button"
-                onClick={async () => {
-                  const nextMuted = !selectedRoom.is_muted;
-                  await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                    body: JSON.stringify({ isMuted: nextMuted, emailMuted: selectedRoom.email_muted }),
-                  });
-                  await loadRooms();
-                  setSelectedRoom((prev) => prev ? { ...prev, is_muted: nextMuted } : prev);
-                }}
-                className="lms-link bg-transparent border-none cursor-pointer p-0"
-              >
-                {selectedRoom.is_muted ? 'Unmute' : 'Mute'}
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const nextEmailMuted = !selectedRoom.email_muted;
-                  await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                    body: JSON.stringify({ isMuted: selectedRoom.is_muted, emailMuted: nextEmailMuted }),
-                  });
-                  await loadRooms();
-                  setSelectedRoom((prev) => prev ? { ...prev, email_muted: nextEmailMuted } : prev);
-                }}
-                className="lms-link bg-transparent border-none cursor-pointer p-0"
-              >
-                {selectedRoom.email_muted ? 'Email off' : 'Email on'}
-              </button>
-            </div>
-          )}
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages.length]);
+
+  if (!selectedRoom) {
+    return (
+      <LmsCard className="md:col-span-2 flex flex-col min-h-[400px]" hoverable={false}>
+        <div className="flex-1 flex items-center justify-center">
+          <p style={{ fontSize: '0.875rem', color: 'var(--neutral-400)' }}>
+            Select a conversation or start a new one.
+          </p>
         </div>
-        {messages.length > 0 && (
+      </LmsCard>
+    );
+  }
+
+  return (
+    <LmsCard
+      title={selectedRoom.displayTitle || 'Messages'}
+      className="md:col-span-2 flex flex-col"
+      hoverable={false}
+      action={
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             type="button"
-            onClick={handleLoadOlder}
-            disabled={loadingOlder}
-            className="mt-3 text-xs lms-link self-start bg-transparent border-none cursor-pointer p-0"
+            onClick={async () => {
+              const nextMuted = !selectedRoom.is_muted;
+              await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                body: JSON.stringify({ isMuted: nextMuted, emailMuted: selectedRoom.email_muted }),
+              });
+              await loadRooms();
+              setSelectedRoom((prev) => prev ? { ...prev, is_muted: nextMuted } : prev);
+            }}
+            className="lms-btn lms-btn-sm lms-btn-outline"
           >
-            {loadingOlder ? 'Loading...' : 'Load older'}
+            {selectedRoom.is_muted ? 'Unmute' : 'Mute'}
           </button>
-        )}
-        <div className="mt-4 flex-1 overflow-auto rounded-lg p-4 space-y-4 min-h-[200px] border border-[var(--neutral-100)] bg-[var(--neutral-50)]">
+          <button
+            type="button"
+            onClick={async () => {
+              const nextEmailMuted = !selectedRoom.email_muted;
+              await fetch(`/api/chat/rooms/${selectedRoom.id}/mute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                body: JSON.stringify({ isMuted: selectedRoom.is_muted, emailMuted: nextEmailMuted }),
+              });
+              await loadRooms();
+              setSelectedRoom((prev) => prev ? { ...prev, email_muted: nextEmailMuted } : prev);
+            }}
+            className="lms-btn lms-btn-sm lms-btn-outline"
+          >
+            {selectedRoom.email_muted ? 'Email off' : 'Email on'}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col" style={{ height: 'clamp(350px, 55vh, 550px)' }}>
+        {/* Messages area */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-auto"
+          style={{
+            padding: 'var(--lms-space-4)',
+            borderRadius: '8px',
+            background: 'var(--neutral-50)',
+            border: '1px solid var(--neutral-100)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--lms-space-3)',
+          }}
+        >
+          {/* Load older */}
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={handleLoadOlder}
+              disabled={loadingOlder}
+              className="lms-btn lms-btn-sm lms-btn-outline"
+              style={{ alignSelf: 'center', marginBottom: 'var(--lms-space-2)' }}
+            >
+              {loadingOlder ? 'Loading...' : 'Load older messages'}
+            </button>
+          )}
+
           {messages.length === 0 ? (
-            <p className="text-sm text-[var(--neutral-500)]">No messages yet. Start the conversation!</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--neutral-400)', textAlign: 'center', padding: 'var(--lms-space-8) 0' }}>
+              No messages yet. Start the conversation!
+            </p>
           ) : (
-            messages.map((m) => (
-              <div key={m.id} className="flex flex-col">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-[var(--neutral-500)]">
-                    {m.first_name || m.email}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fetch(`/api/chat/messages/${m.id}/report`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                      body: JSON.stringify({ reason: 'report' }),
-                    })}
-                    className="text-xs text-[var(--neutral-400)] hover:text-red-500 bg-transparent border-none cursor-pointer p-0"
-                  >
-                    Report
-                  </button>
+            messages.map((m) => {
+              const isSelf = currentUserId && m.user_id === currentUserId;
+              return (
+                <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
+                  <p className="lms-chat-sender">{isSelf ? 'You' : (m.first_name || m.email)}</p>
+                  <div className={`lms-chat-bubble ${isSelf ? 'lms-chat-bubble-self' : 'lms-chat-bubble-other'}`}>
+                    {m.body}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="lms-chat-time">{formatTime(m.created_at)}</span>
+                    {!isSelf && (
+                      <button
+                        type="button"
+                        onClick={() => fetch(`/api/chat/messages/${m.id}/report`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                          body: JSON.stringify({ reason: 'report' }),
+                        })}
+                        style={{ fontSize: '0.6875rem', color: 'var(--neutral-400)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        Report
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-[var(--neutral-800)] mt-1 p-2 bg-white rounded-lg border border-[var(--neutral-100)] shadow-sm">{m.body}</p>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
-        <form onSubmit={handleSend} className="mt-4 flex gap-2">
+
+        {/* Input */}
+        <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.5rem', marginTop: 'var(--lms-space-4)' }}>
           <input
             type="text"
-            placeholder="Type a message"
+            placeholder="Type a message..."
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            className="lms-form-input border-token flex-1 px-3 py-2 rounded-lg text-sm"
+            className="lms-input"
+            style={{ flex: 1 }}
           />
-          <button type="submit" className="lms-btn lms-btn-primary">
+          <button type="submit" className="lms-btn lms-btn-primary" disabled={!messageText.trim()}>
             Send
           </button>
         </form>

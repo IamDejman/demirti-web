@@ -60,6 +60,11 @@ export default function LmsLayoutShell({ variant = 'student', children, user, pe
             padding-top: 56px;
           }
         }
+        @media (max-width: 480px) {
+          .lms-main {
+            padding-top: 48px;
+          }
+        }
       `}</style>
     </div>
   );

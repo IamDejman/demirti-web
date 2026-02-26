@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LmsLayoutShell } from '@/app/components/lms';
-import ThemeToggle from '@/app/components/ThemeToggle';
 import { installLms401Interceptor } from '@/lib/authClient';
 
 const NOTIFICATIONS_ICON = (
@@ -75,16 +74,13 @@ export default function StudentLayout({ children }) {
       variant="student"
       user={user}
       topBarContent={
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/notifications"
-            className="lms-topbar-icon-btn inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[10px] border-2 border-[var(--neutral-300)] bg-[var(--neutral-100)] text-[var(--neutral-800)] no-underline hover:bg-[var(--neutral-200)] hover:border-[var(--neutral-400)] hover:text-[var(--neutral-900)] transition-all duration-200"
-            aria-label="Notifications"
-          >
-            {NOTIFICATIONS_ICON}
-          </Link>
-          <ThemeToggle compact />
-        </div>
+        <Link
+          href="/dashboard/notifications"
+          className="lms-topbar-icon-btn inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[10px] border-2 border-[var(--neutral-300)] bg-[var(--neutral-100)] text-[var(--neutral-800)] no-underline hover:bg-[var(--neutral-200)] hover:border-[var(--neutral-400)] hover:text-[var(--neutral-900)] transition-all duration-200"
+          aria-label="Notifications"
+        >
+          {NOTIFICATIONS_ICON}
+        </Link>
       }
     >
       <ImpersonationBanner />

@@ -115,12 +115,35 @@ export default function FacilitatorDashboardPage() {
             <LmsEmptyState icon={LmsIcons.calendar} title="No upcoming events" description="Events will appear here as they are scheduled." />
           ) : (
             <div>
-              {events.slice(0, 5).map((ev) => (
-                <div key={ev.id} className="lms-row-item">
-                  <span className="lms-row-item-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.title}</span>
-                  <span className="lms-row-item-detail" style={{ flexShrink: 0 }}>{formatDate(ev.start)}</span>
-                </div>
-              ))}
+              {events.slice(0, 5).map((ev) =>
+                ev.url ? (
+                  <a
+                    key={ev.id}
+                    href={ev.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lms-list-item"
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', flex: 1, minWidth: 0 }}>
+                      <span className="lms-list-item-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.title}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
+                        {formatDate(ev.start)}{ev.meta?.cohort ? ` · ${ev.meta.cohort}` : ''}
+                      </span>
+                    </div>
+                    <span className="lms-btn lms-btn-sm lms-btn-outline" style={{ flexShrink: 0 }}>Join ↗</span>
+                  </a>
+                ) : (
+                  <div key={ev.id} className="lms-list-item">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', flex: 1, minWidth: 0 }}>
+                      <span className="lms-list-item-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.title}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
+                        {formatDate(ev.start)}{ev.meta?.cohort ? ` · ${ev.meta.cohort}` : ''}
+                      </span>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           )}
         </LmsCard>

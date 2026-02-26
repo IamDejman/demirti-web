@@ -47,13 +47,17 @@ export async function proxy(request) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const isDev = process.env.NODE_ENV === 'development';
 
+  const storageEndpoint = process.env.STORAGE_ENDPOINT || '';
+  const storagePublicUrl = process.env.STORAGE_PUBLIC_URL || '';
+  const storageCsp = [storageEndpoint, storagePublicUrl].filter(Boolean).join(' ');
+
   const cspDirectives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.paystack.co${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' https://api.paystack.co${isDev ? ' ws: wss:' : ''}`,
+    `connect-src 'self' https://api.paystack.co${storageCsp ? ` ${storageCsp}` : ''}${isDev ? ' ws: wss:' : ''}`,
     "frame-src 'self' https://assessments.skilladder.ai https://checkout.paystack.com https://js.paystack.co",
     "frame-ancestors 'self'",
     "base-uri 'self'",

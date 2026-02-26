@@ -63,36 +63,53 @@ export default function FacilitatorGradingPage() {
 
       {grading ? (
         <LmsCard title="Grade submission" subtitle={`${grading.assignment_title}${grading.week_number ? ` · Week ${grading.week_number}` : ''} · ${grading.first_name} ${grading.last_name}`}>
-          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>Submitted {formatDate(grading.submitted_at)}{grading.cohort_name ? ` · ${grading.cohort_name}` : ''}</p>
-          <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--neutral-50)' }}>
-            {grading.link_url && <p><a href={grading.link_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open submission link</a></p>}
-            {grading.text_content && <p className="mt-2" style={{ color: 'var(--neutral-700)' }}>{grading.text_content}</p>}
-            {grading.file_url && <p><a href={grading.file_url} target="_blank" rel="noopener noreferrer" className="text-primary">Open file</a></p>}
-          </div>
-          <form onSubmit={handleGrade} className="mt-6 space-y-4">
-            <div>
-              <label className="lms-form-label block">Score (0–{grading.max_score ?? 100})</label>
-              <input
-                type="number"
-                min={0}
-                max={grading.max_score ?? 100}
-                value={score}
-                onChange={(e) => setScore(e.target.value)}
-                required
-                className="lms-input mt-1 block w-full sm:max-w-xs"
-              />
+          <div className="lms-form-section" style={{ marginBottom: 0 }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--neutral-500)', margin: '0 0 0.75rem' }}>
+              Submitted {formatDate(grading.submitted_at)}{grading.cohort_name ? ` · ${grading.cohort_name}` : ''}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {grading.link_url && (
+                <a href={grading.link_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline" style={{ alignSelf: 'flex-start' }}>
+                  Open submission link ↗
+                </a>
+              )}
+              {grading.text_content && (
+                <p style={{ fontSize: '0.875rem', color: 'var(--neutral-700)', margin: 0, lineHeight: 1.5 }}>{grading.text_content}</p>
+              )}
+              {grading.file_url && (
+                <a href={grading.file_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline" style={{ alignSelf: 'flex-start' }}>
+                  Open file ↗
+                </a>
+              )}
             </div>
-            <div>
-              <label className="lms-form-label block">Feedback</label>
+          </div>
+
+          <form onSubmit={handleGrade} className="lms-form-stack" style={{ marginTop: 'var(--lms-space-5)' }}>
+            <div className="lms-form-grid">
+              <div className="lms-field">
+                <label className="lms-field-label">Score (0–{grading.max_score ?? 100})</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={grading.max_score ?? 100}
+                  value={score}
+                  onChange={(e) => setScore(e.target.value)}
+                  required
+                  className="lms-input lms-input-narrow"
+                />
+              </div>
+            </div>
+            <div className="lms-field">
+              <label className="lms-field-label">Feedback</label>
               <textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="lms-input mt-1 block w-full"
+                className="lms-input"
                 placeholder="Optional feedback..."
               />
             </div>
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: 'var(--lms-space-3)', flexWrap: 'wrap' }}>
               <button type="submit" disabled={saving} className="lms-btn lms-btn-primary">
                 {saving ? 'Saving...' : 'Submit grade'}
               </button>

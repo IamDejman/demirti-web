@@ -476,6 +476,30 @@ export async function getApplicationByEmailAndTrack(email, trackName) {
   return result.rows[0] || null;
 }
 
+/** Delete a single unpaid application by id. Returns deleted row or null. */
+export async function deleteApplication(id) {
+  await ensureDatabaseInitialized();
+  const result = await sql`
+    DELETE FROM applications
+    WHERE id = ${id} AND status != 'paid'
+    RETURNING *;
+  `;
+  return result.rows[0] || null;
+}
+
+/** Bulk-delete unpaid applications by ids. Returns count of deleted rows. */
+export async function bulkDeleteApplications(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return 0;
+  await ensureDatabaseInitialized();
+  // Use ANY() with a typed parameter array for safe bulk deletion
+  const result = await sql`
+    DELETE FROM applications
+    WHERE id = ANY(${ids}::int[]) AND status != 'paid'
+    RETURNING id;
+  `;
+  return result.rowCount;
+}
+
 // Sponsored application functions - re-exported from db-sponsored.js
 export {
   saveSponsoredApplication,

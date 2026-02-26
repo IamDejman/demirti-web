@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
-import { getAllApplications } from '@/lib/db';
+import { getAllApplications, deleteApplication, bulkDeleteApplications } from '@/lib/db';
+import { recordAuditLog } from '@/lib/audit';
+import { getClientIp } from '@/lib/api-helpers';
 import { reportError } from '@/lib/logger';
 
 // GET - Get all applications with filtering
@@ -75,6 +77,60 @@ export async function GET(request) {
       { error: 'Failed to get applications' },
       { status: 500 }
     );
+  }
+}
+
+// DELETE - Delete unpaid application(s). Body: { id } for single, { ids: [...] } for bulk
+export async function DELETE(request) {
+  try {
+    const admin = await getAdminOrUserFromRequest(request);
+    if (!admin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const ip = getClientIp(request);
+
+    // Bulk delete
+    if (Array.isArray(body.ids)) {
+      if (body.ids.length === 0) {
+        return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
+      }
+      const deletedCount = await bulkDeleteApplications(body.ids);
+      recordAuditLog({
+        userId: admin.id,
+        action: 'application.bulk_delete',
+        targetType: 'application',
+        details: { requestedIds: body.ids, deletedCount },
+        ipAddress: ip,
+      }).catch(() => {});
+      return NextResponse.json({ success: true, deletedCount });
+    }
+
+    // Single delete
+    if (body.id) {
+      const deleted = await deleteApplication(body.id);
+      if (!deleted) {
+        return NextResponse.json(
+          { error: 'Application not found or is paid and cannot be deleted' },
+          { status: 400 }
+        );
+      }
+      recordAuditLog({
+        userId: admin.id,
+        action: 'application.delete',
+        targetType: 'application',
+        targetId: body.id,
+        details: { email: deleted.email, track: deleted.track_name },
+        ipAddress: ip,
+      }).catch(() => {});
+      return NextResponse.json({ success: true, deletedCount: 1 });
+    }
+
+    return NextResponse.json({ error: 'Provide id or ids' }, { status: 400 });
+  } catch (error) {
+    reportError(error, { route: 'DELETE /api/admin/applications' });
+    return NextResponse.json({ error: 'Failed to delete applications' }, { status: 500 });
   }
 }
 

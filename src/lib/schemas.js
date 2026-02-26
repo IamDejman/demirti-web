@@ -60,7 +60,7 @@ export const chatMessageSchema = z.object({
 export const chatRoomSchema = z.object({
   type: z.enum(['dm', 'group']),
   email: email.optional(),
-  otherUserId: posInt.optional(),
+  otherUserId: z.string().uuid().optional(),
   name: optStr,
 });
 

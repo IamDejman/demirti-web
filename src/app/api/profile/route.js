@@ -5,30 +5,35 @@ import { getUserFromRequest } from '@/lib/auth';
 import { ensureLmsSchema } from '@/lib/db-lms';
 
 export async function GET(request) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+    await ensureLmsSchema();
+    const profileResult = await sql`
+      SELECT id, email, first_name, last_name, profile_picture_url, phone, address, years_experience
+      FROM users
+      WHERE id = ${user.id}
+      LIMIT 1;
+    `;
+    const profileRow = profileResult.rows[0];
+    return NextResponse.json({
+      profile: {
+        id: profileRow?.id ?? user.id,
+        email: profileRow?.email ?? user.email,
+        firstName: profileRow?.first_name ?? user.first_name ?? '',
+        lastName: profileRow?.last_name ?? user.last_name ?? '',
+        profilePictureUrl: profileRow?.profile_picture_url ?? user.profile_picture_url ?? null,
+        phone: profileRow?.phone ?? user.phone ?? '',
+        address: profileRow?.address ?? '',
+        yearsExperience: profileRow?.years_experience != null ? profileRow.years_experience : null,
+      },
+    });
+  } catch (e) {
+    reportError(e, { route: 'GET /api/profile' });
+    return NextResponse.json({ error: safeErrorMessage(e, 'Failed to load profile') }, { status: 500 });
   }
-  await ensureLmsSchema();
-  const profileResult = await sql`
-    SELECT id, email, first_name, last_name, profile_picture_url, phone, address, years_experience
-    FROM users
-    WHERE id = ${user.id}
-    LIMIT 1;
-  `;
-  const profileRow = profileResult.rows[0];
-  return NextResponse.json({
-    profile: {
-      id: profileRow?.id ?? user.id,
-      email: profileRow?.email ?? user.email,
-      firstName: profileRow?.first_name ?? user.first_name ?? '',
-      lastName: profileRow?.last_name ?? user.last_name ?? '',
-      profilePictureUrl: profileRow?.profile_picture_url ?? user.profile_picture_url ?? null,
-      phone: profileRow?.phone ?? user.phone ?? '',
-      address: profileRow?.address ?? '',
-      yearsExperience: profileRow?.years_experience != null ? profileRow.years_experience : null,
-    },
-  });
 }
 
 export async function PATCH(request) {
@@ -49,33 +54,32 @@ export async function PATCH(request) {
 
     await ensureLmsSchema();
 
-    const sets = [];
-    if (firstName !== undefined) {
-      sets.push(sql`first_name = ${firstName}`);
-    }
-    if (lastName !== undefined) {
-      sets.push(sql`last_name = ${lastName}`);
-    }
-    if (phone !== undefined) {
-      sets.push(sql`phone = ${phone || null}`);
-    }
-    if (address !== undefined) {
-      sets.push(sql`address = ${address || null}`);
-    }
-    if (yearsExperience !== undefined) {
-      const val = Number.isNaN(yearsExperience) ? null : Math.max(0, Math.min(100, yearsExperience));
-      sets.push(sql`years_experience = ${val}`);
-    }
-    if (profilePictureUrl !== undefined) {
-      sets.push(sql`profile_picture_url = ${profilePictureUrl || null}`);
+    // Fetch current values to merge with updates
+    const currentRes = await sql`
+      SELECT first_name, last_name, phone, address, years_experience, profile_picture_url
+      FROM users WHERE id = ${user.id} LIMIT 1;
+    `;
+    const current = currentRes.rows[0];
+    if (!current) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (sets.length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
-    }
+    const fName = firstName !== undefined ? firstName : current.first_name;
+    const lName = lastName !== undefined ? lastName : current.last_name;
+    const ph = phone !== undefined ? (phone || null) : current.phone;
+    const addr = address !== undefined ? (address || null) : current.address;
+    const yrsExp = yearsExperience !== undefined
+      ? (Number.isNaN(yearsExperience) ? null : Math.max(0, Math.min(100, yearsExperience)))
+      : current.years_experience;
+    const picUrl = profilePictureUrl !== undefined ? (profilePictureUrl || null) : current.profile_picture_url;
 
-    const setClause = sets.reduce((a, b) => (a ? sql`${a}, ${b}` : b), null);
-    await sql`UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ${user.id}`;
+    await sql`
+      UPDATE users SET
+        first_name = ${fName}, last_name = ${lName}, phone = ${ph},
+        address = ${addr}, years_experience = ${yrsExp}, profile_picture_url = ${picUrl},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${user.id}
+    `;
 
     return NextResponse.json({ ok: true });
   } catch (e) {

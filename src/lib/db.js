@@ -598,56 +598,21 @@ export async function getAllTracks() {
 
 export async function updateTrackConfig(trackName, updates) {
   await ensureDatabaseInitialized();
-  // Build update query dynamically based on provided fields
-  let updateFields = [];
-  let updateValues = [];
-  
-  if (updates.coursePrice !== undefined) {
-    updateFields.push('course_price');
-    updateValues.push(updates.coursePrice);
-  }
-  if (updates.scholarshipLimit !== undefined) {
-    updateFields.push('scholarship_limit');
-    updateValues.push(updates.scholarshipLimit);
-  }
-  if (updates.scholarshipDiscountPercentage !== undefined) {
-    updateFields.push('scholarship_discount_percentage');
-    updateValues.push(updates.scholarshipDiscountPercentage);
-  }
-  if (updates.isActive !== undefined) {
-    updateFields.push('is_active');
-    updateValues.push(updates.isActive);
-  }
-  
-  if (updateFields.length === 0) {
-    return null;
-  }
-  
-  // Build the SET clause manually with proper parameterization
-  const setParts = updateFields.map((field, index) => {
-    const value = updateValues[index];
-    if (field === 'course_price') {
-      return sql`course_price = ${value}`;
-    } else if (field === 'scholarship_limit') {
-      return sql`scholarship_limit = ${value}`;
-    } else if (field === 'scholarship_discount_percentage') {
-      return sql`scholarship_discount_percentage = ${value}`;
-    } else if (field === 'is_active') {
-      return sql`is_active = ${value}`;
-    }
-  }).filter(Boolean);
-  
-  const setClause = setParts.length === 1
-    ? setParts[0]
-    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
-  
+  const currentRes = await sql`SELECT * FROM tracks WHERE track_name = ${trackName} LIMIT 1;`;
+  const current = currentRes.rows[0];
+  if (!current) return null;
+  const coursePrice = updates.coursePrice !== undefined ? updates.coursePrice : current.course_price;
+  const scholarshipLimit = updates.scholarshipLimit !== undefined ? updates.scholarshipLimit : current.scholarship_limit;
+  const scholarshipDiscountPercentage = updates.scholarshipDiscountPercentage !== undefined ? updates.scholarshipDiscountPercentage : current.scholarship_discount_percentage;
+  const isActive = updates.isActive !== undefined ? updates.isActive : current.is_active;
   const result = await sql`
     UPDATE tracks
-    SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+    SET course_price = ${coursePrice}, scholarship_limit = ${scholarshipLimit},
+        scholarship_discount_percentage = ${scholarshipDiscountPercentage}, is_active = ${isActive},
+        updated_at = CURRENT_TIMESTAMP
     WHERE track_name = ${trackName}
     RETURNING *;
   `;
-  
   return result.rows[0] || null;
 }
 
@@ -697,48 +662,19 @@ export async function createDiscount(name, percentage) {
 
 export async function updateDiscount(id, updates) {
   await ensureDatabaseInitialized();
-  let updateFields = [];
-  let updateValues = [];
-  
-  if (updates.name !== undefined) {
-    updateFields.push('name');
-    updateValues.push(updates.name);
-  }
-  if (updates.percentage !== undefined) {
-    updateFields.push('percentage');
-    updateValues.push(updates.percentage);
-  }
-  if (updates.isActive !== undefined) {
-    updateFields.push('is_active');
-    updateValues.push(updates.isActive);
-  }
-  
-  if (updateFields.length === 0) {
-    return null;
-  }
-  
-  const setParts = updateFields.map((field, index) => {
-    const value = updateValues[index];
-    if (field === 'name') {
-      return sql`name = ${value}`;
-    } else if (field === 'percentage') {
-      return sql`percentage = ${value}`;
-    } else if (field === 'is_active') {
-      return sql`is_active = ${value}`;
-    }
-  }).filter(Boolean);
-  
-  const setClause = setParts.length === 1
-    ? setParts[0]
-    : setParts.reduce((prev, part) => (prev === null ? part : sql`${prev}, ${part}`), null);
-  
+  const currentRes = await sql`SELECT * FROM discounts WHERE id = ${id} LIMIT 1;`;
+  const current = currentRes.rows[0];
+  if (!current) return null;
+  const name = updates.name !== undefined ? updates.name : current.name;
+  const percentage = updates.percentage !== undefined ? updates.percentage : current.percentage;
+  const isActive = updates.isActive !== undefined ? updates.isActive : current.is_active;
   const result = await sql`
     UPDATE discounts
-    SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+    SET name = ${name}, percentage = ${percentage}, is_active = ${isActive},
+        updated_at = CURRENT_TIMESTAMP
     WHERE id = ${id}
     RETURNING *;
   `;
-  
   return result.rows[0] || null;
 }
 

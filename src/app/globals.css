@@ -3673,8 +3673,6 @@ main.admin-with-fixed-nav {
   display: flex;
   align-items: center;
   height: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 0 var(--lms-space-4);
   gap: var(--lms-space-6);
 }

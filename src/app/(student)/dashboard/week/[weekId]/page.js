@@ -99,18 +99,27 @@ export default function WeekPage() {
         if (!formatted) return null;
         const { displayLines, hasList, truncated } = formatted;
         return (
-          <div className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
-            {hasList ? (
-              <ul className="list-disc list-inside space-y-2 pl-1 max-w-2xl" style={{ color: 'var(--neutral-600)' }}>
-                {displayLines.map((line, i) => (
-                  <li key={i}>{stripBullet(line)}</li>
-                ))}
-                {truncated && <li key="more" style={{ listStyle: 'none', fontStyle: 'italic' }}>…</li>}
-              </ul>
-            ) : (
-              <p>{displayLines.join(' ')}{truncated ? '…' : ''}</p>
-            )}
-          </div>
+          <LmsCard
+            title="This class covers"
+            icon={LmsIcons.book}
+            hoverable={false}
+          >
+            <div className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
+              {hasList ? (
+                <ul className="list-disc list-inside space-y-2 pl-1 max-w-2xl" style={{ color: 'var(--neutral-600)' }}>
+                  {displayLines.map((line, i) => (
+                    <li key={i}>{stripBullet(line)}</li>
+                  ))}
+                  {truncated && <li key="more" style={{ listStyle: 'none', fontStyle: 'italic' }}>…</li>}
+                </ul>
+              ) : (
+                <p>
+                  {displayLines.join(' ')}
+                  {truncated ? '…' : ''}
+                </p>
+              )}
+            </div>
+          </LmsCard>
         );
       })()}
 

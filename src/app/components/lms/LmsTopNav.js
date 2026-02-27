@@ -90,9 +90,8 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
             })}
           </nav>
 
-          {/* Right: Actions */}
+          {/* Right: Avatar, Notifications, Logout */}
           <div className="lms-topnav-actions">
-            {topBarContent}
             {user && (
               <Link href={profileHref} className="lms-topnav-avatar" title={user.firstName || user.email}>
                 {user.profilePictureUrl ? (
@@ -110,6 +109,7 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
                 )}
               </Link>
             )}
+            {topBarContent}
             <button
               type="button"
               onClick={handleLogout}

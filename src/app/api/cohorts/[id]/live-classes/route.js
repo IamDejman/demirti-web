@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCohortById, getLiveClassesByCohort, getCohortFacilitators, createLiveClass } from '@/lib/db-lms';
+
 import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
@@ -43,7 +44,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     const body = await request.json();
-    const { weekId, scheduledAt, googleMeetLink } = body;
+    const { weekId, scheduledAt, endTime, googleMeetLink } = body;
     if (!weekId || !scheduledAt) {
       return NextResponse.json({ error: 'weekId and scheduledAt are required' }, { status: 400 });
     }
@@ -51,6 +52,7 @@ export async function POST(request, { params }) {
       weekId,
       cohortId: id,
       scheduledAt,
+      endTime: endTime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
     });
     return NextResponse.json({ liveClass });

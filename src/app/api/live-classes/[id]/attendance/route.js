@@ -48,7 +48,10 @@ export async function POST(request, { params }) {
     if (!Array.isArray(updates)) {
       return NextResponse.json({ error: 'updates array required' }, { status: 400 });
     }
-    const attendance = await bulkUpdateAttendance(id, updates, user.id);
+    // Only pass markedBy if it's a valid UUID (legacy admins have integer IDs)
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const markedBy = UUID_RE.test(String(user.id)) ? user.id : null;
+    const attendance = await bulkUpdateAttendance(id, updates, markedBy);
     return NextResponse.json({ attendance });
   } catch (e) {
     reportError(e, { route: 'POST /api/live-classes/[id]/attendance' });

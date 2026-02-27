@@ -3802,6 +3802,13 @@ main.admin-with-fixed-nav {
   margin-left: auto;
   flex-shrink: 0;
 }
+@media (max-width: 768px) {
+  .lms-topnav-actions-mobile-open > *:not(.lms-topnav-hamburger) {
+    /* When the mobile menu is open, keep only the toggle icon in the top bar
+       so the dropdown below feels like a single, unified menu instead of two bars. */
+    display: none;
+  }
+}
 .lms-topnav-icon-btn {
   position: relative;
   display: inline-flex;

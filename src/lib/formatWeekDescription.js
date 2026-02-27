@@ -7,16 +7,18 @@
 export function formatWeekDescription(description, maxLines = null) {
   if (!description?.trim()) return null;
 
-  // Normalise common HTML bullet entities to a real bullet character
-  // so both "&bull; Item" and "• Item" are handled the same way.
-  const normalisedDescription = description.replace(
-    /&(bull|#8226|middot);/gi,
-    ' • '
-  );
+  // Normalise line breaks and bullet entities so content coming from rich text
+  // or HTML (&bull;, <br/>, etc.) is rendered as clean bullets.
+  let text = description
+    // Convert common <br> variants to real newlines first
+    .replace(/<br\s*\/?>/gi, '\n')
+    // Normalise common HTML bullet entities to a real bullet character
+    // so "&bull; Item" and "• Item" are handled the same way.
+    .replace(/&(bull|#8226|#x2022|middot);/gi, '•');
 
-  // First split on newlines, then further split any lines that contain
-  // multiple inline bullet separators (e.g. "• Item 1 • Item 2 • Item 3")
-  const rawLines = normalisedDescription
+  // Split on newlines, then further split any lines that contain multiple
+  // inline bullet separators (e.g. "• Item 1 • Item 2 • Item 3").
+  const rawLines = text
     .split(/\r?\n/)
     .map((s) => s.trim())
     .filter(Boolean);
@@ -25,19 +27,19 @@ export function formatWeekDescription(description, maxLines = null) {
 
   const lines = [];
 
-  for (const line of rawLines) {
-    // Split on the bullet character when it appears inline, treating each
-    // segment as its own list item.
-    const pieces = line.split('•').map((p) => p.trim()).filter(Boolean);
+  for (const raw of rawLines) {
+    // If a line contains multiple bullet characters, treat each segment as
+    // its own list item for clearer display.
+    const parts = raw.split('•').map((p) => p.trim()).filter(Boolean);
 
-    if (pieces.length > 1) {
-      for (const piece of pieces) {
-        const alreadyListLike = /^[•\-*]\s+/.test(piece) || /^\d+\.\s+/.test(piece);
-        const normalized = alreadyListLike ? piece : `• ${piece}`;
+    if (parts.length <= 1) {
+      lines.push(raw);
+    } else {
+      for (const part of parts) {
+        const alreadyListLike = /^[•\-*]\s+/.test(part) || /^\d+\.\s+/.test(part);
+        const normalized = alreadyListLike ? part : `• ${part}`;
         lines.push(normalized);
       }
-    } else {
-      lines.push(line);
     }
   }
 

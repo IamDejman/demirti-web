@@ -92,8 +92,8 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
             </nav>
           </div>
 
-          {/* Right: Avatar, Notifications, Logout */}
-          <div className="lms-topnav-actions">
+          {/* Right: Avatar, notifications, logout, mobile toggle */}
+          <div className={`lms-topnav-actions ${mobileOpen ? 'lms-topnav-actions-mobile-open' : ''}`}>
             {user && (
               <Link href={profileHref} className="lms-topnav-avatar" title={user.firstName || user.email}>
                 {user.profilePictureUrl ? (

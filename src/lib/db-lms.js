@@ -126,6 +126,18 @@ export async function ensureLmsSchema() {
         await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_user ON announcement_reads(user_id);`.catch(() => {});
         await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement ON announcement_reads(announcement_id);`.catch(() => {});
       }
+      // Migration: create announcement_dismissals if missing
+      if (existing.has('announcements') && existing.has('users') && !existing.has('announcement_dismissals')) {
+        await sql`
+          CREATE TABLE IF NOT EXISTS announcement_dismissals (
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            announcement_id UUID NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+            dismissed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, announcement_id)
+          );
+        `.catch((e) => console.error('announcement_dismissals migration error:', e));
+        await sql`CREATE INDEX IF NOT EXISTS idx_announcement_dismissals_user ON announcement_dismissals(user_id);`.catch(() => {});
+      }
       lmsInitialized = true;
     } catch (e) {
       console.error('LMS schema init error:', e);
@@ -1786,6 +1798,15 @@ export async function isStudentInCohort(cohortId, studentId) {
   return r.rows.length > 0;
 }
 
+export async function dismissAnnouncementForUser(userId, announcementId) {
+  await ensureLmsSchema();
+  await sql`
+    INSERT INTO announcement_dismissals (user_id, announcement_id)
+    VALUES (${userId}, ${announcementId})
+    ON CONFLICT (user_id, announcement_id) DO NOTHING;
+  `;
+}
+
 export async function getAnnouncementsForUser(userId, role, limit = 50) {
   await ensureLmsSchema();
   const cohortIds = await getCohortIdsForUser(userId, role);
@@ -1798,6 +1819,10 @@ export async function getAnnouncementsForUser(userId, role, limit = 50) {
       WHERE a.is_published = true
         AND (a.publish_at IS NULL OR a.publish_at <= CURRENT_TIMESTAMP)
         AND a.scope = 'system'
+        AND NOT EXISTS (
+          SELECT 1 FROM announcement_dismissals ad
+          WHERE ad.user_id = ${userId} AND ad.announcement_id = a.id
+        )
       ORDER BY a.created_at DESC
       LIMIT ${limit};
     `;
@@ -1816,6 +1841,10 @@ export async function getAnnouncementsForUser(userId, role, limit = 50) {
           SELECT DISTINCT track_id FROM cohorts WHERE id = ANY(${cohortIds})
         ))
         OR (a.scope = 'cohort' AND a.cohort_id = ANY(${cohortIds}))
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM announcement_dismissals ad
+        WHERE ad.user_id = ${userId} AND ad.announcement_id = a.id
       )
     ORDER BY a.created_at DESC
     LIMIT ${limit};

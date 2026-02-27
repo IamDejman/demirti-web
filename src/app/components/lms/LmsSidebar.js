@@ -135,7 +135,7 @@ const STUDENT_NAV = [
   { href: '/dashboard', label: 'Home', icon: 'home' },
   { href: '/dashboard/classroom', label: 'Classroom', icon: 'graduation' },
   { href: '/dashboard/announcements', label: 'Announcements', icon: 'megaphone' },
-  { href: '/dashboard/communities', label: 'Communities', icon: 'users' },
+  // { href: '/dashboard/communities', label: 'Communities', icon: 'users' },
   { href: '/dashboard/chat', label: 'Chat', icon: 'chat' },
   { href: '/dashboard/portfolio', label: 'Portfolio', icon: 'briefcase' },
   { href: '/dashboard/profile', label: 'Profile', icon: 'profile' },
@@ -246,16 +246,11 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
                     className={`lms-sidebar-link flex items-center gap-3 ${active ? 'active' : ''}`}
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span className="flex-shrink-0 text-current">{ICONS[item.icon]}</span>
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 truncate">{item.label}</span>
-                        {badge != null && (
-                          <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center text-xs font-semibold rounded-full text-white" style={{ backgroundColor: 'var(--primary-color)' }}>
-                            {badge}
-                          </span>
-                        )}
-                      </>
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {!collapsed && badge != null && (
+                      <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center text-xs font-semibold rounded-full text-white" style={{ backgroundColor: 'var(--primary-color)' }}>
+                        {badge}
+                      </span>
                     )}
                   </Link>
                 </li>

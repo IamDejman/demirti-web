@@ -61,34 +61,36 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
     <>
       <header className="lms-topnav">
         <div className="lms-topnav-inner">
-          {/* Left: Logo */}
-          <Link href={homeHref} className="lms-topnav-brand">
-            <Image src="/logo.png" alt={brandName} width={160} height={44} style={{ height: '36px', width: 'auto' }} priority />
-            {variant === 'facilitator' && (
-              <span className="lms-topnav-variant-badge">Facilitator</span>
-            )}
-          </Link>
+          <div className="lms-topnav-left">
+            {/* Left: Logo */}
+            <Link href={homeHref} className="lms-topnav-brand">
+              <Image src="/logo.png" alt={brandName} width={160} height={44} style={{ height: '36px', width: 'auto' }} priority />
+              {variant === 'facilitator' && (
+                <span className="lms-topnav-variant-badge">Facilitator</span>
+              )}
+            </Link>
 
-          {/* Center: Nav links (desktop) */}
-          <nav className="lms-topnav-links">
-            {navItems.map((item) => {
-              const active = isActive(item.href);
-              const badgeCounts = { pendingCount, unreadAnnouncements };
-              const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`lms-topnav-link ${active ? 'active' : ''}`}
-                >
-                  {item.label}
-                  {badge != null && (
-                    <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+            {/* Center: Nav links (desktop) */}
+            <nav className="lms-topnav-links">
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                const badgeCounts = { pendingCount, unreadAnnouncements };
+                const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`lms-topnav-link ${active ? 'active' : ''}`}
+                  >
+                    {item.label}
+                    {badge != null && (
+                      <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
           {/* Right: Avatar, Notifications, Logout */}
           <div className="lms-topnav-actions">

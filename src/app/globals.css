@@ -3913,19 +3913,20 @@ main.admin-with-fixed-nav {
   }
 }
 
-/* Mobile dropdown */
+/* Mobile drawer (standard side menu) */
 .lms-topnav-mobile {
   position: fixed;
-  top: var(--lms-topnav-height);
+  top: 0;
+  bottom: 0;
   left: 0;
-  right: 0;
   z-index: 45;
+  width: min(80vw, 320px);
   background: var(--background-color);
-  border-bottom: 1px solid var(--neutral-200);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: var(--lms-space-2) 0;
-  max-height: calc(100vh - var(--lms-topnav-height));
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.16);
+  padding: var(--lms-space-4) 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .lms-topnav-mobile-link {
   display: flex;

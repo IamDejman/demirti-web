@@ -287,14 +287,14 @@ export default function PortfolioPage() {
             />
           </div>
 
-          <div>
-            <label className="lms-form-label block mb-1.5">Resume</label>
+          <div className="flex flex-col" style={{ gap: 'var(--lms-space-3, 0.75rem)' }}>
+            <label className="lms-form-label block">Resume</label>
             <input
               type="text"
               placeholder="https://... or upload below"
               value={form.resumeUrl}
               onChange={(e) => setForm((f) => ({ ...f, resumeUrl: e.target.value }))}
-              className={`${inputCls} mb-4`}
+              className={inputCls}
             />
             <div className="flex flex-wrap items-center gap-3">
               <label className="portfolio-upload-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--neutral-700)] bg-[var(--neutral-100)] border-2 border-[var(--neutral-300)] cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--primary-color)_8%,var(--neutral-100))] hover:border-[color:color-mix(in_srgb,var(--primary-color)_35%,var(--neutral-300))] focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--primary-color)] focus-within:ring-offset-2 transition-colors">

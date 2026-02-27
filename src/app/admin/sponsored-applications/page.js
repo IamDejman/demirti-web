@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { AdminPageHeader } from '../../components/admin';
 import { useToast } from '../../components/ToastProvider';
 
@@ -237,7 +237,7 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
 .section{margin-bottom:1.25rem}.label{font-weight:600;color:#555;font-size:0.85rem;margin-bottom:0.25rem}
 .value{font-size:0.95rem}.value a{color:#0066cc}pre{white-space:pre-wrap;margin:0}</style></head><body>
 <h1>Sponsored application details</h1>
-<div>${DOMPurify.sanitize(detailPrintRef.current?.innerHTML || '', { ALLOWED_TAGS: ['p', 'div', 'span', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li'] })}</div>
+<div>${sanitizeHtml(detailPrintRef.current?.innerHTML || '', ['p', 'div', 'span', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li'])}</div>
 </body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);

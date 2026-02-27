@@ -76,7 +76,7 @@ export default function StudentLayout({ children }) {
       topBarContent={
         <Link
           href="/dashboard/notifications"
-          className="lms-topbar-icon-btn inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[10px] border-2 border-[var(--neutral-300)] bg-[var(--neutral-100)] text-[var(--neutral-800)] no-underline hover:bg-[var(--neutral-200)] hover:border-[var(--neutral-400)] hover:text-[var(--neutral-900)] transition-all duration-200"
+          className="lms-topnav-icon-btn"
           aria-label="Notifications"
         >
           {NOTIFICATIONS_ICON}

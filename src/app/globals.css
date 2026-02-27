@@ -3672,6 +3672,7 @@ main.admin-with-fixed-nav {
 .lms-topnav-inner {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 100%;
   padding: 0 var(--lms-space-4);
   gap: var(--lms-space-6);
@@ -3763,7 +3764,7 @@ main.admin-with-fixed-nav {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  margin-left: 0;
   flex-shrink: 0;
 }
 .lms-topnav-icon-btn {

@@ -12,7 +12,6 @@ const STUDENT_NAV = [
   { href: '/dashboard/announcements', label: 'Announcements' },
   { href: '/dashboard/chat', label: 'Chat' },
   { href: '/dashboard/portfolio', label: 'Portfolio' },
-  { href: '/dashboard/profile', label: 'Profile' },
 ];
 
 const FACILITATOR_NAV = [

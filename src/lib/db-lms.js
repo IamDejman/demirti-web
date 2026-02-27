@@ -2602,15 +2602,29 @@ export async function createChatMessage(roomId, senderId, body) {
   await ensureLmsSchema();
   const { stripHtml } = await import('@/lib/sanitize');
   const sanitizedBody = stripHtml(body);
-  const senderRes = await sql`SELECT is_shadowbanned FROM users WHERE id = ${senderId} LIMIT 1;`;
-  const isShadowbanned = senderRes.rows[0]?.is_shadowbanned === true;
+  let isShadowbanned = false;
+  try {
+    const senderRes = await sql`SELECT is_shadowbanned FROM users WHERE id = ${senderId} LIMIT 1;`;
+    isShadowbanned = senderRes.rows[0]?.is_shadowbanned === true;
+  } catch (e) {
+    console.error('[createChatMessage] Failed to check shadowban:', e.message);
+  }
   const result = await sql`
     INSERT INTO chat_messages (room_id, sender_id, body, is_shadowbanned)
     VALUES (${roomId}, ${senderId}, ${sanitizedBody}, ${isShadowbanned})
     RETURNING *;
   `;
-  await sql`UPDATE chat_rooms SET last_message_at = CURRENT_TIMESTAMP WHERE id = ${roomId}`;
-  await sql`UPDATE chat_room_members SET last_read_at = CURRENT_TIMESTAMP WHERE room_id = ${roomId} AND user_id = ${senderId}`;
+  // Non-critical updates: don't let them break message creation
+  try {
+    await sql`UPDATE chat_rooms SET last_message_at = CURRENT_TIMESTAMP WHERE id = ${roomId}`;
+  } catch (e) {
+    console.error('[createChatMessage] Failed to update last_message_at:', e.message);
+  }
+  try {
+    await sql`UPDATE chat_room_members SET last_read_at = CURRENT_TIMESTAMP WHERE room_id = ${roomId} AND user_id = ${senderId}`;
+  } catch (e) {
+    console.error('[createChatMessage] Failed to update last_read_at:', e.message);
+  }
   return result.rows[0];
 }
 

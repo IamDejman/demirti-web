@@ -7,9 +7,16 @@
 export function formatWeekDescription(description, maxLines = null) {
   if (!description?.trim()) return null;
 
+  // Normalise common HTML bullet entities to a real bullet character
+  // so both "&bull; Item" and "• Item" are handled the same way.
+  const normalisedDescription = description.replace(
+    /&(bull|#8226|middot);/gi,
+    ' • '
+  );
+
   // First split on newlines, then further split any lines that contain
   // multiple inline bullet separators (e.g. "• Item 1 • Item 2 • Item 3")
-  const rawLines = description
+  const rawLines = normalisedDescription
     .split(/\r?\n/)
     .map((s) => s.trim())
     .filter(Boolean);

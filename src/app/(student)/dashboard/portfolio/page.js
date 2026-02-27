@@ -32,10 +32,6 @@ const emptyLinkForm = {
 const inputCls = 'lms-form-input border-token w-full px-4 py-2.5 rounded-lg';
 const textareaCls = 'lms-form-textarea border-token w-full px-4 py-2.5 rounded-xl resize-y';
 
-const PORTFOLIO_GAP_STYLE = { gap: 'var(--lms-space-8)' };
-const PORTFOLIO_GAP_6_STYLE = { gap: 'var(--lms-space-6)' };
-const PORTFOLIO_GRID_GAP_STYLE = { gap: 'var(--lms-space-4)' };
-
 export default function PortfolioPage() {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -203,7 +199,7 @@ export default function PortfolioPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col" style={PORTFOLIO_GAP_STYLE}>
+      <div className="flex flex-col gap-6 md:gap-8">
         <div className="h-24 lms-skeleton rounded-xl" />
         <div className="h-32 lms-skeleton rounded-xl" />
         <div className="h-80 lms-skeleton rounded-xl" />
@@ -217,7 +213,7 @@ export default function PortfolioPage() {
   const domainStatus = portfolio?.domain_verified_at ? 'Verified' : portfolio?.custom_domain ? 'Pending verification' : null;
 
   return (
-    <div className="flex flex-col" style={PORTFOLIO_GAP_STYLE}>
+    <div className="flex flex-col gap-6 md:gap-8">
       <LmsPageHeader
         title="Portfolio"
         subtitle="Build a public profile for recruiters and showcase your projects."
@@ -251,8 +247,8 @@ export default function PortfolioPage() {
       )}
 
       <LmsCard title="Profile details" subtitle="Slug, headline, bio, resume and visibility" icon={LmsIcons.briefcase}>
-        <form onSubmit={savePortfolio} className="flex flex-col" style={PORTFOLIO_GAP_6_STYLE}>
-          <div className="grid gap-6 md:grid-cols-2" style={PORTFOLIO_GAP_6_STYLE}>
+        <form onSubmit={savePortfolio} className="flex flex-col gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
             <div>
               <label className="lms-form-label block mb-1.5">Portfolio slug</label>
               <input
@@ -426,7 +422,7 @@ export default function PortfolioPage() {
             <p className="text-xs mt-1 text-[var(--neutral-500)]">Add a project above to showcase your work.</p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2" style={PORTFOLIO_GRID_GAP_STYLE}>
+          <div className="grid gap-4 sm:grid-cols-2">
             {projects.map((project) => (
               <div key={project.id} className="rounded-xl border border-[var(--neutral-200)] overflow-hidden transition-shadow hover:shadow-md">
                 {project.image_url && (

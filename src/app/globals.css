@@ -3706,7 +3706,6 @@ main.admin-with-fixed-nav {
   display: none;
   align-items: center;
   gap: 0;
-  flex: 1;
   margin-left: var(--lms-space-2);
 }
 @media (min-width: 768px) {

@@ -31,20 +31,7 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
             {breadcrumb.label}
           </Link>
         )}
-        <div className="flex items-center gap-3" style={{ gap: 'var(--lms-space-3)' }}>
-          {icon && (
-            <div
-              className="flex-shrink-0 rounded-lg flex items-center justify-center"
-              style={{
-                padding: '0.625rem',
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              {icon}
-            </div>
-          )}
+        <div>
           <div>
             <h1 className="font-bold" style={{ fontSize: '1.75rem', letterSpacing: '-0.01em' }}>{title}</h1>
             {subtitle && <p className="mt-1" style={{ marginTop: 'var(--lms-space-1)', opacity: 0.9 }}>{subtitle}</p>}

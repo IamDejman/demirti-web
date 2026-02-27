@@ -1068,23 +1068,35 @@ export async function createCohort({ trackId, name, startDate, endDate, status =
   return result.rows[0];
 }
 
+function computeCohortStatus(cohort) {
+  if (!cohort.start_date || !cohort.end_date) return cohort.status;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(cohort.start_date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(cohort.end_date);
+  end.setHours(0, 0, 0, 0);
+  if (today > end) return 'completed';
+  if (today >= start) return 'active';
+  return 'upcoming';
+}
+
 export async function getCohorts(filters = {}) {
   await ensureLmsSchema();
   const trackIdParam =
     filters.trackId != null && !Number.isNaN(Number(filters.trackId))
       ? Number(filters.trackId)
       : null;
-  const statusParam =
-    filters.status && String(filters.status).trim() ? String(filters.status).trim() : null;
   const result = await sql`
     SELECT c.*, t.track_name, t.slug AS track_slug
     FROM cohorts c
     JOIN tracks t ON t.id = c.track_id
     WHERE (${trackIdParam}::int IS NULL OR c.track_id = ${trackIdParam})
-      AND (${statusParam}::text IS NULL OR c.status = ${statusParam})
     ORDER BY c.start_date DESC
   `;
-  return result.rows;
+  const rows = result.rows.map((c) => ({ ...c, status: computeCohortStatus(c) }));
+  const statusFilter = filters.status && String(filters.status).trim();
+  return statusFilter ? rows.filter((c) => c.status === statusFilter) : rows;
 }
 
 export async function getCohortById(id) {
@@ -1095,7 +1107,8 @@ export async function getCohortById(id) {
     JOIN tracks t ON t.id = c.track_id
     WHERE c.id = ${id} LIMIT 1;
   `;
-  return result.rows[0] || null;
+  const cohort = result.rows[0] || null;
+  return cohort ? { ...cohort, status: computeCohortStatus(cohort) } : null;
 }
 
 export async function updateCohort(id, updates) {

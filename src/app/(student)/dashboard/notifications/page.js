@@ -114,16 +114,28 @@ export default function NotificationsPage() {
         title="Recent notifications"
         action={
           notifications.length > 0 ? (
-            <button
-              type="button"
-              className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0"
-              onClick={async () => {
-                await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
-                setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-              }}
-            >
-              Mark all read
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0"
+                onClick={async () => {
+                  await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
+                  setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+                }}
+              >
+                Mark all read
+              </button>
+              <button
+                type="button"
+                className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0 text-[var(--danger-600)]"
+                onClick={async () => {
+                  await fetch('/api/notifications/clear-all', { method: 'POST', headers: getLmsAuthHeaders() });
+                  setNotifications([]);
+                }}
+              >
+                Clear all
+              </button>
+            </div>
           ) : null
         }
       >

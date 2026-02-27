@@ -14,7 +14,11 @@ export function formatWeekDescription(description, maxLines = null) {
     .replace(/<br\s*\/?>/gi, '\n')
     // Normalise common HTML bullet entities to a real bullet character
     // so "&bull; Item" and "• Item" are handled the same way.
-    .replace(/&(bull|#8226|#x2022|middot);/gi, '•');
+    .replace(/&(bull|#8226|#x2022|middot);/gi, '•')
+    // Replace non‑breaking spaces with regular spaces
+    .replace(/\u00A0/g, ' ')
+    // Strip any remaining HTML tags to avoid showing markup in the UI
+    .replace(/<[^>]+>/g, ' ');
 
   // Split on newlines, then further split any lines that contain multiple
   // inline bullet separators (e.g. "• Item 1 • Item 2 • Item 3").
@@ -30,7 +34,11 @@ export function formatWeekDescription(description, maxLines = null) {
   for (const raw of rawLines) {
     // If a line contains multiple bullet characters, treat each segment as
     // its own list item for clearer display.
-    const parts = raw.split('•').map((p) => p.trim()).filter(Boolean);
+    const parts = raw
+      // Split on bullet characters with optional surrounding spaces
+      .split(/\s*•\s*/g)
+      .map((p) => p.trim())
+      .filter(Boolean);
 
     if (parts.length <= 1) {
       lines.push(raw);
@@ -43,7 +51,7 @@ export function formatWeekDescription(description, maxLines = null) {
     }
   }
 
-  const isListItem = (line) => /^[•\-*]\s+/.test(line) || /^\d+\.\s+/.test(line);
+  const isListItem = (line) => /^[•\-*]\s*/.test(line) || /^\d+\.\s+/.test(line);
   const listLines = lines.filter(isListItem);
   const hasList = listLines.length > 0;
   const source = hasList ? listLines : lines;
@@ -54,5 +62,5 @@ export function formatWeekDescription(description, maxLines = null) {
 
 /** Strip leading bullet/number from a line for display */
 export function stripBullet(line) {
-  return line.replace(/^[•\-*]\s+/, '').replace(/^\d+\.\s+/, '');
+  return line.replace(/^[•\-*]\s*/, '').replace(/^\d+\.\s+/, '');
 }

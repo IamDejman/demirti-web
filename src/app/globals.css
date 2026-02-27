@@ -3929,6 +3929,10 @@ main.admin-with-fixed-nav {
   display: flex;
   flex-direction: column;
 }
+.lms-topnav-mobile-list {
+  display: flex;
+  flex-direction: column;
+}
 .lms-topnav-mobile-link {
   display: flex;
   align-items: center;
@@ -3958,9 +3962,9 @@ main.admin-with-fixed-nav {
 }
 .lms-topnav-mobile-footer {
   border-top: 1px solid var(--neutral-100);
-  margin-top: var(--lms-space-2);
   padding-top: var(--lms-space-2);
   padding-bottom: var(--lms-space-3);
+  margin-top: auto;
 }
 .lms-topnav-mobile-user {
   display: flex;

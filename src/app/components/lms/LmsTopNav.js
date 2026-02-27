@@ -149,27 +149,29 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
           </div>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile drawer */}
         {mobileOpen && (
           <nav className="lms-topnav-mobile">
-            {navItems.map((item) => {
-              const active = isActive(item.href);
-              const badgeCounts = { pendingCount, unreadAnnouncements };
-              const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`lms-topnav-mobile-link ${active ? 'active' : ''}`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                  {badge != null && (
-                    <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
-                  )}
-                </Link>
-              );
-            })}
+            <div className="lms-topnav-mobile-list">
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                const badgeCounts = { pendingCount, unreadAnnouncements };
+                const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`lms-topnav-mobile-link ${active ? 'active' : ''}`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                    {badge != null && (
+                      <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
             <div className="lms-topnav-mobile-footer">
               {user && (
                 <Link

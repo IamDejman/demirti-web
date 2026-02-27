@@ -3886,6 +3886,24 @@ main.admin-with-fixed-nav {
   background: rgba(220, 53, 69, 0.08);
   color: #b91c1c;
 }
+.lms-announcement-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--neutral-400);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lms-announcement-dismiss:hover {
+  background: rgba(220, 53, 69, 0.08);
+  color: #b91c1c;
+}
 @media (min-width: 768px) {
   .lms-topnav-logout {
     display: flex;

@@ -91,6 +91,40 @@ export async function ensureLmsSchema() {
             END IF;
           END $$;
         `.catch((e) => console.error('Weeks migration error:', e));
+        // Fix incorrect single-column unique constraint — should be composite (cohort_id, week_number)
+        await sql`
+          DO $$
+          BEGIN
+            IF EXISTS (
+              SELECT 1 FROM information_schema.table_constraints
+              WHERE table_schema = 'public' AND table_name = 'weeks'
+              AND constraint_name = 'weeks_cohort_id_key' AND constraint_type = 'UNIQUE'
+            ) THEN
+              ALTER TABLE weeks DROP CONSTRAINT weeks_cohort_id_key;
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.table_constraints
+              WHERE table_schema = 'public' AND table_name = 'weeks'
+              AND constraint_name = 'weeks_cohort_id_week_number_key' AND constraint_type = 'UNIQUE'
+            ) THEN
+              ALTER TABLE weeks ADD CONSTRAINT weeks_cohort_id_week_number_key UNIQUE(cohort_id, week_number);
+            END IF;
+          END $$;
+        `.catch((e) => console.error('Weeks constraint migration error:', e));
+      }
+      // Migration: create announcement_reads if missing (added after initial schema deployment)
+      if (existing.has('announcements') && existing.has('users') && !existing.has('announcement_reads')) {
+        await sql`
+          CREATE TABLE IF NOT EXISTS announcement_reads (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            announcement_id UUID NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+            read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, announcement_id)
+          );
+        `.catch((e) => console.error('announcement_reads migration error:', e));
+        await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_user ON announcement_reads(user_id);`.catch(() => {});
+        await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement ON announcement_reads(announcement_id);`.catch(() => {});
       }
       lmsInitialized = true;
     } catch (e) {

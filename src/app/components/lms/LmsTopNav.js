@@ -210,7 +210,7 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40"
-          style={{ top: '64px' }}
+          style={{ top: 'var(--lms-topnav-height)' }}
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />

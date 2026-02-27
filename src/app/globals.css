@@ -46,6 +46,8 @@
   --header-offset: 96px;
   --header-offset-tablet: 88px;
   --header-offset-mobile: 82px;
+  /* LMS top navigation height (used for fixed header + content offset) */
+  --lms-topnav-height: 64px;
   /* Standard section spacing */
   --section-padding-y: 5rem;
   --section-padding-y-sm: 4rem;
@@ -1659,6 +1661,28 @@ header:not(.scrolled) .hamburger-line {
   .track-hero {
     padding: 3.5rem 0 3.5rem !important;
     margin-top: 0 !important;
+  }
+}
+
+/* Home Hero Responsive */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 90vh;
+    padding: calc(var(--header-offset-tablet) + 2.5rem) 0 4.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 88vh;
+    padding: calc(var(--header-offset-mobile) + 2rem) 0 4rem;
+  }
+  .hero h1 {
+    font-size: clamp(2.1rem, 7vw, 2.6rem);
+  }
+  .hero p {
+    font-size: 1.05rem;
+    margin-bottom: 2.25rem;
   }
 }
 
@@ -3464,6 +3488,7 @@ main.admin-with-fixed-nav {
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
+  min-height: 44px;
   border: 2px solid var(--neutral-300);
   border-radius: 12px;
   background: var(--background-color);
@@ -3504,6 +3529,7 @@ main.admin-with-fixed-nav {
   padding: 1rem 1.25rem;
   font-size: 1rem;
   font-weight: 600;
+  min-height: 44px;
   color: #fff;
   background: var(--primary-color);
   border: none;
@@ -3641,7 +3667,7 @@ main.admin-with-fixed-nav {
   flex: 1;
   min-width: 0;
   background-color: var(--neutral-50);
-  padding-top: 64px; /* height of top nav */
+  padding-top: var(--lms-topnav-height); /* height of top nav */
 }
 .lms-main-content {
   width: 100%;
@@ -3665,7 +3691,7 @@ main.admin-with-fixed-nav {
   left: 0;
   right: 0;
   z-index: 50;
-  height: 64px;
+  height: var(--lms-topnav-height);
   background: var(--background-color);
   border-bottom: 1px solid var(--neutral-200);
 }
@@ -3718,7 +3744,7 @@ main.admin-with-fixed-nav {
   align-items: center;
   gap: 6px;
   padding: 0 14px;
-  height: 64px;
+  height: var(--lms-topnav-height);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--neutral-500);
@@ -3874,7 +3900,7 @@ main.admin-with-fixed-nav {
 /* Mobile dropdown */
 .lms-topnav-mobile {
   position: fixed;
-  top: 64px;
+  top: var(--lms-topnav-height);
   left: 0;
   right: 0;
   z-index: 45;
@@ -3882,7 +3908,7 @@ main.admin-with-fixed-nav {
   border-bottom: 1px solid var(--neutral-200);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   padding: var(--lms-space-2) 0;
-  max-height: calc(100vh - 64px);
+  max-height: calc(100vh - var(--lms-topnav-height));
   overflow-y: auto;
 }
 .lms-topnav-mobile-link {
@@ -4379,6 +4405,9 @@ select.lms-form-select.border-token:focus {
   .lms-tabs-tab {
     padding: 0.75rem 1rem;
     font-size: 0.8125rem;
+  }
+  .lms-tabs-panel {
+    padding-top: var(--lms-space-4);
   }
 }
 
@@ -5442,6 +5471,10 @@ textarea.lms-form-textarea.border-token {
   .lms-main-content {
     padding: var(--lms-space-4) var(--lms-space-3);
     gap: var(--lms-space-6);
+  }
+  :root {
+    /* Slightly shorter LMS header on very small phones to reclaim vertical space */
+    --lms-topnav-height: 56px;
   }
 }
 

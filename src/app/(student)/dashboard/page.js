@@ -131,7 +131,7 @@ export default function StudentDashboardPage() {
       ) : (
         <>
           {/* 4 stat cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 'var(--lms-space-4)' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 'var(--lms-space-4)' }}>
             <Link href="/dashboard/classroom?tab=weeks" className="lms-stat-card" style={{ textDecoration: 'none' }}>
               <div className="lms-stat-icon">{LmsIcons.calendar}</div>
               <div className="lms-stat-value">Week {currentCohort.current_week ?? 1}</div>

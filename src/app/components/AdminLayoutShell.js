@@ -116,7 +116,7 @@ export default function AdminLayoutShell({ children }) {
           position: relative;
           z-index: 0;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .admin-main {
             margin-left: 0 !important;
             padding: 1rem;

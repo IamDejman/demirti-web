@@ -880,7 +880,7 @@ export default function AdminSidebar({ collapsed = false, onToggleCollapse }) {
           background: rgba(220, 53, 69, 0.12);
           color: #c82333;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .admin-sidebar-toggle {
             display: flex;
           }

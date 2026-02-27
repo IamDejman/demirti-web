@@ -2549,6 +2549,14 @@ export async function clearAllNotifications(userId) {
   `;
 }
 
+export async function deleteNotification(notificationId, userId) {
+  await ensureLmsSchema();
+  await sql`
+    DELETE FROM notifications
+    WHERE id = ${notificationId} AND user_id = ${userId};
+  `;
+}
+
 // --- Chat ---
 export async function ensureCohortChatRoom(cohortId, title = null, createdBy = null) {
   await ensureLmsSchema();

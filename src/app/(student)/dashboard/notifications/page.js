@@ -149,18 +149,35 @@ export default function NotificationsPage() {
                   {!n.is_read && <span className="lms-notification-dot" />}
                   <span className={`text-sm ${n.is_read ? 'text-[var(--neutral-500)]' : 'font-medium text-[var(--neutral-900)]'}`}>{n.title}</span>
                 </div>
-                {!n.is_read && (
+                <div className="flex items-center gap-2">
+                  {!n.is_read && (
+                    <button
+                      type="button"
+                      className="lms-btn lms-btn-sm lms-btn-outline"
+                      onClick={async () => {
+                        await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
+                        setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
+                      }}
+                    >
+                      Mark read
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="lms-btn lms-btn-sm lms-btn-outline"
+                    className="lms-link text-xs font-medium bg-transparent border-none cursor-pointer p-0 text-[var(--danger-600)]"
                     onClick={async () => {
-                      await fetch(`/api/notifications/${n.id}/read`, { method: 'POST', headers: getLmsAuthHeaders() });
-                      setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item)));
+                      const res = await fetch(`/api/notifications/${n.id}`, {
+                        method: 'DELETE',
+                        headers: getLmsAuthHeaders(),
+                      });
+                      if (res.ok) {
+                        setNotifications((prev) => prev.filter((item) => item.id !== n.id));
+                      }
                     }}
                   >
-                    Mark read
+                    Delete
                   </button>
-                )}
+                </div>
               </li>
             ))}
           </ul>

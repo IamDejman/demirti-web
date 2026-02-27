@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
+import { normalizeFileUrl } from '@/lib/storage';
 
 export async function GET(request) {
   const user = await getUserFromRequest(request);
@@ -13,7 +14,7 @@ export async function GET(request) {
       role: user.role,
       firstName: user.first_name,
       lastName: user.last_name,
-      profilePictureUrl: user.profile_picture_url,
+      profilePictureUrl: normalizeFileUrl(user.profile_picture_url),
       phone: user.phone ?? null,
       address: user.address ?? null,
       yearsExperience: user.years_experience != null ? user.years_experience : null,

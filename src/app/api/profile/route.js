@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres';
 import { reportError, safeErrorMessage } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { ensureLmsSchema } from '@/lib/db-lms';
+import { normalizeFileUrl } from '@/lib/storage';
 
 export async function GET(request) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request) {
         email: profileRow?.email ?? user.email,
         firstName: profileRow?.first_name ?? user.first_name ?? '',
         lastName: profileRow?.last_name ?? user.last_name ?? '',
-        profilePictureUrl: profileRow?.profile_picture_url ?? user.profile_picture_url ?? null,
+        profilePictureUrl: normalizeFileUrl(profileRow?.profile_picture_url ?? user.profile_picture_url ?? null),
         phone: profileRow?.phone ?? user.phone ?? '',
         address: profileRow?.address ?? '',
         yearsExperience: profileRow?.years_experience != null ? profileRow.years_experience : null,

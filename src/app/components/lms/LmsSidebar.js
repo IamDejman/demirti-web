@@ -273,7 +273,7 @@ export default function LmsSidebar({ variant = 'student', collapsed = false, onT
             >
               <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 overflow-hidden" style={{ backgroundColor: 'rgba(0, 82, 163, 0.1)', color: 'var(--primary-color)' }}>
                 {user.profilePictureUrl ? (
-                  <img src={user.profilePictureUrl} alt={`${user.firstName || 'User'} profile photo`} className="w-full h-full object-cover" />
+                  <img src={user.profilePictureUrl} alt={`${user.firstName || 'User'} profile photo`} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.textContent = (user.firstName || user.email || 'U').charAt(0).toUpperCase(); }} />
                 ) : (
                   (user.firstName || user.email || 'U').charAt(0).toUpperCase()
                 )}

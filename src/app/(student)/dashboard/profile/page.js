@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef(null);
   const [email, setEmail] = useState('');
   const [form, setForm] = useState({
@@ -111,6 +112,7 @@ export default function ProfilePage() {
         body: file,
       });
       const fileUrl = presignData.fileUrl;
+      setImgError(false);
       setForm((f) => ({ ...f, profilePictureUrl: fileUrl }));
       const patchRes = await fetch('/api/profile', {
         method: 'PATCH',
@@ -243,12 +245,12 @@ export default function ProfilePage() {
               <div
                 className="profile-hero-avatar"
                 style={{
-                  background: form.profilePictureUrl ? 'transparent' : 'linear-gradient(135deg, var(--primary-color), #00a67e)',
+                  background: (form.profilePictureUrl && !imgError) ? 'transparent' : 'linear-gradient(135deg, var(--primary-color), #00a67e)',
                   color: 'white',
                 }}
               >
-                {form.profilePictureUrl ? (
-                  <img src={form.profilePictureUrl} alt="" className="w-full h-full object-cover" />
+                {form.profilePictureUrl && !imgError ? (
+                  <img src={form.profilePictureUrl} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
                 ) : (
                   (form.firstName || form.lastName || 'U').charAt(0).toUpperCase()
                 )}

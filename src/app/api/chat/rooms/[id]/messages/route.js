@@ -130,7 +130,8 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({ message: created });
   } catch (e) {
+    console.error('[POST /api/chat/rooms/[id]/messages] Error:', e.message, e.stack?.slice(0, 500));
     reportError(e, { route: 'POST /api/chat/rooms/[id]/messages' });
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to send message', debug: e.message }, { status: 500 });
   }
 }

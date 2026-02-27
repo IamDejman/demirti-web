@@ -359,7 +359,7 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Projects" subtitle="Showcase work with title, description, link and image" icon={LmsIcons.book}>
-        <form onSubmit={saveProject} className="flex flex-col gap-4 pb-10 mb-8 border-b border-[var(--neutral-200)]">
+        <form onSubmit={saveProject} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
           <div className="grid gap-6 md:grid-cols-2">
             <input
               type="text"
@@ -421,7 +421,7 @@ export default function PortfolioPage() {
         </form>
 
         {projects.length === 0 ? (
-          <div className="text-center pt-8 pb-10 text-[var(--neutral-600)]">
+          <div className="text-center pt-6 pb-4 text-[var(--neutral-600)]">
             <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 bg-[var(--neutral-100)] text-[var(--neutral-400)]">
               {LmsIcons.book}
             </div>
@@ -478,7 +478,7 @@ export default function PortfolioPage() {
       </LmsCard>
 
       <LmsCard title="Social links" subtitle="LinkedIn, GitHub, Twitter, etc." icon={LmsIcons.chat}>
-        <form onSubmit={saveLink} className="flex flex-col gap-4 pb-10 mb-8 border-b border-[var(--neutral-200)]">
+        <form onSubmit={saveLink} className="flex flex-col gap-4 pb-6 mb-6 border-b border-[var(--neutral-200)]">
           <div className="grid gap-6 md:grid-cols-2">
             <input
               type="text"

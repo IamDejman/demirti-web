@@ -117,6 +117,60 @@ export async function sendAssignmentEmails({ recipients, assignment, title, body
   }
 }
 
+export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
+  if (!process.env.RESEND_API_KEY || !recipient?.email) {
+    return;
+  }
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'admin@demirti.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com';
+  const firstName = recipient.first_name || recipient.firstName || '';
+  const cohortName = cohort?.name || 'your cohort';
+  const startDate = cohort?.start_date ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'Africa/Lagos' }).format(new Date(cohort.start_date)) : '';
+  const endDate = cohort?.end_date ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'Africa/Lagos' }).format(new Date(cohort.end_date)) : '';
+
+  if (tempPassword) {
+    // New user — send credentials
+    const subject = `Welcome to CVERSE — Your Login Details for ${cohortName}`;
+    const html = `
+      <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
+        <h2 style="color:#0066cc; margin-bottom:8px;">Welcome to CVERSE Academy!</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
+        <p style="margin:0 0 16px;">You have been enrolled in <strong>${escapeHtml(cohortName)}</strong>${startDate ? ` starting ${escapeHtml(startDate)}` : ''}${endDate ? ` and running until ${escapeHtml(endDate)}` : ''}.</p>
+        <p style="margin:0 0 8px;">Here are your login details:</p>
+        <div style="background:#f0f4ff; border:1px solid #d0dff7; padding:16px; border-radius:8px; margin-bottom:16px;">
+          <p style="margin:0 0 6px;"><strong>Email:</strong> ${escapeHtml(recipient.email)}</p>
+          <p style="margin:0;"><strong>Temporary Password:</strong> <span style="font-family:monospace; font-size:1.1em; letter-spacing:0.05em;">${escapeHtml(tempPassword)}</span></p>
+        </div>
+        <p style="margin:0 0 16px; color:#dc2626;">You will be asked to set a new password on your first login.</p>
+        <a href="${baseUrl}/login" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Log in to CVERSE</a>
+        <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to your cohort admin.</p>
+      </div>
+    `;
+    try {
+      await resend.emails.send({ from: fromEmail, to: recipient.email, subject, html });
+    } catch (error) {
+      console.error('Resend enrollment email failed', error);
+    }
+  } else {
+    // Existing user — enrollment notification only
+    const subject = `You've been enrolled in ${cohortName}`;
+    const html = `
+      <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
+        <h2 style="color:#0066cc; margin-bottom:8px;">Enrollment Confirmation</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
+        <p style="margin:0 0 16px;">You have been enrolled in <strong>${escapeHtml(cohortName)}</strong>${startDate ? ` starting ${escapeHtml(startDate)}` : ''}${endDate ? ` and running until ${escapeHtml(endDate)}` : ''}.</p>
+        <a href="${baseUrl}/dashboard" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Go to Dashboard</a>
+        <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to your cohort admin.</p>
+      </div>
+    `;
+    try {
+      await resend.emails.send({ from: fromEmail, to: recipient.email, subject, html });
+    } catch (error) {
+      console.error('Resend enrollment notification email failed', error);
+    }
+  }
+}
+
 export async function sendGradeEmail({ recipient, assignment, title, body }) {
   if (!process.env.RESEND_API_KEY || !recipient?.email) {
     return;

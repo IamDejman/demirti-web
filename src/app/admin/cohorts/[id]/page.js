@@ -103,6 +103,7 @@ export default function AdminCohortDetailPage() {
   const [liveClassForm, setLiveClassForm] = useState({
     weekId: '',
     scheduledAt: '',
+    endTime: '',
     googleMeetLink: '',
   });
   const [lmsMessage, setLmsMessage] = useState('');
@@ -466,6 +467,9 @@ export default function AdminCohortDetailPage() {
     if (weekData.week) setWeekDetails(weekData);
   };
 
+  // Convert datetime-local value (treated as WAT/UTC+1) to ISO string with +01:00 offset
+  const toWatIso = (val) => (val ? `${val}:00+01:00` : null);
+
   const handleCreateLiveClass = async (e) => {
     e.preventDefault();
     if (!liveClassForm.weekId || !liveClassForm.scheduledAt) return;
@@ -477,14 +481,15 @@ export default function AdminCohortDetailPage() {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           weekId: liveClassForm.weekId,
-          scheduledAt: liveClassForm.scheduledAt,
+          scheduledAt: toWatIso(liveClassForm.scheduledAt),
+          endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
           googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
         }),
       });
       const data = await res.json();
       if (res.ok && data.liveClass) {
         await refreshLiveClasses();
-        setLiveClassForm({ weekId: '', scheduledAt: '', googleMeetLink: '' });
+        setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
         setLmsMessage('Live class scheduled.');
       } else {
         setLmsMessage(data.error || 'Failed to schedule live class');
@@ -493,6 +498,22 @@ export default function AdminCohortDetailPage() {
       setLmsMessage('Failed to schedule live class');
     } finally {
       setSavingLiveClass(false);
+    }
+  };
+
+  const handleDeleteLiveClass = async (liveClassId) => {
+    if (!confirm('Delete this scheduled class? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/live-classes/${liveClassId}`, { method: 'DELETE', headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok && data.deleted) {
+        await refreshLiveClasses();
+        setLmsMessage('Live class deleted.');
+      } else {
+        setLmsMessage(data.error || 'Failed to delete live class');
+      }
+    } catch {
+      setLmsMessage('Failed to delete live class');
     }
   };
 
@@ -733,6 +754,7 @@ export default function AdminCohortDetailPage() {
           handleEditMaterial={handleEditMaterial}
           handleDeleteMaterial={handleDeleteMaterial}
           handleCreateLiveClass={handleCreateLiveClass}
+          handleDeleteLiveClass={handleDeleteLiveClass}
         />
 
         <div className="admin-card">

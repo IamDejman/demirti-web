@@ -38,6 +38,7 @@ export default function CohortAssignments({
   liveClassForm,
   setLiveClassForm,
   liveClasses,
+  handleDeleteLiveClass,
   assignmentForm,
   setAssignmentForm,
   savingAssignment,
@@ -271,8 +272,10 @@ export default function CohortAssignments({
 
       <div className="admin-card">
         <h2 className="admin-card-title">Live classes</h2>
-        <form onSubmit={handleCreateLiveClass} className="admin-form-group admin-action-group admin-cohort-live-form">
-          <div className="admin-form-field">
+        <p className="admin-form-hint" style={{ marginBottom: '0.75rem' }}>All times in WAT (Lagos, UTC+1)</p>
+        <form onSubmit={handleCreateLiveClass} className="admin-form-group admin-cohort-live-form" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+          <div className="admin-form-field" style={{ flex: '1 1 160px' }}>
+            <label className="admin-form-label">Week</label>
             <select value={liveClassForm.weekId} onChange={(e) => setLiveClassForm((f) => ({ ...f, weekId: e.target.value }))}>
               <option value="">Select week</option>
               {weeks.map((w) => (
@@ -280,13 +283,19 @@ export default function CohortAssignments({
               ))}
             </select>
           </div>
-          <div className="admin-form-field">
+          <div className="admin-form-field" style={{ flex: '1 1 180px' }}>
+            <label className="admin-form-label">Start time (WAT)</label>
             <input type="datetime-local" value={liveClassForm.scheduledAt} onChange={(e) => setLiveClassForm((f) => ({ ...f, scheduledAt: e.target.value }))} />
           </div>
-          <div className="admin-form-field">
-            <input type="text" placeholder="Google Meet link" value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+          <div className="admin-form-field" style={{ flex: '1 1 180px' }}>
+            <label className="admin-form-label">End time (WAT, optional)</label>
+            <input type="datetime-local" value={liveClassForm.endTime} onChange={(e) => setLiveClassForm((f) => ({ ...f, endTime: e.target.value }))} />
           </div>
-          <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary admin-cohort-live-submit">
+          <div className="admin-form-field" style={{ flex: '2 1 200px' }}>
+            <label className="admin-form-label">Google Meet link</label>
+            <input type="text" placeholder="https://meet.google.com/..." value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+          </div>
+          <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary admin-cohort-live-submit" style={{ flexShrink: 0 }}>
             {savingLiveClass ? 'Scheduling...' : 'Schedule live class'}
           </button>
         </form>
@@ -299,8 +308,10 @@ export default function CohortAssignments({
               <thead>
                 <tr>
                   <th className="admin-table-th">Week</th>
-                  <th className="admin-table-th">Scheduled</th>
+                  <th className="admin-table-th">Start (WAT)</th>
+                  <th className="admin-table-th">End (WAT)</th>
                   <th className="admin-table-th">Meet link</th>
+                  <th className="admin-table-th">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -308,7 +319,18 @@ export default function CohortAssignments({
                   <tr key={lc.id} className="admin-table-tr">
                     <td className="admin-table-td" style={{ fontWeight: 500 }}>{lc.week_title || lc.week_number}</td>
                     <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{lc.scheduled_at ? formatTimeLagos(lc.scheduled_at) : '—'}</td>
+                    <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{lc.end_time ? formatTimeLagos(lc.end_time) : '—'}</td>
                     <td className="admin-table-td" style={{ color: 'var(--text-light)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{lc.google_meet_link || '—'}</td>
+                    <td className="admin-table-td">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLiveClass(lc.id)}
+                        className="admin-btn admin-btn-ghost admin-btn-sm"
+                        style={{ color: '#dc3545' }}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

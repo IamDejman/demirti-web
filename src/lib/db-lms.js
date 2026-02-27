@@ -492,6 +492,7 @@ export async function initializeLmsSchema() {
     );
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_live_classes_cohort_id ON live_classes(cohort_id);`.catch(() => {});
+  await sql`ALTER TABLE live_classes ADD COLUMN IF NOT EXISTS end_time TIMESTAMP;`.catch(() => {});
 
   // --- attendance_records ---
   await sql`
@@ -1674,14 +1675,19 @@ export async function getLiveClassByWeekId(weekId) {
   return result.rows[0] || null;
 }
 
-export async function createLiveClass({ weekId, cohortId, scheduledAt, googleMeetLink }) {
+export async function createLiveClass({ weekId, cohortId, scheduledAt, endTime, googleMeetLink }) {
   await ensureLmsSchema();
   const result = await sql`
-    INSERT INTO live_classes (week_id, cohort_id, scheduled_at, google_meet_link, status)
-    VALUES (${weekId}, ${cohortId}, ${scheduledAt}, ${googleMeetLink || null}, 'scheduled')
+    INSERT INTO live_classes (week_id, cohort_id, scheduled_at, end_time, google_meet_link, status)
+    VALUES (${weekId}, ${cohortId}, ${scheduledAt}, ${endTime || null}, ${googleMeetLink || null}, 'scheduled')
     RETURNING *;
   `;
   return result.rows[0];
+}
+
+export async function deleteLiveClass(id) {
+  await ensureLmsSchema();
+  await sql`DELETE FROM live_classes WHERE id = ${id}`;
 }
 
 export async function updateLiveClass(id, updates) {
@@ -1691,9 +1697,11 @@ export async function updateLiveClass(id, updates) {
   const recordingUrl = updates.recordingUrl !== undefined ? updates.recordingUrl : current.recording_url;
   const status = updates.status !== undefined ? updates.status : current.status;
   const googleMeetLink = updates.googleMeetLink !== undefined ? updates.googleMeetLink : current.google_meet_link;
+  const endTime = updates.endTime !== undefined ? updates.endTime : current.end_time;
   await sql`
     UPDATE live_classes SET
       recording_url = ${recordingUrl}, status = ${status}, google_meet_link = ${googleMeetLink},
+      end_time = ${endTime || null},
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ${id}
   `;

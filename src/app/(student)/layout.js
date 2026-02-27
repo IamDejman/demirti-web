@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LmsLayoutShell } from '@/app/components/lms';
-import { installLms401Interceptor } from '@/lib/authClient';
+import { installLms401Interceptor, getLmsAuthHeaders } from '@/lib/authClient';
 
 const NOTIFICATIONS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,10 +20,29 @@ export default function StudentLayout({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
 
   useEffect(() => {
     const uninstall = installLms401Interceptor();
     return uninstall;
+  }, []);
+
+  const fetchUnreadCounts = useCallback(async () => {
+    try {
+      const [notifRes, announceRes] = await Promise.all([
+        fetch('/api/notifications?unreadOnly=true&limit=100', { headers: getLmsAuthHeaders() }),
+        fetch('/api/announcements/unread-count', { headers: getLmsAuthHeaders() }),
+      ]);
+      if (notifRes.ok) {
+        const notifData = await notifRes.json();
+        setUnreadNotifications(notifData.notifications?.length ?? 0);
+      }
+      if (announceRes.ok) {
+        const annData = await announceRes.json();
+        setUnreadAnnouncements(annData.count ?? 0);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -51,10 +70,19 @@ export default function StudentLayout({ children }) {
           return;
         }
         setUser(data.user);
+        // Fetch unread counts once authenticated
+        fetchUnreadCounts();
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router, fetchUnreadCounts]);
+
+  // Poll for unread counts every 60 seconds
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(fetchUnreadCounts, 60000);
+    return () => clearInterval(interval);
+  }, [user, fetchUnreadCounts]);
 
   if (loading) {
     return (
@@ -73,6 +101,7 @@ export default function StudentLayout({ children }) {
     <LmsLayoutShell
       variant="student"
       user={user}
+      unreadAnnouncements={unreadAnnouncements}
       topBarContent={
         <Link
           href="/dashboard/notifications"
@@ -80,6 +109,11 @@ export default function StudentLayout({ children }) {
           aria-label="Notifications"
         >
           {NOTIFICATIONS_ICON}
+          {unreadNotifications > 0 && (
+            <span className="lms-topnav-icon-badge">
+              {unreadNotifications > 99 ? '99+' : unreadNotifications}
+            </span>
+          )}
         </Link>
       }
     >

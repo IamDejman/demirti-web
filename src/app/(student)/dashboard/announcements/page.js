@@ -1,13 +1,27 @@
 'use client';
 
+import { useEffect } from 'react';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { useFetch } from '@/hooks/useFetch';
+import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos } from '@/lib/dateUtils';
 
 export default function AnnouncementsPage() {
   const { data, isLoading, error } = useFetch('/api/announcements?limit=50');
   const announcements = data?.announcements ?? [];
+
+  // Mark all visible announcements as read when page loads
+  useEffect(() => {
+    if (announcements.length > 0) {
+      const ids = announcements.map((a) => a.id);
+      fetch('/api/announcements/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+        body: JSON.stringify({ announcementIds: ids }),
+      }).catch(() => {});
+    }
+  }, [announcements]);
 
   if (isLoading) {
     return (
@@ -23,11 +37,7 @@ export default function AnnouncementsPage() {
   if (error) {
     return (
       <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
-        <LmsPageHeader
-          title="Announcements"
-          subtitle="Updates and news from your facilitators."
-          icon={LmsIcons.megaphone}
-        />
+        <LmsPageHeader title="Announcements" />
         <LmsCard hoverable={false}>
           <LmsEmptyState
             icon={LmsIcons.megaphone}
@@ -41,11 +51,7 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
-      <LmsPageHeader
-        title="Announcements"
-        subtitle="Updates and news from your facilitators."
-        icon={LmsIcons.megaphone}
-      />
+      <LmsPageHeader title="Announcements" />
 
       {announcements.length === 0 ? (
         <LmsCard hoverable={false}>

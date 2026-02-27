@@ -237,7 +237,6 @@ export default function ProfilePage() {
     <div className="profile-page flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
       <LmsPageHeader
         title="Profile"
-        subtitle="Update your name, contact details, and photo."
       />
 
       {/* Profile hero — always visible above tabs */}

@@ -26,6 +26,20 @@ const defaultPrefs = {
   push_deadlines: true,
 };
 
+const CATEGORIES = [
+  { label: 'Announcements', keys: { in_app: 'in_app_announcements', email: 'email_announcements', push: 'push_announcements' } },
+  { label: 'Chat', keys: { in_app: 'in_app_chat', email: 'email_chat', push: 'push_chat' } },
+  { label: 'Assignments', keys: { in_app: 'in_app_assignments', email: 'email_assignments', push: 'push_assignments' } },
+  { label: 'Grades', keys: { in_app: 'in_app_grades', email: 'email_grades', push: 'push_grades' } },
+  { label: 'Deadlines', keys: { in_app: 'in_app_deadlines', email: 'email_deadlines', push: 'push_deadlines' } },
+];
+
+const CHANNELS = [
+  { id: 'in_app', label: 'In-app' },
+  { id: 'email', label: 'Email' },
+  { id: 'push', label: 'Push' },
+];
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [prefs, setPrefs] = useState(defaultPrefs);
@@ -55,38 +69,66 @@ export default function NotificationsPage() {
       <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
         <div className="h-24 lms-skeleton rounded-xl" />
         <div className="lms-skeleton rounded-xl" style={{ height: 200 }} />
-        <div className="lms-skeleton rounded-xl" style={{ height: 320 }} />
-        <div className="lms-skeleton rounded-xl" style={{ height: 140 }} />
+        <div className="lms-skeleton rounded-xl" style={{ height: 280 }} />
       </div>
     );
   }
+
+  const handleSavePrefs = async () => {
+    setSavingPrefs(true);
+    await fetch('/api/notifications/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+      body: JSON.stringify({
+        inAppEnabled: prefs.in_app_enabled !== false,
+        emailEnabled: prefs.email_enabled !== false,
+        emailAnnouncements: prefs.email_announcements !== false,
+        emailChat: prefs.email_chat !== false,
+        emailAssignments: prefs.email_assignments !== false,
+        emailGrades: prefs.email_grades !== false,
+        emailDeadlines: prefs.email_deadlines !== false,
+        inAppAnnouncements: prefs.in_app_announcements !== false,
+        inAppChat: prefs.in_app_chat !== false,
+        inAppAssignments: prefs.in_app_assignments !== false,
+        inAppGrades: prefs.in_app_grades !== false,
+        inAppDeadlines: prefs.in_app_deadlines !== false,
+        pushAnnouncements: prefs.push_announcements !== false,
+        pushChat: prefs.push_chat !== false,
+        pushAssignments: prefs.push_assignments !== false,
+        pushGrades: prefs.push_grades !== false,
+        pushDeadlines: prefs.push_deadlines !== false,
+      }),
+    });
+    setSavingPrefs(false);
+  };
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
       <LmsPageHeader
         title="Notifications"
         subtitle="Manage your notifications and preferences."
-        icon={LmsIcons.bell}
       />
 
+      {/* Notification list */}
       <LmsCard
-        title="Notifications"
-        icon={LmsIcons.bell}
+        title="Recent notifications"
         action={
-          <button
-            type="button"
-            className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0"
-            onClick={async () => {
-              await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
-              setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-            }}
-          >
-            Mark all read
-          </button>
+          notifications.length > 0 ? (
+            <button
+              type="button"
+              className="lms-link text-sm font-medium bg-transparent border-none cursor-pointer p-0"
+              onClick={async () => {
+                await fetch('/api/notifications/read-all', { method: 'POST', headers: getLmsAuthHeaders() });
+                setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+              }}
+            >
+              Mark all read
+            </button>
+          ) : null
         }
       >
         {notifications.length === 0 ? (
-          <p className="text-sm text-[var(--neutral-500)]">No notifications yet.</p>
+          <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>No notifications yet.</p>
         ) : (
           <ul className="space-y-0">
             {notifications.map((n) => (
@@ -113,10 +155,11 @@ export default function NotificationsPage() {
         )}
       </LmsCard>
 
-      <LmsCard title="Notification preferences">
-        <div className="flex flex-col" style={{ gap: 'var(--lms-space-5)' }}>
+      {/* Preferences — matrix table + push toggle */}
+      <LmsCard title="Preferences">
+        <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
           {/* Master toggles */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
             <label className="lms-toggle">
               <input
                 type="checkbox"
@@ -124,7 +167,7 @@ export default function NotificationsPage() {
                 onChange={(e) => setPrefs((p) => ({ ...p, in_app_enabled: e.target.checked }))}
               />
               <span className="lms-toggle-track" />
-              <span className="text-sm font-medium text-[var(--neutral-700)]">In-app notifications</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>In-app</span>
             </label>
             <label className="lms-toggle">
               <input
@@ -133,93 +176,79 @@ export default function NotificationsPage() {
                 onChange={(e) => setPrefs((p) => ({ ...p, email_enabled: e.target.checked }))}
               />
               <span className="lms-toggle-track" />
-              <span className="text-sm font-medium text-[var(--neutral-700)]">Email notifications</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Email</span>
             </label>
           </div>
 
-          {/* Category grids */}
-          <div className="grid md:grid-cols-3 text-sm text-[var(--neutral-600)]" style={{ gap: 'var(--lms-space-4)' }}>
-            <div className="lms-prefs-column">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.bell}</span>
-                <p className="lms-prefs-column-title">In-app</p>
-              </div>
-              {[['in_app_announcements', 'Announcements'], ['in_app_chat', 'Chat'], ['in_app_assignments', 'Assignments'], ['in_app_grades', 'Grades'], ['in_app_deadlines', 'Deadlines']].map(([key, label]) => (
-                <label key={key} className="lms-toggle mt-2.5">
-                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
-                  <span className="lms-toggle-track" />
-                  <span>{label}</span>
-                </label>
-              ))}
+          {/* Matrix table */}
+          <div className="overflow-x-auto -mx-1">
+            <table className="w-full text-sm" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+              <thead>
+                <tr>
+                  <th className="text-left font-medium py-2 pr-4" style={{ color: 'var(--neutral-500)', minWidth: 120 }}>Category</th>
+                  {CHANNELS.map((ch) => (
+                    <th key={ch.id} className="text-center font-medium py-2 px-3" style={{ color: 'var(--neutral-500)', minWidth: 70 }}>{ch.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {CATEGORIES.map((cat, i) => (
+                  <tr key={cat.label}>
+                    <td
+                      className="py-2.5 pr-4 font-medium"
+                      style={{
+                        color: 'var(--neutral-700)',
+                        borderTop: i > 0 ? '1px solid var(--neutral-100)' : 'none',
+                      }}
+                    >
+                      {cat.label}
+                    </td>
+                    {CHANNELS.map((ch) => (
+                      <td
+                        key={ch.id}
+                        className="text-center py-2.5 px-3"
+                        style={{ borderTop: i > 0 ? '1px solid var(--neutral-100)' : 'none' }}
+                      >
+                        <label className="inline-flex items-center justify-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={prefs[cat.keys[ch.id]] !== false}
+                            onChange={(e) => setPrefs((p) => ({ ...p, [cat.keys[ch.id]]: e.target.checked }))}
+                            className="lms-checkbox"
+                          />
+                        </label>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Push notifications toggle */}
+          <div
+            className="flex items-center justify-between rounded-lg"
+            style={{
+              padding: 'var(--lms-space-4)',
+              background: 'var(--neutral-50)',
+              border: '1px solid var(--neutral-100)',
+            }}
+          >
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Browser push notifications</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--neutral-500)' }}>Get alerts even when the tab is closed</p>
             </div>
-            <div className="lms-prefs-column">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.megaphone}</span>
-                <p className="lms-prefs-column-title">Email</p>
-              </div>
-              {[['email_announcements', 'Announcements'], ['email_chat', 'Chat'], ['email_assignments', 'Assignments'], ['email_grades', 'Grades'], ['email_deadlines', 'Deadlines']].map(([key, label]) => (
-                <label key={key} className="lms-toggle mt-2.5">
-                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
-                  <span className="lms-toggle-track" />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-            <div className="lms-prefs-column">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="lms-card-icon-box w-7 h-7 text-sm">{LmsIcons.chat}</span>
-                <p className="lms-prefs-column-title">Push</p>
-              </div>
-              {[['push_announcements', 'Announcements'], ['push_chat', 'Chat'], ['push_assignments', 'Assignments'], ['push_grades', 'Grades'], ['push_deadlines', 'Deadlines']].map(([key, label]) => (
-                <label key={key} className="lms-toggle mt-2.5">
-                  <input type="checkbox" checked={prefs[key] !== false} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} />
-                  <span className="lms-toggle-track" />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
+            <PushToggle />
           </div>
 
           <button
             type="button"
             disabled={savingPrefs}
-            onClick={async () => {
-              setSavingPrefs(true);
-              await fetch('/api/notifications/preferences', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                body: JSON.stringify({
-                  inAppEnabled: prefs.in_app_enabled !== false,
-                  emailEnabled: prefs.email_enabled !== false,
-                  emailAnnouncements: prefs.email_announcements !== false,
-                  emailChat: prefs.email_chat !== false,
-                  emailAssignments: prefs.email_assignments !== false,
-                  emailGrades: prefs.email_grades !== false,
-                  emailDeadlines: prefs.email_deadlines !== false,
-                  inAppAnnouncements: prefs.in_app_announcements !== false,
-                  inAppChat: prefs.in_app_chat !== false,
-                  inAppAssignments: prefs.in_app_assignments !== false,
-                  inAppGrades: prefs.in_app_grades !== false,
-                  inAppDeadlines: prefs.in_app_deadlines !== false,
-                  pushAnnouncements: prefs.push_announcements !== false,
-                  pushChat: prefs.push_chat !== false,
-                  pushAssignments: prefs.push_assignments !== false,
-                  pushGrades: prefs.push_grades !== false,
-                  pushDeadlines: prefs.push_deadlines !== false,
-                }),
-              });
-              setSavingPrefs(false);
-            }}
-            className="lms-btn lms-btn-primary"
+            onClick={handleSavePrefs}
+            className="lms-btn lms-btn-primary self-start"
           >
             {savingPrefs ? 'Saving...' : 'Save preferences'}
           </button>
-        </div>
-      </LmsCard>
-
-      <LmsCard title="Push notifications" subtitle="Enable browser push alerts. Use the category toggles above to fine-tune.">
-        <div className="mt-4">
-          <PushToggle />
         </div>
       </LmsCard>
     </div>

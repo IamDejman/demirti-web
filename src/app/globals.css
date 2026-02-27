@@ -1949,11 +1949,7 @@ textarea:focus {
   border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
 }
 
-.glass-sidebar {
-  background: color-mix(in srgb, var(--background-color) 85%, transparent);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-}
+/* glass-sidebar removed — using top nav now */
 
 .glass-modal {
   background: color-mix(in srgb, var(--background-color) 90%, transparent);
@@ -3636,44 +3632,248 @@ main.admin-with-fixed-nav {
   background-color: var(--neutral-50);
 }
 
+.lms-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 .lms-main {
   flex: 1;
   min-width: 0;
-  min-height: 100vh;
   background-color: var(--neutral-50);
-  transition: margin-left 0.2s ease;
+  padding-top: 60px; /* height of top nav */
 }
-
-/* Top bar (theme etc.) – sticky, padding matches main content so theme respects margins */
-.lms-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--background-color);
-  border-bottom: 1px solid var(--neutral-200);
-  padding-left: var(--lms-space-4);
-  padding-right: var(--lms-space-6);
-}
-
-@media (min-width: 1024px) {
-  .lms-topbar {
-    padding-left: var(--lms-space-6);
-    padding-right: var(--lms-space-6);
-  }
-}
-
 .lms-main-content {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: var(--lms-space-6) var(--lms-space-4);
   display: flex;
   flex-direction: column;
   gap: var(--lms-space-8);
 }
-
 @media (min-width: 1024px) {
   .lms-main-content {
     padding: var(--lms-space-8) var(--lms-space-8);
   }
+}
+
+/* ── Top Navigation Bar ────────────────────────────────── */
+.lms-topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 60px;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--neutral-200);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.lms-topnav-inner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--lms-space-4);
+  gap: var(--lms-space-4);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .lms-topnav-inner {
+    padding: 0 var(--lms-space-6);
+  }
+}
+.lms-topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--lms-space-2);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.lms-topnav-variant-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 82, 163, 0.1);
+  color: var(--primary-color);
+}
+.lms-topnav-links {
+  display: none;
+  align-items: center;
+  gap: var(--lms-space-1);
+  flex: 1;
+  margin-left: var(--lms-space-4);
+}
+@media (min-width: 768px) {
+  .lms-topnav-links {
+    display: flex;
+  }
+}
+.lms-topnav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--lms-space-3);
+  height: 60px;
+  font-size: var(--lms-body-sm);
+  font-weight: 500;
+  color: var(--neutral-600);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.lms-topnav-link:hover {
+  color: var(--neutral-900);
+}
+.lms-topnav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+.lms-topnav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--lms-space-3);
+  right: var(--lms-space-3);
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 2px 2px 0 0;
+}
+.lms-topnav-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9px;
+  color: white;
+  background: var(--primary-color);
+}
+.lms-topnav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--lms-space-2);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.lms-topnav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: hidden;
+  background: rgba(0, 82, 163, 0.1);
+  color: var(--primary-color);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.lms-topnav-avatar-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+.lms-topnav-logout {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--neutral-500);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lms-topnav-logout:hover {
+  background: rgba(220, 53, 69, 0.08);
+  color: #b91c1c;
+}
+@media (min-width: 768px) {
+  .lms-topnav-logout {
+    display: flex;
+  }
+}
+.lms-topnav-hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--neutral-600);
+  cursor: pointer;
+}
+@media (min-width: 768px) {
+  .lms-topnav-hamburger {
+    display: none;
+  }
+}
+
+/* Mobile dropdown */
+.lms-topnav-mobile {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--neutral-200);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: var(--lms-space-2) 0;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+.lms-topnav-mobile-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: var(--lms-space-3) var(--lms-space-5);
+  font-size: var(--lms-body-sm);
+  font-weight: 500;
+  color: var(--neutral-600);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  min-height: 44px;
+  text-align: left;
+}
+.lms-topnav-mobile-link:hover {
+  background: var(--neutral-100);
+}
+.lms-topnav-mobile-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  background: rgba(0, 82, 163, 0.06);
+}
+.lms-topnav-mobile-footer {
+  border-top: 1px solid var(--neutral-100);
+  margin-top: var(--lms-space-2);
+  padding-top: var(--lms-space-2);
+}
+.lms-topnav-mobile-user {
+  display: flex;
+  align-items: center;
+  gap: var(--lms-space-3);
+  padding: var(--lms-space-3) var(--lms-space-5);
+  text-decoration: none;
+  color: var(--neutral-700);
 }
 
 .lms-card {
@@ -3912,47 +4112,7 @@ select.lms-form-select.border-token:focus {
 }
 
 /* LMS sidebar (layout) */
-.lms-sidebar {
-  background: var(--background-color);
-  border-right: 1px solid var(--neutral-200);
-}
-.lms-sidebar-header {
-  border-bottom: 1px solid var(--neutral-100);
-  padding: var(--lms-space-4) var(--lms-space-4);
-  min-height: 3.5rem;
-  background: linear-gradient(180deg, rgba(0, 82, 163, 0.04) 0%, transparent 100%);
-}
-.lms-sidebar nav {
-  padding: var(--lms-space-4) var(--lms-space-2);
-}
-.lms-sidebar-link {
-  padding: var(--lms-space-2) var(--lms-space-3);
-  min-height: 44px;
-  border-radius: 0.5rem;
-  font-size: var(--lms-body-sm);
-  font-weight: 500;
-  color: var(--neutral-600);
-  transition: background-color 0.2s, color 0.2s;
-}
-.lms-sidebar-link:hover {
-  background-color: var(--neutral-100);
-  color: var(--neutral-900);
-}
-.lms-sidebar-link.active {
-  background-color: rgba(0, 82, 163, 0.08);
-  color: var(--primary-color);
-  border-left: 3px solid var(--primary-color);
-  padding-left: calc(var(--lms-space-3) - 3px);
-  font-weight: 600;
-}
-.lms-sidebar-user {
-  border-top: 1px solid var(--neutral-100);
-  padding: var(--lms-space-4);
-}
-.lms-sidebar-user button:hover {
-  background-color: rgba(220, 53, 69, 0.08);
-  color: #b91c1c;
-}
+/* sidebar styles removed — using top nav */
 
 /* LMS stat cards */
 .lms-stat-card {
@@ -5303,15 +5463,7 @@ textarea.lms-form-textarea.border-token {
 }
 
 /* Sidebar badge (Facilitator label) */
-.lms-sidebar-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-  color: var(--primary-color);
-  white-space: nowrap;
-}
+/* .lms-sidebar-badge removed — using .lms-topnav-variant-badge */
 
 /* Stat cards — tighter on very small screens */
 @media (max-width: 380px) {

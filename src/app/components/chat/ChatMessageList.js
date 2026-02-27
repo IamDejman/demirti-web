@@ -115,7 +115,7 @@ export default function ChatMessageList({
             </p>
           ) : (
             messages.map((m) => {
-              const isSelf = currentUserId && m.user_id === currentUserId;
+              const isSelf = currentUserId && String(m.sender_id || m.user_id) === String(currentUserId);
               return (
                 <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
                   <p className="lms-chat-sender">{isSelf ? 'You' : (m.first_name || m.email)}</p>

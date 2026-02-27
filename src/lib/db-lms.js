@@ -486,6 +486,19 @@ export async function initializeLmsSchema() {
   await sql`CREATE INDEX IF NOT EXISTS idx_announcements_cohort_id ON announcements(cohort_id);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at);`.catch(() => {});
 
+  // --- announcement reads ---
+  await sql`
+    CREATE TABLE IF NOT EXISTS announcement_reads (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      announcement_id UUID NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+      read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, announcement_id)
+    );
+  `.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_user ON announcement_reads(user_id);`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement ON announcement_reads(announcement_id);`.catch(() => {});
+
   // --- notifications ---
   await sql`
     CREATE TABLE IF NOT EXISTS notifications (
@@ -1774,6 +1787,55 @@ export async function getAnnouncementsForUser(userId, role, limit = 50) {
     LIMIT ${limit};
   `;
   return result.rows;
+}
+
+export async function getUnreadAnnouncementCount(userId, role) {
+  await ensureLmsSchema();
+  const cohortIds = await getCohortIdsForUser(userId, role);
+  if (!cohortIds || cohortIds.length === 0) {
+    const result = await sql`
+      SELECT COUNT(*) AS count
+      FROM announcements a
+      WHERE a.is_published = true
+        AND (a.publish_at IS NULL OR a.publish_at <= CURRENT_TIMESTAMP)
+        AND a.scope = 'system'
+        AND NOT EXISTS (
+          SELECT 1 FROM announcement_reads ar
+          WHERE ar.announcement_id = a.id AND ar.user_id = ${userId}
+        );
+    `;
+    return parseInt(result.rows[0]?.count ?? 0, 10);
+  }
+  const result = await sql`
+    SELECT COUNT(*) AS count
+    FROM announcements a
+    WHERE a.is_published = true
+      AND (a.publish_at IS NULL OR a.publish_at <= CURRENT_TIMESTAMP)
+      AND (
+        a.scope = 'system'
+        OR (a.scope = 'track' AND a.track_id IN (
+          SELECT DISTINCT track_id FROM cohorts WHERE id = ANY(${cohortIds})
+        ))
+        OR (a.scope = 'cohort' AND a.cohort_id = ANY(${cohortIds}))
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM announcement_reads ar
+        WHERE ar.announcement_id = a.id AND ar.user_id = ${userId}
+      );
+  `;
+  return parseInt(result.rows[0]?.count ?? 0, 10);
+}
+
+export async function markAnnouncementsRead(userId, announcementIds) {
+  await ensureLmsSchema();
+  if (!announcementIds || announcementIds.length === 0) return;
+  for (const aid of announcementIds) {
+    await sql`
+      INSERT INTO announcement_reads (user_id, announcement_id)
+      VALUES (${userId}, ${aid})
+      ON CONFLICT (user_id, announcement_id) DO NOTHING;
+    `.catch(() => {});
+  }
 }
 
 export async function createAnnouncementNotifications(announcement) {

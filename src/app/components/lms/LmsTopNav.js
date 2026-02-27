@@ -9,7 +9,7 @@ import { getLmsAuthHeaders } from '@/lib/authClient';
 const STUDENT_NAV = [
   { href: '/dashboard', label: 'Home' },
   { href: '/dashboard/classroom', label: 'Classroom' },
-  { href: '/dashboard/announcements', label: 'Announcements' },
+  { href: '/dashboard/announcements', label: 'Announcements', badgeKey: 'unreadAnnouncements' },
   { href: '/dashboard/chat', label: 'Chat' },
   { href: '/dashboard/portfolio', label: 'Portfolio' },
 ];
@@ -22,7 +22,7 @@ const FACILITATOR_NAV = [
   { href: '/facilitator/chat', label: 'Chat' },
 ];
 
-export default function LmsTopNav({ variant = 'student', user, pendingCount = 0, topBarContent }) {
+export default function LmsTopNav({ variant = 'student', user, pendingCount = 0, topBarContent, unreadAnnouncements = 0 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,7 +73,8 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
           <nav className="lms-topnav-links">
             {navItems.map((item) => {
               const active = isActive(item.href);
-              const badge = item.badgeKey === 'pendingCount' && pendingCount > 0 ? pendingCount : null;
+              const badgeCounts = { pendingCount, unreadAnnouncements };
+              const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
               return (
                 <Link
                   key={item.href}
@@ -82,7 +83,7 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
                 >
                   {item.label}
                   {badge != null && (
-                    <span className="lms-topnav-badge">{badge}</span>
+                    <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
                   )}
                 </Link>
               );
@@ -151,7 +152,8 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
           <nav className="lms-topnav-mobile">
             {navItems.map((item) => {
               const active = isActive(item.href);
-              const badge = item.badgeKey === 'pendingCount' && pendingCount > 0 ? pendingCount : null;
+              const badgeCounts = { pendingCount, unreadAnnouncements };
+              const badge = item.badgeKey && badgeCounts[item.badgeKey] > 0 ? badgeCounts[item.badgeKey] : null;
               return (
                 <Link
                   key={item.href}
@@ -161,7 +163,7 @@ export default function LmsTopNav({ variant = 'student', user, pendingCount = 0,
                 >
                   {item.label}
                   {badge != null && (
-                    <span className="lms-topnav-badge">{badge}</span>
+                    <span className="lms-topnav-badge">{badge > 99 ? '99+' : badge}</span>
                   )}
                 </Link>
               );

@@ -1682,6 +1682,14 @@ export async function getLiveClassByWeekId(weekId) {
   return result.rows[0] || null;
 }
 
+export async function getLiveClassesByWeekId(weekId) {
+  await ensureLmsSchema();
+  const result = await sql`
+    SELECT * FROM live_classes WHERE week_id = ${weekId} ORDER BY scheduled_at ASC;
+  `;
+  return result.rows;
+}
+
 export async function createLiveClass({ weekId, cohortId, scheduledAt, endTime, googleMeetLink }) {
   await ensureLmsSchema();
   if (!liveClassEndTimeColAdded) {

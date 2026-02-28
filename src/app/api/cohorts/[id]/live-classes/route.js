@@ -4,6 +4,7 @@ import { getCohortById, getLiveClassesByCohort, getCohortFacilitators, createLiv
 import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -55,6 +56,17 @@ export async function POST(request, { params }) {
       endTime: endTime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'live_class.created',
+      targetType: 'live_class',
+      targetId: liveClass.id,
+      details: { cohort_id: id, week_id: weekId, scheduled_at: scheduledAt, end_time: endTime || null },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ liveClass });
   } catch (e) {
     reportError(e, { route: 'POST /api/cohorts/[id]/live-classes' });

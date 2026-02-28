@@ -7,6 +7,7 @@ import { sql } from '@vercel/postgres';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendFacilitatorWelcomeEmail } from '@/lib/notifications';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -64,6 +65,17 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'facilitatorId or email is required' }, { status: 400 });
     }
     const facilitators = await addCohortFacilitator(id, userId);
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'facilitator.assigned',
+      targetType: 'cohort',
+      targetId: id,
+      details: { facilitator_email: facilitatorUser?.email || email, cohort_name: cohort.name, is_new_user: isNewUser },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     if (facilitatorUser) {
       sendFacilitatorWelcomeEmail({
         recipient: facilitatorUser,
@@ -91,6 +103,17 @@ export async function DELETE(request, { params }) {
     }
     await removeCohortFacilitator(id, facilitatorId);
     const facilitators = await getCohortFacilitators(id);
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'facilitator.removed',
+      targetType: 'cohort',
+      targetId: id,
+      details: { facilitator_id: facilitatorId },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ facilitators });
   } catch (e) {
     reportError(e, { route: 'DELETE /api/cohorts/[id]/facilitators' });

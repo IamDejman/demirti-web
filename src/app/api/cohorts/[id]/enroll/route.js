@@ -7,6 +7,7 @@ import { sql } from '@vercel/postgres';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendEnrollmentEmail } from '@/lib/notifications';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function POST(request, { params }) {
   try {
@@ -56,6 +57,16 @@ export async function POST(request, { params }) {
     }
 
     const enrollment = await enrollStudentInCohort(id, userId, applicationId || null);
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'student.enrolled',
+      targetType: 'cohort',
+      targetId: id,
+      details: { student_email: enrolledUser?.email || email, cohort_name: cohort.name, is_new_user: isNewUser },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
 
     // Send welcome/enrollment email (non-blocking)
     if (enrolledUser?.email) {

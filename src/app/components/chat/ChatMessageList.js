@@ -18,6 +18,8 @@ export default function ChatMessageList({
   loadRooms,
   setSelectedRoom,
   currentUserId,
+  sending = false,
+  onDeleteMessage,
 }) {
   const scrollRef = useRef(null);
 
@@ -124,7 +126,15 @@ export default function ChatMessageList({
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span className="lms-chat-time">{formatTime(m.created_at)}</span>
-                    {!isSelf && (
+                    {isSelf ? (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteMessage?.(m.id)}
+                        style={{ fontSize: '0.6875rem', color: 'var(--neutral-400)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        Delete
+                      </button>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => fetch(`/api/chat/messages/${m.id}/report`, {
@@ -153,9 +163,10 @@ export default function ChatMessageList({
             onChange={(e) => setMessageText(e.target.value)}
             className="lms-input"
             style={{ flex: 1 }}
+            disabled={sending}
           />
-          <button type="submit" className="lms-btn lms-btn-primary" disabled={!messageText.trim()}>
-            Send
+          <button type="submit" className="lms-btn lms-btn-primary" disabled={!messageText.trim() || sending}>
+            {sending ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>

@@ -14,14 +14,14 @@ export async function DELETE(request, { params }) {
     if (!id) return NextResponse.json({ error: 'Message ID required' }, { status: 400 });
 
     const msgRes = await sql`
-      SELECT id, user_id, is_deleted FROM chat_messages WHERE id = ${id} LIMIT 1;
+      SELECT id, sender_id, is_deleted FROM chat_messages WHERE id = ${id} LIMIT 1;
     `;
     if (msgRes.rows.length === 0) {
       return NextResponse.json({ error: 'Message not found' }, { status: 404 });
     }
 
     const message = msgRes.rows[0];
-    const isOwner = String(message.user_id) === String(user.id);
+    const isOwner = String(message.sender_id) === String(user.id);
     const isPrivileged = user.role === 'admin' || user.role === 'facilitator';
 
     if (!isOwner && !isPrivileged) {

@@ -3,6 +3,7 @@ import { getLiveClassById, deleteLiveClass, updateLiveClass, getCohortFacilitato
 import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserFromRequest } from '@/lib/auth';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function PUT(request, { params }) {
   try {
@@ -26,6 +27,17 @@ export async function PUT(request, { params }) {
       endTime: endTime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'live_class.updated',
+      targetType: 'live_class',
+      targetId: id,
+      details: { cohort_id: liveClass.cohort_id, scheduled_at: scheduledAt, end_time: endTime || null },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ liveClass: updated });
   } catch (e) {
     reportError(e, { route: 'PUT /api/live-classes/[id]' });
@@ -47,6 +59,17 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     await deleteLiveClass(id);
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'live_class.deleted',
+      targetType: 'live_class',
+      targetId: id,
+      details: { cohort_id: liveClass.cohort_id, scheduled_at: liveClass.scheduled_at },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ deleted: true });
   } catch (e) {
     reportError(e, { route: 'DELETE /api/live-classes/[id]' });

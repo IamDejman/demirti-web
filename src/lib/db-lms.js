@@ -8,6 +8,8 @@ import { ensureDatabaseInitialized } from './db';
 
 let lmsInitialized = false;
 let lmsInitPromise = null;
+let liveClassEndTimeColAdded = false;
+let cohortStudentsConstraintFixed = false;
 
 /** Ensure base DB is up, then run LMS schema if needed */
 export async function ensureLmsSchema() {
@@ -1182,6 +1184,11 @@ export async function getCohortStudents(cohortId, limit = 500) {
 
 export async function enrollStudentInCohort(cohortId, studentId, applicationId = null) {
   await ensureLmsSchema();
+  if (!cohortStudentsConstraintFixed) {
+    await sql`ALTER TABLE cohort_students DROP CONSTRAINT IF EXISTS cohort_students_cohort_id_key;`.catch(() => {});
+    await sql`ALTER TABLE cohort_students ADD CONSTRAINT cohort_students_cohort_id_student_id_key UNIQUE(cohort_id, student_id);`.catch(() => {});
+    cohortStudentsConstraintFixed = true;
+  }
   const result = await sql`
     INSERT INTO cohort_students (cohort_id, student_id, application_id)
     VALUES (${cohortId}, ${studentId}, ${applicationId})
@@ -1677,6 +1684,10 @@ export async function getLiveClassByWeekId(weekId) {
 
 export async function createLiveClass({ weekId, cohortId, scheduledAt, endTime, googleMeetLink }) {
   await ensureLmsSchema();
+  if (!liveClassEndTimeColAdded) {
+    await sql`ALTER TABLE live_classes ADD COLUMN IF NOT EXISTS end_time TIMESTAMP;`.catch(() => {});
+    liveClassEndTimeColAdded = true;
+  }
   const result = await sql`
     INSERT INTO live_classes (week_id, cohort_id, scheduled_at, end_time, google_meet_link, status)
     VALUES (${weekId}, ${cohortId}, ${scheduledAt}, ${endTime || null}, ${googleMeetLink || null}, 'scheduled')

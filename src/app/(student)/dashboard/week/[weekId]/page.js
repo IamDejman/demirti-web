@@ -123,35 +123,44 @@ export default function WeekPage() {
         );
       })()}
 
-      {week.live_class_datetime && (
-        <LmsCard title="Live class" subtitle={formatDate(week.live_class_datetime)} icon={LmsIcons.video}>
-          {week.google_meet_link && (
-            <a
-              href={week.google_meet_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lms-btn lms-btn-primary mt-4"
-              onClick={async () => {
-                try {
-                  await fetch(`/api/live-classes/${week.live_class_id}/join-click`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                    body: '{}',
-                  });
-                } catch {}
-              }}
+      {(week.live_classes?.length > 0 || week.live_class_datetime) && (
+        <>
+          {(week.live_classes?.length > 0 ? week.live_classes : [{ id: week.live_class_id, scheduled_at: week.live_class_datetime, end_time: null, google_meet_link: week.google_meet_link, recording_url: week.recording_url }]).map((lc, idx) => (
+            <LmsCard
+              key={lc.id || idx}
+              title={week.live_classes?.length > 1 ? `Live class ${idx + 1}` : 'Live class'}
+              subtitle={lc.scheduled_at ? (lc.end_time ? `${formatDate(lc.scheduled_at)} – ${formatDate(lc.end_time)}` : formatDate(lc.scheduled_at)) : ''}
+              icon={LmsIcons.video}
             >
-              Join class
-            </a>
-          )}
-          {week.recording_url && (
-            <div className="mt-3">
-              <a href={week.recording_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm">
-                Watch recording
-              </a>
-            </div>
-          )}
-        </LmsCard>
+              {lc.google_meet_link && (
+                <a
+                  href={lc.google_meet_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lms-btn lms-btn-primary mt-4"
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/live-classes/${lc.id}/join-click`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                        body: '{}',
+                      });
+                    } catch {}
+                  }}
+                >
+                  Join class
+                </a>
+              )}
+              {lc.recording_url && (
+                <div className="mt-3">
+                  <a href={lc.recording_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm">
+                    Watch recording
+                  </a>
+                </div>
+              )}
+            </LmsCard>
+          ))}
+        </>
       )}
 
       {checklistItems.length > 0 && (

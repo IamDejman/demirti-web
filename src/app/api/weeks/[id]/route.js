@@ -10,6 +10,7 @@ import {
   getCohortById,
   getCohortFacilitators,
   getLiveClassByWeekId,
+  getLiveClassesByWeekId,
   isStudentInCohort,
 } from '@/lib/db-lms';
 import { requireAdminOrUser } from '@/lib/adminAuth';
@@ -29,11 +30,11 @@ export async function GET(request, { params }) {
     const checklistPromise = (user.role === 'student' || user.role === 'alumni') && userIdIsUuid
       ? getStudentChecklistProgress(user.id, id)
       : getChecklistItemsByWeek(id);
-    const [cohort, facilitators, isStudent, liveClass, contentItems, materials, checklistItems] = await Promise.all([
+    const [cohort, facilitators, isStudent, liveClasses, contentItems, materials, checklistItems] = await Promise.all([
       getCohortById(week.cohort_id),
       getCohortFacilitators(week.cohort_id),
       isStudentPromise,
-      getLiveClassByWeekId(id),
+      getLiveClassesByWeekId(id),
       getContentItemsByWeek(id),
       getMaterialsByWeek(id),
       checklistPromise,
@@ -46,14 +47,25 @@ export async function GET(request, { params }) {
     if ((user.role === 'student' || user.role === 'alumni') && week.is_locked && week.unlock_date && new Date(week.unlock_date) > new Date()) {
       return NextResponse.json({ error: 'Week is locked' }, { status: 403 });
     }
+    const firstLiveClass = liveClasses[0] || null;
     return NextResponse.json({
       week: {
         ...week,
         cohort,
-        live_class_datetime: liveClass?.scheduled_at ?? week.live_class_datetime,
-        google_meet_link: liveClass?.google_meet_link ?? week.google_meet_link,
-        live_class_id: liveClass?.id,
-        recording_url: liveClass?.recording_url ?? null,
+        // Legacy single-class fields (kept for backward compat)
+        live_class_datetime: firstLiveClass?.scheduled_at ?? week.live_class_datetime,
+        google_meet_link: firstLiveClass?.google_meet_link ?? week.google_meet_link,
+        live_class_id: firstLiveClass?.id,
+        recording_url: firstLiveClass?.recording_url ?? null,
+        // Full list of live classes for this week
+        live_classes: liveClasses.map((lc) => ({
+          id: lc.id,
+          scheduled_at: lc.scheduled_at,
+          end_time: lc.end_time,
+          google_meet_link: lc.google_meet_link,
+          recording_url: lc.recording_url,
+          status: lc.status,
+        })),
       },
       contentItems,
       materials,

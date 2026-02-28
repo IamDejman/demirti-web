@@ -70,7 +70,7 @@ export default function AdminCohortDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const APPLICATIONS_PAGE_SIZE = 10;
   const [applicationsPage, setApplicationsPage] = useState(1);
-  const [facilitatorEmail, setFacilitatorEmail] = useState('');
+  const [facilitatorForm, setFacilitatorForm] = useState({ email: '', firstName: '', lastName: '' });
   const [facilitatorMessage, setFacilitatorMessage] = useState('');
   const [assigningFacilitator, setAssigningFacilitator] = useState(false);
   const [weekForm, setWeekForm] = useState({
@@ -253,20 +253,24 @@ export default function AdminCohortDetailPage() {
 
   const handleAssignFacilitator = async (e) => {
     e.preventDefault();
-    if (!facilitatorEmail?.trim()) return;
+    if (!facilitatorForm.email?.trim()) return;
     setAssigningFacilitator(true);
     setFacilitatorMessage('');
     try {
       const res = await fetch(`/api/cohorts/${id}/facilitators`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ email: facilitatorEmail.trim() }),
+        body: JSON.stringify({
+          email: facilitatorForm.email.trim(),
+          firstName: facilitatorForm.firstName.trim() || null,
+          lastName: facilitatorForm.lastName.trim() || null,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.facilitators) {
         setFacilitators(data.facilitators);
         setFacilitatorMessage('Facilitator assigned.');
-        setFacilitatorEmail('');
+        setFacilitatorForm({ email: '', firstName: '', lastName: '' });
       } else {
         setFacilitatorMessage(data.error || 'Assign failed');
       }
@@ -814,14 +818,20 @@ export default function AdminCohortDetailPage() {
 
         <div className="admin-card">
           <h2 className="admin-card-title">Facilitators</h2>
-          <form onSubmit={handleAssignFacilitator} className="admin-form-group admin-action-group admin-cohort-enroll-form">
-            <div className="admin-form-group admin-cohort-enroll-input">
-              <label className="admin-form-label">Facilitator email</label>
-              <div className="admin-form-field">
-                <input type="email" value={facilitatorEmail} onChange={(e) => setFacilitatorEmail(e.target.value)} placeholder="facilitator@example.com" />
-              </div>
+          <form onSubmit={handleAssignFacilitator} className="admin-form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+            <div className="admin-form-field" style={{ flex: '1 1 140px' }}>
+              <label className="admin-form-label">First name</label>
+              <input type="text" value={facilitatorForm.firstName} onChange={(e) => setFacilitatorForm((f) => ({ ...f, firstName: e.target.value }))} placeholder="First name" />
             </div>
-            <button type="submit" disabled={assigningFacilitator} className="admin-btn admin-btn-primary">{assigningFacilitator ? 'Assigning...' : 'Assign'}</button>
+            <div className="admin-form-field" style={{ flex: '1 1 140px' }}>
+              <label className="admin-form-label">Last name</label>
+              <input type="text" value={facilitatorForm.lastName} onChange={(e) => setFacilitatorForm((f) => ({ ...f, lastName: e.target.value }))} placeholder="Last name" />
+            </div>
+            <div className="admin-form-field" style={{ flex: '2 1 200px' }}>
+              <label className="admin-form-label">Email address</label>
+              <input type="email" value={facilitatorForm.email} onChange={(e) => setFacilitatorForm((f) => ({ ...f, email: e.target.value }))} placeholder="facilitator@example.com" required />
+            </div>
+            <button type="submit" disabled={assigningFacilitator} className="admin-btn admin-btn-primary" style={{ flexShrink: 0 }}>{assigningFacilitator ? 'Assigning...' : 'Assign'}</button>
           </form>
           {isSuccessFeedback(facilitatorMessage) && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: '#059669' }}>{facilitatorMessage}</p>}
 

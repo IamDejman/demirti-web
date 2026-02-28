@@ -128,6 +128,19 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
   const startDate = cohort?.start_date ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'Africa/Lagos' }).format(new Date(cohort.start_date)) : '';
   const endDate = cohort?.end_date ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'Africa/Lagos' }).format(new Date(cohort.end_date)) : '';
 
+  const platformFeatures = `
+    <div style="background:#f8f9fa; border-radius:8px; padding:16px; margin-bottom:16px;">
+      <p style="margin:0 0 10px; font-weight:600;">Here's what you'll find on your dashboard:</p>
+      <ul style="margin:0; padding-left:20px; line-height:2;">
+        <li>📅 <strong>Live classes</strong> — links to join scheduled sessions will appear here</li>
+        <li>📢 <strong>Announcements</strong> — important updates from your facilitator</li>
+        <li>💬 <strong>Chat</strong> — connect with your cohort and facilitators</li>
+        <li>📝 <strong>Assignments</strong> — submit your work and track your progress</li>
+        <li>✅ <strong>Weekly checklists</strong> — stay on top of each week's tasks</li>
+      </ul>
+    </div>
+  `;
+
   if (tempPassword) {
     // New user — send credentials
     const subject = `Welcome to CVERSE — Your Login Details for ${cohortName}`;
@@ -142,6 +155,7 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
           <p style="margin:0;"><strong>Temporary Password:</strong> <span style="font-family:monospace; font-size:1.1em; letter-spacing:0.05em;">${escapeHtml(tempPassword)}</span></p>
         </div>
         <p style="margin:0 0 16px; color:#dc2626;">You will be asked to set a new password on your first login.</p>
+        ${platformFeatures}
         <a href="${baseUrl}/login" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Log in to CVERSE</a>
         <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to your cohort admin.</p>
       </div>
@@ -159,6 +173,7 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
         <h2 style="color:#0066cc; margin-bottom:8px;">Enrollment Confirmation</h2>
         <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
         <p style="margin:0 0 16px;">You have been enrolled in <strong>${escapeHtml(cohortName)}</strong>${startDate ? ` starting ${escapeHtml(startDate)}` : ''}${endDate ? ` and running until ${escapeHtml(endDate)}` : ''}.</p>
+        ${platformFeatures}
         <a href="${baseUrl}/dashboard" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Go to Dashboard</a>
         <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to your cohort admin.</p>
       </div>
@@ -167,6 +182,54 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
       await resend.emails.send({ from: fromEmail, to: recipient.email, subject, html });
     } catch (error) {
       console.error('Resend enrollment notification email failed', error);
+    }
+  }
+}
+
+export async function sendFacilitatorWelcomeEmail({ recipient, cohort, tempPassword }) {
+  if (!process.env.RESEND_API_KEY || !recipient?.email) return;
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'admin@demirti.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com';
+  const firstName = recipient.first_name || recipient.firstName || '';
+  const cohortName = cohort?.name || 'a cohort';
+
+  if (tempPassword) {
+    const subject = `Welcome to CVERSE — Your Facilitator Login Details`;
+    const html = `
+      <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
+        <h2 style="color:#0066cc; margin-bottom:8px;">Welcome to CVERSE Academy!</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
+        <p style="margin:0 0 16px;">You have been added as a <strong>Facilitator</strong> for <strong>${escapeHtml(cohortName)}</strong>.</p>
+        <p style="margin:0 0 8px;">Here are your login details:</p>
+        <div style="background:#f0f4ff; border:1px solid #d0dff7; padding:16px; border-radius:8px; margin-bottom:16px;">
+          <p style="margin:0 0 6px;"><strong>Email:</strong> ${escapeHtml(recipient.email)}</p>
+          <p style="margin:0;"><strong>Temporary Password:</strong> <span style="font-family:monospace; font-size:1.1em; letter-spacing:0.05em;">${escapeHtml(tempPassword)}</span></p>
+        </div>
+        <p style="margin:0 0 16px; color:#dc2626;">You will be asked to set a new password on your first login.</p>
+        <a href="${baseUrl}/login" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Log in to CVERSE</a>
+        <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to the admin.</p>
+      </div>
+    `;
+    try {
+      await resend.emails.send({ from: fromEmail, to: recipient.email, subject, html });
+    } catch (error) {
+      console.error('Resend facilitator welcome email failed', error);
+    }
+  } else {
+    const subject = `You've been added as a Facilitator for ${cohortName}`;
+    const html = `
+      <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
+        <h2 style="color:#0066cc; margin-bottom:8px;">Facilitator Assignment</h2>
+        <p style="margin:0 0 16px;">Hello ${escapeHtml(firstName) || 'there'},</p>
+        <p style="margin:0 0 16px;">You have been added as a <strong>Facilitator</strong> for <strong>${escapeHtml(cohortName)}</strong>.</p>
+        <a href="${baseUrl}/facilitator" style="display:inline-block; background:#0066cc; color:#fff; padding:10px 24px; border-radius:6px; text-decoration:none; font-weight:600;">Go to Facilitator Dashboard</a>
+        <p style="margin-top:24px; font-size:0.875rem; color:#6b7280;">If you have any questions, reply to this email or reach out to the admin.</p>
+      </div>
+    `;
+    try {
+      await resend.emails.send({ from: fromEmail, to: recipient.email, subject, html });
+    } catch (error) {
+      console.error('Resend facilitator notification email failed', error);
     }
   }
 }

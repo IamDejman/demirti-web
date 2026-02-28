@@ -4,6 +4,9 @@ import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserByEmail, createUser } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import { sendFacilitatorWelcomeEmail } from '@/lib/notifications';
 
 export async function GET(request, { params }) {
   try {
@@ -34,9 +37,15 @@ export async function POST(request, { params }) {
     const body = await request.json();
     const { facilitatorId, email, firstName, lastName } = body;
     let userId = facilitatorId;
+    let tempPassword = null;
+    let facilitatorUser = null;
+    let isNewUser = false;
     if (!userId && email) {
       let user = await getUserByEmail(email);
       if (!user) {
+        isNewUser = true;
+        tempPassword = crypto.randomBytes(6).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+        const passwordHash = await bcrypt.hash(tempPassword, 10);
         user = await createUser({
           email: email.trim(),
           password: null,
@@ -44,15 +53,24 @@ export async function POST(request, { params }) {
           lastName: lastName?.trim() || null,
           role: 'facilitator',
         });
+        await sql`UPDATE users SET password_hash = ${passwordHash}, must_change_password = true WHERE id = ${user.id}`;
       } else if (user.role !== 'facilitator') {
         await sql`UPDATE users SET role = 'facilitator' WHERE id = ${user.id}`;
       }
+      facilitatorUser = user;
       userId = user.id;
     }
     if (!userId) {
       return NextResponse.json({ error: 'facilitatorId or email is required' }, { status: 400 });
     }
     const facilitators = await addCohortFacilitator(id, userId);
+    if (facilitatorUser) {
+      sendFacilitatorWelcomeEmail({
+        recipient: facilitatorUser,
+        cohort,
+        tempPassword: isNewUser ? tempPassword : null,
+      }).catch((err) => reportError(err, { route: 'POST /api/cohorts/[id]/facilitators', context: 'email' }));
+    }
     return NextResponse.json({ facilitators });
   } catch (e) {
     reportError(e, { route: 'POST /api/cohorts/[id]/facilitators' });

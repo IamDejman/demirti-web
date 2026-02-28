@@ -22,6 +22,7 @@ export default function ChatPanel({ students, currentUserId, mode = 'all' }) {
   const [userResults, setUserResults] = useState([]);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   const loadRooms = useCallback(async () => {
     const res = await fetch('/api/chat/rooms', { headers: getLmsAuthHeaders() });
@@ -87,14 +88,28 @@ export default function ChatPanel({ students, currentUserId, mode = 'all' }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!messageText.trim() || !selectedRoom) return;
-    await fetch(`/api/chat/rooms/${selectedRoom.id}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-      body: JSON.stringify({ message: messageText.trim() }),
-    });
+    if (!messageText.trim() || !selectedRoom || sending) return;
+    const text = messageText.trim();
     setMessageText('');
-    await loadMessages(selectedRoom.id);
+    setSending(true);
+    try {
+      await fetch(`/api/chat/rooms/${selectedRoom.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+        body: JSON.stringify({ message: text }),
+      });
+      await loadMessages(selectedRoom.id);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    await fetch(`/api/chat/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: getLmsAuthHeaders(),
+    });
   };
 
   const handleLoadOlder = async () => {
@@ -159,6 +174,8 @@ export default function ChatPanel({ students, currentUserId, mode = 'all' }) {
         loadRooms={loadRooms}
         setSelectedRoom={setSelectedRoom}
         currentUserId={currentUserId}
+        sending={sending}
+        onDeleteMessage={handleDeleteMessage}
       />
     </div>
   );

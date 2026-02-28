@@ -3,6 +3,7 @@ import { createAssignment, getWeekById, getCohortFacilitators, createAssignmentN
 import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { recordAuditLog } from '@/lib/audit';
 import { sendAssignmentEmails } from '@/lib/notifications';
 import { sendPushNotifications } from '@/lib/push';
 
@@ -53,6 +54,16 @@ export async function POST(request) {
       createdBy,
     });
     await recordLmsEvent(createdBy ?? null, 'assignment_created', { assignmentId: assignment.id, cohortId: assignment.cohort_id });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'assignment.created',
+      targetType: 'assignment',
+      targetId: String(assignment.id),
+      details: { cohort_id: assignment.cohort_id, week_id: assignment.week_id, title: assignment.title, deadline_at: assignment.deadline_at },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
     const publishNow = assignment.is_published && (!assignment.publish_at || new Date(assignment.publish_at) <= new Date());
     if (publishNow) {
       const recipientsResult = await createAssignmentNotifications(assignment, 'assignment_posted');

@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres';
 import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { recordAuditLog } from '@/lib/audit';
 
 function toCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -61,6 +62,17 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unknown export type' }, { status: 400 });
     }
     const csv = toCsv(rows);
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'data.exported',
+      targetType: 'export',
+      targetId: type,
+      details: { export_type: type, row_count: rows.length },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return new NextResponse(csv, {
       headers: {
         'Content-Type': 'text/csv',

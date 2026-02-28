@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createOfficeHourSlot, getOfficeHourSlotsForFacilitator, getOfficeHourSlotsForStudent, getCohortIdsForUser } from '@/lib/db-lms';
 import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request) {
   try {
@@ -43,6 +44,17 @@ export async function POST(request) {
       meetingLink: meetingLink || null,
       capacity: capacity || 1,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'office_hours_slot.created',
+      targetType: 'office_hours_slot',
+      targetId: String(slot.id),
+      details: { cohort_id: cohortId || null, start_time: startTime, end_time: endTime, capacity: capacity || 1 },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ slot });
   } catch (e) {
     reportError(e, { route: 'POST /api/office-hours/slots' });

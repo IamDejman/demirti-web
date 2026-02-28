@@ -15,6 +15,7 @@ import {
 } from '@/lib/db-lms';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 import { isValidUuid } from '@/lib/validation';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -101,6 +102,17 @@ export async function PUT(request, { params }) {
       weekEndDate: body.weekEndDate,
       isLocked: body.isLocked,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'week.updated',
+      targetType: 'week',
+      targetId: id,
+      details: { cohort_id: week.cohort_id, title: body.title ?? week.title, is_locked: body.isLocked },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ week: updated });
   } catch (e) {
     reportError(e, { route: 'PUT /api/weeks/[id]' });

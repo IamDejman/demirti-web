@@ -3,6 +3,7 @@ import { getAssignmentById, updateAssignment, deleteAssignment, getCohortFacilit
 import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 import { isValidUuid } from '@/lib/validation';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -50,6 +51,17 @@ export async function PUT(request, { params }) {
       isPublished: body.isPublished,
       publishAt: body.publishAt,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'assignment.updated',
+      targetType: 'assignment',
+      targetId: id,
+      details: { cohort_id: assignment.cohort_id, title: body.title ?? assignment.title, is_published: body.isPublished },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ assignment: updated });
   } catch (e) {
     reportError(e, { route: 'PUT /api/assignments/[id]' });
@@ -71,6 +83,17 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     await deleteAssignment(id);
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'assignment.deleted',
+      targetType: 'assignment',
+      targetId: id,
+      details: { cohort_id: assignment.cohort_id, title: assignment.title },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (e) {
     reportError(e, { route: 'DELETE /api/assignments/[id]' });

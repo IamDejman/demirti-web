@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/adminAuth';
 import { reportError } from '@/lib/logger';
+import { recordAuditLog } from '@/lib/audit';
 import {
   getSponsoredApplicationById,
   updateSponsoredApplicationReviewStatus,
@@ -24,6 +25,15 @@ export async function PATCH(request, { params }) {
     if (action === 'mark_forfeited') {
       const updated = await markSponsoredApplicationForfeited(id);
       if (!updated) return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+      recordAuditLog({
+        userId: String(admin.id),
+        action: 'sponsored_application.forfeited',
+        targetType: 'sponsored_application',
+        targetId: String(id),
+        details: { email: updated.email },
+        actorEmail: admin.email,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+      }).catch(() => {});
       return NextResponse.json({ success: true, application: updated });
     }
 
@@ -40,6 +50,15 @@ export async function PATCH(request, { params }) {
         email: updated.email,
         firstName: updated.first_name
       });
+      recordAuditLog({
+        userId: String(admin.id),
+        action: 'sponsored_application.promoted_from_waitlist',
+        targetType: 'sponsored_application',
+        targetId: String(id),
+        details: { email: updated.email },
+        actorEmail: admin.email,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+      }).catch(() => {});
       return NextResponse.json({ success: true, application: updated });
     }
 
@@ -47,6 +66,15 @@ export async function PATCH(request, { params }) {
     if (action === 'confirm_spot' && linkedinPostUrl) {
       const updated = await updateSponsoredApplicationConfirmation(id, linkedinPostUrl);
       if (!updated) return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+      recordAuditLog({
+        userId: String(admin.id),
+        action: 'sponsored_application.spot_confirmed',
+        targetType: 'sponsored_application',
+        targetId: String(id),
+        details: { email: updated.email, linkedin_post_url: linkedinPostUrl },
+        actorEmail: admin.email,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+      }).catch(() => {});
       return NextResponse.json({ success: true, application: updated });
     }
 
@@ -72,6 +100,16 @@ export async function PATCH(request, { params }) {
     } else {
       await sendRejectionEmail(emailPayload);
     }
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: `sponsored_application.${reviewStatus}`,
+      targetType: 'sponsored_application',
+      targetId: String(id),
+      details: { email: updated.email, review_status: reviewStatus },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, application: updated });
   } catch (error) {

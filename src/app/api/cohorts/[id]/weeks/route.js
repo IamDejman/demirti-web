@@ -3,6 +3,7 @@ import { getCohortById, getWeeksByCohort, getCohortFacilitators, createWeek, isS
 import { reportError } from '@/lib/logger';
 import { requireAdminOrUser } from '@/lib/adminAuth';
 import { isValidUuid } from '@/lib/validation';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -68,6 +69,17 @@ export async function POST(request, { params }) {
       weekEndDate: weekEndDate || null,
       isLocked: isLocked ?? true,
     });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'week.created',
+      targetType: 'week',
+      targetId: String(week.id),
+      details: { cohort_id: id, cohort_name: cohort.name, week_number: weekNumber, title: title.trim() },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ week });
   } catch (e) {
     reportError(e, { route: 'POST /api/cohorts/[id]/weeks' });

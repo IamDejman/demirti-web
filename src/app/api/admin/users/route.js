@@ -5,6 +5,7 @@ import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { createUser } from '@/lib/auth';
 import { validatePassword } from '@/lib/passwordPolicy';
+import { recordAuditLog } from '@/lib/audit';
 
 const ALLOWED_ROLES = ['guest', 'student', 'facilitator', 'alumni', 'admin'];
 
@@ -33,6 +34,17 @@ export async function POST(request) {
       lastName: lastName?.trim() || null,
       role,
     });
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'user.created',
+      targetType: 'user',
+      targetId: String(user.id),
+      details: { email: user.email, role: user.role },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: {

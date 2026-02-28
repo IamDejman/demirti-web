@@ -3,6 +3,7 @@ import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmissio
 import { reportError } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { isAllowedFileType, isWithinSizeLimit } from '@/lib/storage';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function POST(request, { params }) {
   try {
@@ -48,6 +49,17 @@ export async function POST(request, { params }) {
       textContent: textContent || null,
     });
     await recordLmsEvent(user.id, 'assignment_submitted', { assignmentId: id, submissionId: submission.id });
+
+    recordAuditLog({
+      userId: String(user.id),
+      action: 'assignment.submitted',
+      targetType: 'assignment_submission',
+      targetId: String(submission.id),
+      details: { assignment_id: id, cohort_id: assignment.cohort_id, submission_type: submission.submission_type },
+      actorEmail: user.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ submission });
   } catch (e) {
     reportError(e, { route: 'POST /api/assignments/[id]/submit' });

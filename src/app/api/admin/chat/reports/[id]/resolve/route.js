@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres';
 import { reportError } from '@/lib/logger';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
+import { recordAuditLog } from '@/lib/audit';
 
 export async function POST(request, { params }) {
   try {
@@ -39,6 +40,16 @@ export async function POST(request, { params }) {
         WHERE id = ${id};
       `;
     }
+    recordAuditLog({
+      userId: String(admin.id),
+      action: `chat_report.${action}`,
+      targetType: 'message_report',
+      targetId: String(id),
+      details: { message_id: report.message_id, action },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (e) {
     reportError(e, { route: 'POST /api/admin/chat/reports/[id]/resolve' });

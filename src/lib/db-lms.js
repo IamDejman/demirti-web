@@ -1705,12 +1705,15 @@ export async function updateLiveClass(id, updates) {
   await ensureLmsSchema();
   const current = await getLiveClassById(id);
   if (!current) return null;
+  const weekId = updates.weekId !== undefined ? updates.weekId : current.week_id;
+  const scheduledAt = updates.scheduledAt !== undefined ? updates.scheduledAt : current.scheduled_at;
   const recordingUrl = updates.recordingUrl !== undefined ? updates.recordingUrl : current.recording_url;
   const status = updates.status !== undefined ? updates.status : current.status;
   const googleMeetLink = updates.googleMeetLink !== undefined ? updates.googleMeetLink : current.google_meet_link;
   const endTime = updates.endTime !== undefined ? updates.endTime : current.end_time;
   await sql`
     UPDATE live_classes SET
+      week_id = ${weekId}, scheduled_at = ${scheduledAt},
       recording_url = ${recordingUrl}, status = ${status}, google_meet_link = ${googleMeetLink},
       end_time = ${endTime || null},
       updated_at = CURRENT_TIMESTAMP

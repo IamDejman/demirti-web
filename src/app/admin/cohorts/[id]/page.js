@@ -467,8 +467,11 @@ export default function AdminCohortDetailPage() {
     if (weekData.week) setWeekDetails(weekData);
   };
 
-  // Convert datetime-local value (treated as WAT/UTC+1) to ISO string with +01:00 offset
-  const toWatIso = (val) => (val ? `${val}:00+01:00` : null);
+  // Parse datetime-local value as WAT (UTC+1) and return UTC ISO string for TIMESTAMP column
+  const toWatIso = (val) => {
+    if (!val) return null;
+    return new Date(`${val}:00+01:00`).toISOString();
+  };
 
   const handleCreateLiveClass = async (e) => {
     e.preventDefault();

@@ -106,6 +106,7 @@ export default function AdminCohortDetailPage() {
     endTime: '',
     googleMeetLink: '',
   });
+  const [editingLiveClassId, setEditingLiveClassId] = useState(null);
   const [lmsMessage, setLmsMessage] = useState('');
   const [savingWeek, setSavingWeek] = useState(false);
   const [savingContent, setSavingContent] = useState(false);
@@ -473,32 +474,80 @@ export default function AdminCohortDetailPage() {
     return new Date(`${val}:00+01:00`).toISOString();
   };
 
+  // Convert stored UTC ISO string back to WAT datetime-local string for editing
+  const toWatLocal = (isoStr) => {
+    if (!isoStr) return '';
+    const s = typeof isoStr === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(isoStr) ? isoStr.replace(' ', 'T') + 'Z' : isoStr;
+    const watMs = new Date(s).getTime() + 60 * 60 * 1000;
+    return new Date(watMs).toISOString().slice(0, 16);
+  };
+
+  const handleEditLiveClass = (lc) => {
+    setEditingLiveClassId(lc.id);
+    setLiveClassForm({
+      weekId: lc.week_id || '',
+      scheduledAt: toWatLocal(lc.scheduled_at),
+      endTime: toWatLocal(lc.end_time),
+      googleMeetLink: lc.google_meet_link || '',
+    });
+    setLmsMessage('');
+  };
+
+  const handleCancelEditLiveClass = () => {
+    setEditingLiveClassId(null);
+    setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+    setLmsMessage('');
+  };
+
   const handleCreateLiveClass = async (e) => {
     e.preventDefault();
     if (!liveClassForm.weekId || !liveClassForm.scheduledAt) return;
     setSavingLiveClass(true);
     setLmsMessage('');
     try {
-      const res = await fetch(`/api/cohorts/${id}/live-classes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({
-          weekId: liveClassForm.weekId,
-          scheduledAt: toWatIso(liveClassForm.scheduledAt),
-          endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
-          googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.liveClass) {
-        await refreshLiveClasses();
-        setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
-        setLmsMessage('Live class scheduled.');
+      let res, data;
+      if (editingLiveClassId) {
+        res = await fetch(`/api/live-classes/${editingLiveClassId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({
+            weekId: liveClassForm.weekId,
+            scheduledAt: toWatIso(liveClassForm.scheduledAt),
+            endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
+            googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
+          }),
+        });
+        data = await res.json();
+        if (res.ok && data.liveClass) {
+          await refreshLiveClasses();
+          setEditingLiveClassId(null);
+          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+          setLmsMessage('Live class updated.');
+        } else {
+          setLmsMessage(data.error || 'Failed to update live class');
+        }
       } else {
-        setLmsMessage(data.error || 'Failed to schedule live class');
+        res = await fetch(`/api/cohorts/${id}/live-classes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({
+            weekId: liveClassForm.weekId,
+            scheduledAt: toWatIso(liveClassForm.scheduledAt),
+            endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
+            googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
+          }),
+        });
+        data = await res.json();
+        if (res.ok && data.liveClass) {
+          await refreshLiveClasses();
+          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+          setLmsMessage('Live class scheduled.');
+        } else {
+          setLmsMessage(data.error || 'Failed to schedule live class');
+        }
       }
     } catch {
-      setLmsMessage('Failed to schedule live class');
+      setLmsMessage(editingLiveClassId ? 'Failed to update live class' : 'Failed to schedule live class');
     } finally {
       setSavingLiveClass(false);
     }
@@ -758,6 +807,9 @@ export default function AdminCohortDetailPage() {
           handleDeleteMaterial={handleDeleteMaterial}
           handleCreateLiveClass={handleCreateLiveClass}
           handleDeleteLiveClass={handleDeleteLiveClass}
+          handleEditLiveClass={handleEditLiveClass}
+          handleCancelEditLiveClass={handleCancelEditLiveClass}
+          editingLiveClassId={editingLiveClassId}
         />
 
         <div className="admin-card">

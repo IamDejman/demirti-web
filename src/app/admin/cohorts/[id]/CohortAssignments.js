@@ -16,7 +16,8 @@ function isSuccessFeedback(message) {
     lower.includes('scheduled') ||
     lower.includes('assigned') ||
     lower.includes('removed') ||
-    lower.includes('enrolled')
+    lower.includes('enrolled') ||
+    lower.includes('deleted')
   );
 }
 
@@ -39,6 +40,9 @@ export default function CohortAssignments({
   setLiveClassForm,
   liveClasses,
   handleDeleteLiveClass,
+  handleEditLiveClass,
+  handleCancelEditLiveClass,
+  editingLiveClassId,
   assignmentForm,
   setAssignmentForm,
   savingAssignment,
@@ -295,9 +299,16 @@ export default function CohortAssignments({
             <label className="admin-form-label">Google Meet link</label>
             <input type="text" placeholder="https://meet.google.com/..." value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
           </div>
-          <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary admin-cohort-live-submit" style={{ flexShrink: 0 }}>
-            {savingLiveClass ? 'Scheduling...' : 'Schedule live class'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+            <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary admin-cohort-live-submit">
+              {savingLiveClass ? (editingLiveClassId ? 'Saving...' : 'Scheduling...') : (editingLiveClassId ? 'Save changes' : 'Schedule live class')}
+            </button>
+            {editingLiveClassId && (
+              <button type="button" onClick={handleCancelEditLiveClass} className="admin-btn admin-btn-ghost">
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
 
         {liveClasses.length === 0 ? (
@@ -322,14 +333,25 @@ export default function CohortAssignments({
                     <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{lc.end_time ? formatTimeLagos(lc.end_time) : '—'}</td>
                     <td className="admin-table-td" style={{ color: 'var(--text-light)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{lc.google_meet_link || '—'}</td>
                     <td className="admin-table-td">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLiveClass(lc.id)}
-                        className="admin-btn admin-btn-ghost admin-btn-sm"
-                        style={{ color: '#dc3545' }}
-                      >
-                        Delete
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditLiveClass(lc)}
+                          className="admin-btn admin-btn-ghost admin-btn-sm"
+                          disabled={!!editingLiveClassId && editingLiveClassId !== lc.id}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLiveClass(lc.id)}
+                          className="admin-btn admin-btn-ghost admin-btn-sm"
+                          style={{ color: '#dc3545' }}
+                          disabled={!!editingLiveClassId}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

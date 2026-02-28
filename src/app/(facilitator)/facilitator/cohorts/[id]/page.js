@@ -11,6 +11,7 @@ import CohortStudentsTab from '@/app/components/lms/facilitator/CohortStudentsTa
 import CohortAssignmentsTab from '@/app/components/lms/facilitator/CohortAssignmentsTab';
 import CohortContentTab from '@/app/components/lms/facilitator/CohortContentTab';
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LmsIcons.graduation },
@@ -75,8 +76,7 @@ export default function FacilitatorCohortPage() {
     router.replace(`/facilitator/cohorts/${id}?tab=${tabId}`, { scroll: false });
   };
 
-  const formatDate = (d) =>
-    d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '';
+  const formatDate = (d) => formatTimeLagos(d);
 
   /* ── Loading skeleton ── */
   if (loading) {

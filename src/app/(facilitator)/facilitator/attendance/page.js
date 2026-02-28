@@ -5,6 +5,7 @@ import { LmsCard, LmsPageHeader, LmsBadge } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 
 import { getLmsAuthHeaders } from '@/lib/authClient';
+import { formatTimeLagos } from '@/lib/dateUtils';
 
 export default function FacilitatorAttendancePage() {
   const [cohorts, setCohorts] = useState([]);
@@ -86,7 +87,7 @@ export default function FacilitatorAttendancePage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '');
+  const formatDate = (d) => formatTimeLagos(d);
 
   if (loading) {
     return (

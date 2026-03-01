@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { LmsCard, LmsEmptyState, StreakCounter } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
-import { formatTimeLagos, formatDateLagos } from '@/lib/dateUtils';
+import { formatTimeLagos, formatDateLagos, formatClassTimeLagos } from '@/lib/dateUtils';
 import { useFetch } from '@/hooks/useFetch';
 
 function getGreeting() {
@@ -157,41 +157,60 @@ export default function StudentDashboardPage() {
           {/* Activity feed */}
           <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
             {/* Next live class */}
-            {nextLiveClass && (
-              <LmsCard accent="info" hoverable={false}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.video}</div>
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate" style={{ color: 'var(--neutral-900)' }}>{nextLiveClass.title}</p>
-                      <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>{formatTimeLagos(nextLiveClass.start)}</p>
+            {nextLiveClass && (() => {
+              const now = new Date();
+              const startD = new Date(nextLiveClass.start);
+              const endD = nextLiveClass.end ? new Date(nextLiveClass.end) : new Date(startD.getTime() + 2 * 60 * 60 * 1000);
+              const isLive = now >= startD && now <= endD;
+              return (
+                <LmsCard accent="info" hoverable={false}>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.video}</div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold truncate" style={{ color: 'var(--neutral-900)' }}>{nextLiveClass.title}</p>
+                          <span style={{
+                            fontSize: '0.7rem', fontWeight: 600, padding: '1px 7px', borderRadius: 999,
+                            background: isLive ? '#fef2f2' : '#f0fdf4',
+                            color: isLive ? '#ef4444' : '#16a34a',
+                            border: `1px solid ${isLive ? '#fecaca' : '#bbf7d0'}`,
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {isLive ? '● Live now' : '● Upcoming'}
+                          </span>
+                        </div>
+                        <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>
+                          {formatClassTimeLagos(nextLiveClass.start, nextLiveClass.end)}
+                        </p>
+                      </div>
                     </div>
+                    {nextLiveClass.url ? (
+                      <a
+                        href={nextLiveClass.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="lms-btn lms-btn-primary lms-btn-sm flex-shrink-0"
+                        onClick={async () => {
+                          try {
+                            const liveClassId = nextLiveClass.id.replace(/^live-/, '');
+                            await fetch(`/api/live-classes/${liveClassId}/join-click`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                              body: '{}',
+                            });
+                          } catch {}
+                        }}
+                      >
+                        Join class
+                      </a>
+                    ) : (
+                      <span className="text-sm flex-shrink-0" style={{ color: 'var(--neutral-400)' }}>Link coming soon</span>
+                    )}
                   </div>
-                  {nextLiveClass.url ? (
-                    <a
-                      href={nextLiveClass.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="lms-btn lms-btn-primary lms-btn-sm flex-shrink-0"
-                      onClick={async () => {
-                        try {
-                          const liveClassId = nextLiveClass.id.replace(/^live-/, '');
-                          await fetch(`/api/live-classes/${liveClassId}/join-click`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                            body: '{}',
-                          });
-                        } catch {}
-                      }}
-                    >
-                      Join class
-                    </a>
-                  ) : (
-                    <span className="text-sm flex-shrink-0" style={{ color: 'var(--neutral-400)' }}>Link coming soon</span>
-                  )}
-                </div>
-              </LmsCard>
-            )}
+                </LmsCard>
+              );
+            })()}
 
             {/* Next assignment deadline */}
             {upcomingDeadlines.length > 0 && (

@@ -61,6 +61,38 @@ export default function WeekPage() {
 
   const formatDate = (d) => formatTimeLagos(d);
 
+  const toWat = (iso) => {
+    if (!iso) return null;
+    const s = typeof iso === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(iso) ? iso.replace(' ', 'T') + 'Z' : iso;
+    return new Date(s);
+  };
+
+  const formatClassTime = (startIso, endIso) => {
+    const start = toWat(startIso);
+    if (!start || isNaN(start)) return '';
+    const opts = { timeZone: 'Africa/Lagos' };
+    const datePart = start.toLocaleDateString('en-GB', { ...opts, weekday: 'short', day: 'numeric', month: 'short' });
+    const startTime = start.toLocaleTimeString('en-GB', { ...opts, hour: 'numeric', minute: '2-digit', hour12: true });
+    if (!endIso) return `${datePart} · ${startTime}`;
+    const end = toWat(endIso);
+    if (!end || isNaN(end)) return `${datePart} · ${startTime}`;
+    const endTime = end.toLocaleTimeString('en-GB', { ...opts, hour: 'numeric', minute: '2-digit', hour12: true });
+    const sameDay = start.toLocaleDateString('en-GB', opts) === end.toLocaleDateString('en-GB', opts);
+    if (sameDay) return `${datePart} · ${startTime} – ${endTime}`;
+    const endDatePart = end.toLocaleDateString('en-GB', { ...opts, weekday: 'short', day: 'numeric', month: 'short' });
+    return `${datePart} ${startTime} – ${endDatePart} ${endTime}`;
+  };
+
+  const getClassStatus = (scheduledAt, endTime) => {
+    const now = new Date();
+    const start = toWat(scheduledAt);
+    if (!start) return 'upcoming';
+    const end = endTime ? toWat(endTime) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    if (now < start) return 'upcoming';
+    if (now >= start && now <= end) return 'live';
+    return 'past';
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-[var(--lms-space-6)]">
@@ -123,45 +155,69 @@ export default function WeekPage() {
         );
       })()}
 
-      {(week.live_classes?.length > 0 || week.live_class_datetime) && (
-        <>
-          {(week.live_classes?.length > 0 ? week.live_classes : [{ id: week.live_class_id, scheduled_at: week.live_class_datetime, end_time: null, google_meet_link: week.google_meet_link, recording_url: week.recording_url }]).map((lc, idx) => (
-            <LmsCard
-              key={lc.id || idx}
-              title={week.live_classes?.length > 1 ? `Live class ${idx + 1}` : 'Live class'}
-              subtitle={lc.scheduled_at ? (lc.end_time ? `${formatDate(lc.scheduled_at)} – ${formatDate(lc.end_time)}` : formatDate(lc.scheduled_at)) : ''}
-              icon={LmsIcons.video}
-            >
-              {lc.google_meet_link && (
-                <a
-                  href={lc.google_meet_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="lms-btn lms-btn-primary mt-4"
-                  onClick={async () => {
-                    try {
-                      await fetch(`/api/live-classes/${lc.id}/join-click`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
-                        body: '{}',
-                      });
-                    } catch {}
-                  }}
-                >
-                  Join class
-                </a>
-              )}
-              {lc.recording_url && (
-                <div className="mt-3">
-                  <a href={lc.recording_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm">
-                    Watch recording
-                  </a>
-                </div>
-              )}
-            </LmsCard>
-          ))}
-        </>
-      )}
+      {(week.live_classes?.length > 0 || week.live_class_datetime) && (() => {
+        const classes = week.live_classes?.length > 0
+          ? week.live_classes
+          : [{ id: week.live_class_id, scheduled_at: week.live_class_datetime, end_time: null, google_meet_link: week.google_meet_link, recording_url: week.recording_url }];
+        return (
+          <LmsCard title="Live Sessions" icon={LmsIcons.video} hoverable={false}>
+            <ul className="mt-2 divide-y divide-[var(--neutral-100)]">
+              {classes.map((lc, idx) => {
+                const status = getClassStatus(lc.scheduled_at, lc.end_time);
+                const statusConfig = {
+                  live:     { label: 'Live now',  dot: '#ef4444' },
+                  upcoming: { label: 'Upcoming',  dot: '#22c55e' },
+                  past:     { label: 'Completed', dot: 'var(--neutral-300)' },
+                }[status];
+                return (
+                  <li key={lc.id || idx} className="flex items-center justify-between py-4 gap-4">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      {classes.length > 1 && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--neutral-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Session {idx + 1}
+                        </span>
+                      )}
+                      <span style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: '0.9375rem' }}>
+                        {formatClassTime(lc.scheduled_at, lc.end_time)}
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: status === 'live' ? '#ef4444' : status === 'upcoming' ? '#16a34a' : 'var(--neutral-400)' }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusConfig.dot, display: 'inline-block', flexShrink: 0 }} />
+                        {statusConfig.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      {lc.google_meet_link && status !== 'past' && (
+                        <a
+                          href={lc.google_meet_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="lms-btn lms-btn-primary lms-btn-sm"
+                          onClick={async () => {
+                            try {
+                              await fetch(`/api/live-classes/${lc.id}/join-click`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', ...getLmsAuthHeaders() },
+                                body: '{}',
+                              });
+                            } catch {}
+                          }}
+                        >
+                          Join
+                        </a>
+                      )}
+                      {lc.recording_url && (
+                        <a href={lc.recording_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline">
+                          Recording
+                        </a>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </LmsCard>
+        );
+      })()}
 
       {checklistItems.length > 0 && (
         <LmsCard title="Checklist" icon={LmsIcons.checkCircle}>

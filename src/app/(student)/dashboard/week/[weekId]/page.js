@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { LmsCard, LmsEmptyState, LmsPageHeader } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
-import { formatTimeLagos } from '@/lib/dateUtils';
+import { formatTimeLagos, formatClassTimeLagos } from '@/lib/dateUtils';
 import { formatWeekDescription, stripBullet } from '@/lib/formatWeekDescription';
 
 export default function WeekPage() {
@@ -61,33 +61,16 @@ export default function WeekPage() {
 
   const formatDate = (d) => formatTimeLagos(d);
 
-  const toWat = (iso) => {
-    if (!iso) return null;
-    const s = typeof iso === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(iso) ? iso.replace(' ', 'T') + 'Z' : iso;
-    return new Date(s);
-  };
-
-  const formatClassTime = (startIso, endIso) => {
-    const start = toWat(startIso);
-    if (!start || isNaN(start)) return '';
-    const opts = { timeZone: 'Africa/Lagos' };
-    const datePart = start.toLocaleDateString('en-GB', { ...opts, weekday: 'short', day: 'numeric', month: 'short' });
-    const startTime = start.toLocaleTimeString('en-GB', { ...opts, hour: 'numeric', minute: '2-digit', hour12: true });
-    if (!endIso) return `${datePart} · ${startTime}`;
-    const end = toWat(endIso);
-    if (!end || isNaN(end)) return `${datePart} · ${startTime}`;
-    const endTime = end.toLocaleTimeString('en-GB', { ...opts, hour: 'numeric', minute: '2-digit', hour12: true });
-    const sameDay = start.toLocaleDateString('en-GB', opts) === end.toLocaleDateString('en-GB', opts);
-    if (sameDay) return `${datePart} · ${startTime} – ${endTime}`;
-    const endDatePart = end.toLocaleDateString('en-GB', { ...opts, weekday: 'short', day: 'numeric', month: 'short' });
-    return `${datePart} ${startTime} – ${endDatePart} ${endTime}`;
-  };
-
   const getClassStatus = (scheduledAt, endTime) => {
     const now = new Date();
-    const start = toWat(scheduledAt);
+    const toD = (iso) => {
+      if (!iso) return null;
+      const s = typeof iso === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(iso) ? iso.replace(' ', 'T') + 'Z' : iso;
+      return new Date(s);
+    };
+    const start = toD(scheduledAt);
     if (!start) return 'upcoming';
-    const end = endTime ? toWat(endTime) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    const end = endTime ? toD(endTime) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
     if (now < start) return 'upcoming';
     if (now >= start && now <= end) return 'live';
     return 'past';
@@ -178,7 +161,7 @@ export default function WeekPage() {
                         </span>
                       )}
                       <span style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: '0.9375rem' }}>
-                        {formatClassTime(lc.scheduled_at, lc.end_time)}
+                        {formatClassTimeLagos(lc.scheduled_at, lc.end_time)}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: status === 'live' ? '#ef4444' : status === 'upcoming' ? '#16a34a' : 'var(--neutral-400)' }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusConfig.dot, display: 'inline-block', flexShrink: 0 }} />

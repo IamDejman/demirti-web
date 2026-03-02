@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyUserCredentials, createUserSession, generateSessionToken } from '@/lib/auth';
 import { rateLimit, getLoginBackoff, recordLoginFailure, clearLoginFailures } from '@/lib/rateLimit';
 import { recordAuditLog } from '@/lib/audit';
+import { recordLmsEvent } from '@/lib/db-lms';
 import { getClientIp } from '@/lib/api-helpers';
 import { loginSchema, validateBody } from '@/lib/schemas';
 import { reportError } from '@/lib/logger';
@@ -63,6 +64,7 @@ export async function POST(request) {
         ipAddress: ip,
         actorEmail: user.email,
       }),
+      recordLmsEvent(user.id, 'user_login').catch(() => {}),
     ]);
     const res = NextResponse.json({
       success: true,

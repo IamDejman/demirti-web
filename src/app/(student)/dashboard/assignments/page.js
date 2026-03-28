@@ -83,7 +83,7 @@ export default function StudentAssignmentsPage() {
         </div>
       )}
 
-      <LmsCard title="All assignments" icon={LmsIcons.clipboard} hoverable={false}>
+      <LmsCard title="All assignments" icon={LmsIcons.clipboard}>
         {assignments.length === 0 ? (
           <LmsEmptyState icon={LmsIcons.clipboard} title="No assignments in this cohort yet" description="Assignments will appear here when your facilitators add them." />
         ) : (

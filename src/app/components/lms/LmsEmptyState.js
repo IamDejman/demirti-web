@@ -4,7 +4,7 @@ export default function LmsEmptyState({ icon, title, description, action }) {
   return (
     <div
       className="lms-empty-state flex flex-col items-center justify-center text-center"
-      style={{ padding: 'var(--lms-space-10) var(--lms-space-6)' }}
+      style={{ padding: 'var(--lms-space-12, 3rem) var(--lms-space-6)' }}
     >
       {icon && (
         <div className="lms-empty-state-icon mb-4" style={{ color: 'var(--neutral-300)' }}>

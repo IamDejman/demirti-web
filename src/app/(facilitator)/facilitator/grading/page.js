@@ -153,7 +153,7 @@ export default function FacilitatorGradingPage() {
       ) : null}
 
       {submissions.length === 0 ? (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState icon={LmsIcons.checkCircle} title="No pending submissions to grade" description="New submissions will appear here when students submit." />
         </LmsCard>
       ) : (
@@ -162,7 +162,7 @@ export default function FacilitatorGradingPage() {
             const key = `${group.assignmentTitle}-${gi}`;
             const isExpanded = expandedAssignment === key || expandedAssignment === null;
             return (
-              <LmsCard key={key} hoverable={false}>
+              <LmsCard key={key}>
                 <button
                   type="button"
                   onClick={() => setExpandedAssignment(isExpanded && expandedAssignment !== null ? null : key)}

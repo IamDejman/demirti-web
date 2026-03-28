@@ -240,13 +240,13 @@ export default function ProfilePage() {
       />
 
       {/* Profile hero — always visible above tabs */}
-      <LmsCard accent="primary" hoverable={false}>
+      <LmsCard>
         <div className="profile-hero">
           <div className="profile-hero-avatar-wrap">
             <div
               className="profile-hero-avatar"
               style={{
-                background: (form.profilePictureUrl && !imgError) ? 'transparent' : 'linear-gradient(135deg, var(--primary-color), #00a67e)',
+                background: (form.profilePictureUrl && !imgError) ? 'transparent' : 'var(--neutral-200)',
                 color: 'white',
               }}
             >
@@ -278,7 +278,7 @@ export default function ProfilePage() {
       {/* Tabbed sections */}
       <ClassroomTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === 'personal' && (
-          <LmsCard hoverable={false}>
+          <LmsCard>
             {message && (
               <div className="lms-alert mb-6 lms-alert-success" role="alert" aria-live="polite">
                 {message}
@@ -329,7 +329,7 @@ export default function ProfilePage() {
         )}
 
         {activeTab === 'certificates' && (
-          <LmsCard hoverable={false}>
+          <LmsCard>
             {certsLoading ? (
               <div className="grid gap-6 sm:grid-cols-2" style={{ gap: 'var(--lms-space-6)' }}>
                 <div className="lms-skeleton rounded-xl" style={{ height: 160 }} />
@@ -376,7 +376,7 @@ export default function ProfilePage() {
         )}
 
         {activeTab === 'settings' && (
-          <LmsCard hoverable={false}>
+          <LmsCard>
             <div className="flex flex-col" style={{ gap: 'var(--lms-space-2)' }}>
               <h3 className="lms-section-title">Change Password</h3>
               <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>Update your account password</p>

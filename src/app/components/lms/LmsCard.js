@@ -1,14 +1,8 @@
 'use client';
 
-export default function LmsCard({ title, subtitle, icon, action, children, className = '', hoverable = true, accent }) {
-  const accentClass = accent ? `lms-card-accent-${accent}` : '';
-
+export default function LmsCard({ title, subtitle, icon, action, children, className = '' }) {
   return (
-    <div
-      className={`lms-card rounded-xl ${accentClass} ${
-        hoverable ? '' : 'hover:transform-none hover:shadow-sm'
-      } ${className}`}
-    >
+    <div className={`lms-card rounded-xl ${className}`}>
       {(title || action) && (
         <div className="lms-card-header">
           <div className="flex items-center" style={{ gap: 'var(--lms-space-3)' }}>
@@ -16,8 +10,8 @@ export default function LmsCard({ title, subtitle, icon, action, children, class
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08))',
-                  color: 'var(--primary-color)',
+                  background: 'var(--neutral-100)',
+                  color: 'var(--neutral-500)',
                 }}
               >
                 {icon}

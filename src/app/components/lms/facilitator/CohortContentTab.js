@@ -317,7 +317,7 @@ export default function CohortContentTab({ cohortId, weeks }) {
         title="Week content"
         subtitle={weekId ? `${totalItems} item${totalItems !== 1 ? 's' : ''}` : 'Select a week'}
         icon={LmsIcons.book || LmsIcons.clipboard}
-        hoverable={false}
+       
         action={
           hasWeeks && weekId && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>

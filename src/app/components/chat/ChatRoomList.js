@@ -39,7 +39,7 @@ export default function ChatRoomList({
   return (
     <div className="md:col-span-1 flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
       {/* Search / new conversation */}
-      <LmsCard hoverable={false}>
+      <LmsCard>
         <div className="flex flex-col" style={{ gap: 'var(--lms-space-3)' }}>
           <input
             type="text"
@@ -86,7 +86,7 @@ export default function ChatRoomList({
 
       {/* Student directory (facilitator only) */}
       {students && students.length > 0 && (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <button
             type="button"
             onClick={() => setShowStudents((v) => !v)}
@@ -144,7 +144,7 @@ export default function ChatRoomList({
       )}
 
       {/* Room list */}
-      <LmsCard title={listTitle} hoverable={false}>
+      <LmsCard title={listTitle}>
         {filteredRooms.length === 0 ? (
           <p style={{ fontSize: '0.875rem', color: 'var(--neutral-500)' }}>
             {roomFilter ? 'No results match your search.' : emptyMessage}

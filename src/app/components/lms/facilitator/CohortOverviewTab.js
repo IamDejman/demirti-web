@@ -8,7 +8,7 @@ export default function CohortOverviewTab({ cohort, weeks, liveClasses, formatDa
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
       {/* Quick actions */}
-      <LmsCard title="Quick actions" hoverable={false}>
+      <LmsCard title="Quick actions">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
           <Link href="/facilitator/grading" className="lms-btn lms-btn-sm lms-btn-primary">
             Grading queue
@@ -24,7 +24,7 @@ export default function CohortOverviewTab({ cohort, weeks, liveClasses, formatDa
 
       {/* Cohort info */}
       {cohort.start_date && (
-        <LmsCard title="Cohort details" hoverable={false}>
+        <LmsCard title="Cohort details">
           <div className="flex flex-col" style={{ gap: '0.5rem' }}>
             <div className="lms-row-item">
               <span className="lms-row-item-name">Track</span>

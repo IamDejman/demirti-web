@@ -113,7 +113,7 @@ export default function CohortAssignmentsTab({ cohortId, weeks, assignments, onR
         title="Assignments"
         subtitle={`${assignments.length} total`}
         icon={LmsIcons.clipboard}
-        hoverable={false}
+       
         action={
           <button
             type="button"

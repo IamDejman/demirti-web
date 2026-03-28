@@ -157,7 +157,7 @@ export default function AssignmentDetailPage() {
 
   if (!assignment) {
     return (
-      <LmsCard hoverable={false}>
+      <LmsCard>
         <LmsEmptyState
           icon={LmsIcons.inbox}
           title="Assignment not found"
@@ -175,7 +175,7 @@ export default function AssignmentDetailPage() {
         icon={LmsIcons.clipboard}
         breadcrumb={{ href: '/dashboard/assignments', label: 'Assignments' }}
       />
-      <LmsCard title="Details" hoverable={false}>
+      <LmsCard title="Details">
         {assignment.description && (
           <div className="prose prose-sm max-w-none text-[var(--neutral-600)]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(assignment.description) }} />
         )}
@@ -275,7 +275,7 @@ export default function AssignmentDetailPage() {
       )}
 
       {deadlinePassed && !submission && (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <div className="flex items-center gap-2">
             <LmsBadge variant="danger">Deadline passed</LmsBadge>
             <span className="text-sm text-[var(--neutral-500)]">The deadline for this assignment has passed.</span>

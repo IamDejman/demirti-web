@@ -87,7 +87,7 @@ export default function WeekPage() {
 
   if (!week) {
     return (
-      <LmsCard hoverable={false}>
+      <LmsCard>
         <LmsEmptyState icon={LmsIcons.inbox} title="Week not found" action={<Link href="/dashboard" className="lms-link">Back to dashboard</Link>} />
       </LmsCard>
     );
@@ -95,7 +95,7 @@ export default function WeekPage() {
 
   if (week.locked) {
     return (
-      <LmsCard hoverable={false}>
+      <LmsCard>
         <LmsEmptyState icon={LmsIcons.lock} title="This week is not yet unlocked" action={<Link href="/dashboard" className="lms-link">Back to dashboard</Link>} />
       </LmsCard>
     );
@@ -117,7 +117,7 @@ export default function WeekPage() {
           <LmsCard
             title="This class covers"
             icon={LmsIcons.book}
-            hoverable={false}
+           
           >
             <div className="text-sm leading-relaxed" style={{ color: 'var(--neutral-600)' }}>
               {hasList ? (
@@ -143,7 +143,7 @@ export default function WeekPage() {
           ? week.live_classes
           : [{ id: week.live_class_id, scheduled_at: week.live_class_datetime, end_time: null, google_meet_link: week.google_meet_link, recording_url: week.recording_url }];
         return (
-          <LmsCard title="Live Sessions" icon={LmsIcons.video} hoverable={false}>
+          <LmsCard title="Live Sessions" icon={LmsIcons.video}>
             <ul className="mt-2 divide-y divide-[var(--neutral-100)]">
               {classes.map((lc, idx) => {
                 const status = getClassStatus(lc.scheduled_at, lc.end_time);

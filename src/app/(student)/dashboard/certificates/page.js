@@ -50,7 +50,7 @@ export default function CertificatesPage() {
       />
 
       {certificates.length === 0 ? (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState
             icon={LmsIcons.trophy}
             title="No certificates yet"

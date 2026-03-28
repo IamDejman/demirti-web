@@ -28,9 +28,10 @@ export async function GET(request) {
 
     await ensureLmsSchema();
 
-    // 1. Get all active cohorts (start_date <= today <= end_date)
+    // 1. Get all active cohorts with computed week (date math in SQL to avoid timezone issues)
     const cohortsResult = await sql`
-      SELECT id, start_date, end_date, current_week
+      SELECT id, start_date, end_date, current_week,
+             FLOOR((CURRENT_DATE - start_date::date) / 7) + 1 AS computed_week
       FROM cohorts
       WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE;
     `;
@@ -41,13 +42,8 @@ export async function GET(request) {
     const details = [];
 
     for (const cohort of cohorts) {
-      // 2. Compute which week number we should be on
-      const startDate = new Date(cohort.start_date);
-      startDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      const computedWeek = Math.floor(daysSinceStart / 7) + 1;
+      // 2. Week number computed in SQL (avoids JS timezone drift)
+      const computedWeek = Number(cohort.computed_week);
 
       // 3. Get max week number for this cohort
       const maxWeekResult = await sql`

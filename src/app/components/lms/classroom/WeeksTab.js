@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { LmsEmptyState } from '@/app/components/lms';
 
 export default function WeeksTab({ weeks = [], loading = false }) {
-  const currentWeek = useMemo(
-    () => weeks.find((w) => !w.is_locked) || weeks[0],
-    [weeks]
-  );
+  // Current week = last unlocked week (highest week_number with is_locked = false)
+  const currentWeek = useMemo(() => {
+    const unlocked = weeks.filter((w) => !w.is_locked);
+    return unlocked.length > 0 ? unlocked[unlocked.length - 1] : weeks[0];
+  }, [weeks]);
 
   if (loading) {
     return (
@@ -32,10 +33,10 @@ export default function WeeksTab({ weeks = [], loading = false }) {
 
   return (
     <div className="space-y-1" style={{ position: 'relative' }}>
-      {weeks.map((w, idx) => {
+      {weeks.map((w) => {
         const isCurrent = currentWeek?.id === w.id;
         const isLocked = w.is_locked;
-        const isCompleted = !isLocked && !isCurrent && weeks.indexOf(w) < weeks.indexOf(currentWeek);
+        const isCompleted = !isLocked && !isCurrent && w.week_number < (currentWeek?.week_number ?? 0);
         return (
           <Link
             key={w.id}

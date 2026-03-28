@@ -64,7 +64,8 @@ export default function AiAssistantPage() {
       if (hasCohort) {
         const weeksData = batch2Results[idx++];
         if (weeksData?.weeks?.length) {
-          const currentWeek = weeksData.weeks.find((w) => !w.is_locked) || weeksData.weeks[0];
+          const unlocked = weeksData.weeks.filter((w) => !w.is_locked);
+          const currentWeek = unlocked.length > 0 ? unlocked[unlocked.length - 1] : weeksData.weeks[0] || null;
           setContextWeekId(currentWeek?.id || null);
         }
       }

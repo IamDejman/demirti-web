@@ -6,8 +6,8 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
   return (
     <div
       style={{
-        paddingBottom: 'var(--lms-space-6)',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        paddingBottom: 'var(--lms-space-8)',
+        borderBottom: '2px solid var(--primary-100)',
         marginBottom: 'var(--lms-space-6)',
       }}
     >

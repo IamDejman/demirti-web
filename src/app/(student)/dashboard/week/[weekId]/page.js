@@ -228,17 +228,33 @@ export default function WeekPage() {
 
       {contentItems.length > 0 && (
         <LmsCard title="Content" icon={LmsIcons.book}>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-2 space-y-2">
               {contentItems.map((item) => (
-                <li key={item.id} className="rounded-lg px-3 py-2 -mx-3 -my-1 transition-colors hover:bg-[var(--neutral-50)]">
-                  <span className="font-medium text-[var(--neutral-900)]">{item.title}</span>
-                {item.file_url && (
-                  <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Open</a>
-                )}
-                {item.external_url && (
-                  <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Link</a>
-                )}
-              </li>
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl px-4 py-3 transition-all"
+                  style={{
+                    border: '1px solid var(--neutral-100)',
+                    background: 'var(--neutral-50)',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-200)'; e.currentTarget.style.background = 'var(--primary-50)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--neutral-100)'; e.currentTarget.style.background = 'var(--neutral-50)'; e.currentTarget.style.transform = 'translateX(0)'; }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary-50)', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <span className="font-medium" style={{ fontSize: '0.9375rem', color: 'var(--neutral-800)' }}>{item.title}</span>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    {item.file_url && (
+                      <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline" style={{ minHeight: 30, padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>Open</a>
+                    )}
+                    {item.external_url && (
+                      <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline" style={{ minHeight: 30, padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>Link</a>
+                    )}
+                  </div>
+                </li>
             ))}
           </ul>
         </LmsCard>
@@ -246,13 +262,29 @@ export default function WeekPage() {
 
       {materials.length > 0 && (
         <LmsCard title="Materials" icon={LmsIcons.briefcase}>
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-2 space-y-2">
             {materials.map((m) => (
-              <li key={m.id} className="rounded-lg px-3 py-2 -mx-3 -my-1 transition-colors hover:bg-[var(--neutral-50)]">
-                <span className="font-medium text-[var(--neutral-900)]">{m.title}</span>
-                {(m.url || m.file_url) && (
-                  <a href={m.url || m.file_url} target="_blank" rel="noopener noreferrer" className="lms-link text-sm ml-2">Open</a>
-                )}
+              <li
+                key={m.id}
+                className="flex items-center justify-between rounded-xl px-4 py-3 transition-all"
+                style={{
+                  border: '1px solid var(--neutral-100)',
+                  background: 'var(--neutral-50)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-200)'; e.currentTarget.style.background = 'var(--primary-50)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--neutral-100)'; e.currentTarget.style.background = 'var(--neutral-50)'; e.currentTarget.style.transform = 'translateX(0)'; }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary-50)', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                  </div>
+                  <span className="font-medium" style={{ fontSize: '0.9375rem', color: 'var(--neutral-800)' }}>{m.title}</span>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  {(m.url || m.file_url) && (
+                    <a href={m.url || m.file_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-outline" style={{ minHeight: 30, padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>Open</a>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

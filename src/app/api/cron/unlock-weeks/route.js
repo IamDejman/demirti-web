@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { reportError } from '@/lib/logger';
+import { ensureLmsSchema } from '@/lib/db-lms';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -24,6 +25,8 @@ export async function GET(request) {
     if (!cronSecret || token !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await ensureLmsSchema();
 
     // 1. Get all active cohorts (start_date <= today <= end_date)
     const cohortsResult = await sql`
@@ -95,6 +98,6 @@ export async function GET(request) {
     });
   } catch (error) {
     reportError(error, { route: 'GET /api/cron/unlock-weeks' });
-    return NextResponse.json({ error: 'Failed to unlock weeks' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to unlock weeks', message: error?.message || String(error) }, { status: 500 });
   }
 }

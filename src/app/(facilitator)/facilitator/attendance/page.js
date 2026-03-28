@@ -7,6 +7,13 @@ import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatTimeLagos } from '@/lib/dateUtils';
 
+const ATTENDANCE_COLORS = {
+  present: { border: 'var(--color-success)', color: 'var(--color-success)', bg: 'rgba(16, 185, 129, 0.05)' },
+  excused: { border: 'var(--color-warning)', color: 'var(--color-warning)', bg: 'rgba(245, 158, 11, 0.05)' },
+  absent: { border: 'var(--danger-color)', color: 'var(--danger-color)', bg: 'rgba(239, 68, 68, 0.05)' },
+  default: { border: 'var(--neutral-300)', color: 'var(--neutral-700)', bg: 'white' },
+};
+
 export default function FacilitatorAttendancePage() {
   const [cohorts, setCohorts] = useState([]);
   const [selectedCohort, setSelectedCohort] = useState(null);
@@ -156,11 +163,7 @@ export default function FacilitatorAttendancePage() {
                         value={r.status || 'absent'}
                         onChange={(e) => handleStatusChange(r.student_id, e.target.value)}
                         className="lms-input text-sm"
-                        style={{
-                          borderColor: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : 'var(--neutral-300)',
-                          color: r.status === 'present' ? '#16a34a' : r.status === 'excused' ? '#d97706' : r.status === 'absent' ? '#dc2626' : 'var(--neutral-700)',
-                          backgroundColor: r.status === 'present' ? 'rgba(22, 163, 74, 0.05)' : r.status === 'excused' ? 'rgba(217, 119, 6, 0.05)' : r.status === 'absent' ? 'rgba(220, 38, 38, 0.05)' : 'white',
-                        }}
+                        style={(() => { const sc = ATTENDANCE_COLORS[r.status] || ATTENDANCE_COLORS.default; return { borderColor: sc.border, color: sc.color, backgroundColor: sc.bg }; })()}
                       >
                         <option value="present">Present</option>
                         <option value="absent">Absent</option>
@@ -181,8 +184,8 @@ export default function FacilitatorAttendancePage() {
             >
               {saving ? 'Saving...' : 'Save attendance'}
             </button>
-            {saveSuccess && <span style={{ fontSize: '0.8125rem', color: '#16a34a', fontWeight: 500 }}>✓ Attendance saved</span>}
-            {saveError && <span style={{ fontSize: '0.8125rem', color: '#dc2626', fontWeight: 500 }}>{saveError}</span>}
+            {saveSuccess && <span style={{ fontSize: '0.8125rem', color: 'var(--color-success)', fontWeight: 500 }}>✓ Attendance saved</span>}
+            {saveError && <span style={{ fontSize: '0.8125rem', color: 'var(--danger-color)', fontWeight: 500 }}>{saveError}</span>}
           </div>
         </LmsCard>
       )}

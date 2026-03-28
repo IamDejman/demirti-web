@@ -87,13 +87,10 @@ export default function AdminMfaSettings() {
     );
   }
 
-  const cardStyle = {
+  const cardExtraStyle = {
     maxWidth: '560px',
     margin: '2rem auto',
     padding: '2rem',
-    background: '#fff',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   };
 
   const inputStyle = {
@@ -125,7 +122,7 @@ export default function AdminMfaSettings() {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <div style={cardStyle}>
+      <div className="admin-card" style={cardExtraStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <a href="/admin" style={{ color: '#0066cc', textDecoration: 'none', fontSize: '0.9rem' }}>&larr; Dashboard</a>
         </div>

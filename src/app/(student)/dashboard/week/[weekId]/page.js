@@ -148,8 +148,8 @@ export default function WeekPage() {
               {classes.map((lc, idx) => {
                 const status = getClassStatus(lc.scheduled_at, lc.end_time);
                 const statusConfig = {
-                  live:     { label: 'Live now',  dot: '#ef4444' },
-                  upcoming: { label: 'Upcoming',  dot: '#22c55e' },
+                  live:     { label: 'Live now',  dot: 'var(--danger-color)' },
+                  upcoming: { label: 'Upcoming',  dot: 'var(--color-success)' },
                   past:     { label: 'Completed', dot: 'var(--neutral-300)' },
                 }[status];
                 return (
@@ -163,7 +163,7 @@ export default function WeekPage() {
                       <span style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: '0.9375rem' }}>
                         {formatClassTimeLagos(lc.scheduled_at, lc.end_time)}
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: status === 'live' ? '#ef4444' : status === 'upcoming' ? '#16a34a' : 'var(--neutral-400)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', fontWeight: 500, color: status === 'live' ? 'var(--danger-color)' : status === 'upcoming' ? 'var(--color-success)' : 'var(--neutral-400)' }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusConfig.dot, display: 'inline-block', flexShrink: 0 }} />
                         {statusConfig.label}
                       </span>

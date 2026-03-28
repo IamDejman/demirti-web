@@ -246,8 +246,8 @@ export default function ProfilePage() {
             <div
               className="profile-hero-avatar"
               style={{
-                background: (form.profilePictureUrl && !imgError) ? 'transparent' : 'var(--neutral-200)',
-                color: 'white',
+                background: (form.profilePictureUrl && !imgError) ? 'transparent' : 'var(--primary-50)',
+                color: 'var(--primary-color)',
               }}
             >
               {form.profilePictureUrl && !imgError ? (

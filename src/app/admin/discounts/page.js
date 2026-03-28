@@ -281,12 +281,8 @@ export default function DiscountsPage() {
             <>
               {/* Create/Edit Form */}
               {showForm && (
-                <div style={{
-                  backgroundColor: 'white',
+                <div className="admin-card" style={{
                   padding: '2rem',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  marginBottom: '2rem',
                   border: '2px solid #00c896'
                 }}>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
@@ -394,12 +390,7 @@ export default function DiscountsPage() {
               )}
 
               {/* Discounts List */}
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
+              <div className="admin-card">
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
                   All Discounts ({discounts.length})
                 </h2>

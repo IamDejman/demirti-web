@@ -172,9 +172,9 @@ export default function StudentDashboardPage() {
                           <p className="font-semibold truncate" style={{ color: 'var(--neutral-900)' }}>{nextLiveClass.title}</p>
                           <span style={{
                             fontSize: '0.7rem', fontWeight: 600, padding: '1px 7px', borderRadius: 999,
-                            background: isLive ? '#fef2f2' : '#f0fdf4',
-                            color: isLive ? '#ef4444' : '#16a34a',
-                            border: `1px solid ${isLive ? '#fecaca' : '#bbf7d0'}`,
+                            background: isLive ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)',
+                            color: isLive ? 'var(--danger-color)' : 'var(--color-success)',
+                            border: `1px solid ${isLive ? 'var(--danger-color)' : 'var(--color-success)'}`,
                             whiteSpace: 'nowrap',
                           }}>
                             {isLive ? '● Live now' : '● Upcoming'}

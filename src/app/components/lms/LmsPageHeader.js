@@ -7,14 +7,14 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
     <div
       style={{
         paddingBottom: 'var(--lms-space-6)',
-        borderBottom: '1px solid var(--neutral-100)',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         marginBottom: 'var(--lms-space-6)',
       }}
     >
       {breadcrumb && (
         <Link
           href={breadcrumb.href}
-          className="inline-flex items-center gap-1 mb-2 transition-colors"
+          className="inline-flex items-center gap-1 mb-3 transition-colors hover:opacity-80"
           style={{
             fontSize: 'var(--lms-body-sm)',
             color: 'var(--neutral-400)',
@@ -29,12 +29,12 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="font-bold"
+            className="lms-page-header-title font-bold"
             style={{
-              fontSize: 'var(--lms-title-lg, 1.75rem)',
-              letterSpacing: '-0.02em',
+              fontSize: 'var(--lms-title-xl, 2rem)',
+              letterSpacing: '-0.03em',
               color: 'var(--neutral-900)',
-              lineHeight: 1.2,
+              lineHeight: 'var(--lms-leading-tight, 1.2)',
             }}
           >
             {title}
@@ -42,9 +42,10 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
           {subtitle && (
             <p
               style={{
-                marginTop: 'var(--lms-space-1)',
+                marginTop: 'var(--lms-space-2)',
                 fontSize: 'var(--lms-body)',
                 color: 'var(--neutral-500)',
+                lineHeight: 'var(--lms-leading-normal, 1.5)',
               }}
             >
               {subtitle}

@@ -69,13 +69,7 @@ export default function ScholarshipsPage() {
           ) : (
             <>
               {/* Scholarship Status Cards */}
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                marginBottom: '2rem'
-              }}>
+              <div className="admin-card" style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
                   Scholarship Status by Track
                 </h2>
@@ -162,12 +156,7 @@ export default function ScholarshipsPage() {
               </div>
 
               {/* Scholarship Recipients List */}
-              <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
+              <div className="admin-card">
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
                   Scholarship Recipients
                 </h2>

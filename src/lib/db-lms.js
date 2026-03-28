@@ -114,6 +114,10 @@ export async function ensureLmsSchema() {
           END $$;
         `.catch((e) => console.error('Weeks constraint migration error:', e));
       }
+      // Migration: add audience column to announcements
+      if (existing.has('announcements')) {
+        await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS audience VARCHAR(20) DEFAULT 'all';`.catch(() => {});
+      }
       // Migration: create announcement_reads if missing (added after initial schema deployment)
       if (existing.has('announcements') && existing.has('users') && !existing.has('announcement_reads')) {
         await sql`

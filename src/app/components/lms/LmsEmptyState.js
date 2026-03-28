@@ -10,12 +10,13 @@ export default function LmsEmptyState({ icon, title, description, action }) {
         <div
           className="mb-5 flex items-center justify-center"
           style={{
-            width: 64,
-            height: 64,
+            width: 72,
+            height: 72,
             borderRadius: '50%',
-            background: 'var(--primary-50)',
+            background: 'linear-gradient(135deg, var(--primary-50), var(--primary-100))',
             color: 'var(--primary-color)',
-            border: '2px dashed var(--primary-100)',
+            border: '2px dashed var(--primary-200)',
+            boxShadow: '0 4px 12px rgba(0, 82, 163, 0.1)',
           }}
         >
           <div className="lms-empty-state-icon" style={{ color: 'inherit' }}>

@@ -31,8 +31,8 @@ export default function WeeksTab({ weeks = [], loading = false }) {
   }
 
   return (
-    <div className="space-y-1">
-      {weeks.map((w) => {
+    <div className="space-y-1" style={{ position: 'relative' }}>
+      {weeks.map((w, idx) => {
         const isCurrent = currentWeek?.id === w.id;
         const isLocked = w.is_locked;
         const isCompleted = !isLocked && !isCurrent && weeks.indexOf(w) < weeks.indexOf(currentWeek);
@@ -51,7 +51,7 @@ export default function WeeksTab({ weeks = [], loading = false }) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-sm font-medium" style={{ color: isLocked ? 'var(--neutral-400)' : 'var(--neutral-900)' }}>
+              <span style={{ fontSize: '0.9375rem', fontWeight: isCurrent ? 700 : 500, color: isLocked ? 'var(--neutral-400)' : isCurrent ? 'var(--primary-color)' : 'var(--neutral-900)' }}>
                 {w.title}
               </span>
             </div>

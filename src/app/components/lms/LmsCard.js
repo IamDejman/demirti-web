@@ -8,10 +8,11 @@ export default function LmsCard({ title, subtitle, icon, action, children, class
           <div className="flex items-center" style={{ gap: 'var(--lms-space-3)' }}>
             {icon && (
               <div
-                className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
                 style={{
-                  background: 'var(--primary-50)',
+                  background: 'linear-gradient(135deg, var(--primary-50), var(--primary-100))',
                   color: 'var(--primary-color)',
+                  boxShadow: '0 2px 8px rgba(0, 82, 163, 0.12)',
                 }}
               >
                 {icon}

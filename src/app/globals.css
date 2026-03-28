@@ -5503,6 +5503,27 @@ textarea.lms-form-textarea.border-token {
   margin-top: 2px;
 }
 
+/* LMS week detail — resources 2-column grid */
+@media (min-width: 768px) {
+  .lms-week-resources-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* LMS dashboard 2-column grid */
+@media (min-width: 768px) {
+  .lms-dashboard-grid {
+    grid-template-columns: 1fr 320px !important;
+  }
+  .lms-dashboard-grid > *:first-child { order: 1 !important; }
+  .lms-dashboard-grid > *:last-child { order: 2 !important; }
+}
+@media (min-width: 1024px) {
+  .lms-dashboard-grid {
+    grid-template-columns: 1fr 360px !important;
+  }
+}
+
 /* LMS greeting header */
 .lms-greeting {
   font-size: 2.25rem;

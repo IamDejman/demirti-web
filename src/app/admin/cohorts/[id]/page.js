@@ -28,7 +28,8 @@ function isSuccessFeedback(message) {
     lower.includes('assigned') ||
     lower.includes('removed') ||
     lower.includes('enrolled') ||
-    lower.includes('resent')
+    lower.includes('resent') ||
+    lower.includes('deleted')
   );
 }
 

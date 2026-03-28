@@ -57,7 +57,10 @@ export default function StudentDashboardPage() {
 
   const currentCohort = cohorts[0];
   const currentWeek = useMemo(
-    () => weeks.find((w) => !w.is_locked) || weeks[0],
+    () => {
+      const unlocked = weeks.filter((w) => !w.is_locked);
+      return unlocked.length > 0 ? unlocked[unlocked.length - 1] : weeks[0] || null;
+    },
     [weeks]
   );
   const upcomingDeadlines = useMemo(

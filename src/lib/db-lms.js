@@ -1269,15 +1269,8 @@ export async function getCohortsForUser(userId, role) {
 export async function getWeeksByCohort(cohortId, options = {}) {
   await ensureLmsSchema();
   const { forStudent = false } = options;
-  if (forStudent) {
-    const result = await sql`
-      SELECT * FROM weeks
-      WHERE cohort_id = ${cohortId}
-      AND (is_locked = false OR (unlock_date IS NOT NULL AND unlock_date <= CURRENT_TIMESTAMP))
-      ORDER BY week_number ASC;
-    `;
-    return result.rows;
-  }
+  // Always return all weeks so students can see the full curriculum.
+  // For students, we strip sensitive fields but keep is_locked for UI display.
   const result = await sql`
     SELECT * FROM weeks WHERE cohort_id = ${cohortId} ORDER BY week_number ASC;
   `;

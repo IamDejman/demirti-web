@@ -304,6 +304,28 @@ export default function AdminCohortDetailPage() {
     }
   };
 
+  const handleResendFacilitatorInvite = async (facilitatorId) => {
+    setAssigningFacilitator(true);
+    setFacilitatorMessage('');
+    try {
+      const res = await fetch(`/api/cohorts/${id}/facilitators`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ facilitatorId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFacilitatorMessage('Invitation resent.');
+      } else {
+        setFacilitatorMessage(data.error || 'Resend failed');
+      }
+    } catch {
+      setFacilitatorMessage('Something went wrong');
+    } finally {
+      setAssigningFacilitator(false);
+    }
+  };
+
   const refreshWeeks = async () => {
     const res = await fetch(`/api/cohorts/${id}/weeks`, { headers: getAuthHeaders() });
     const data = await res.json();
@@ -855,6 +877,7 @@ export default function AdminCohortDetailPage() {
                       <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{f.email}</td>
                       <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{formatDate(f.assigned_at)}</td>
                       <td className="admin-table-td">
+                        <button type="button" onClick={() => handleResendFacilitatorInvite(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#0066cc' }}>Resend invite</button>
                         <button type="button" onClick={() => handleRemoveFacilitator(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Remove</button>
                       </td>
                     </tr>

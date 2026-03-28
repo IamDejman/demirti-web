@@ -27,6 +27,7 @@ export default function AdminAnnouncementsPage() {
     scope: 'system',
     trackId: '',
     cohortId: '',
+    audience: 'all',
     sendEmail: true,
     publishAt: '',
   });
@@ -71,6 +72,7 @@ export default function AdminAnnouncementsPage() {
         scope: form.scope,
         trackId: form.scope === 'track' ? parseInt(form.trackId, 10) : null,
         cohortId: form.scope === 'cohort' ? form.cohortId : null,
+        audience: form.scope !== 'system' ? form.audience : 'all',
         sendEmail: form.sendEmail,
         publishAt: form.publishAt || null,
       }),
@@ -79,7 +81,7 @@ export default function AdminAnnouncementsPage() {
     if (res.ok && data.announcement) {
       setMessageType('success');
       setMessage(editingId ? 'Announcement updated.' : 'Announcement created.');
-      setForm({ title: '', body: '', scope: 'system', trackId: '', cohortId: '', sendEmail: true, publishAt: '' });
+      setForm({ title: '', body: '', scope: 'system', trackId: '', cohortId: '', audience: 'all', sendEmail: true, publishAt: '' });
       setEditingId(null);
       await loadData();
     } else {
@@ -110,6 +112,7 @@ export default function AdminAnnouncementsPage() {
       scope: announcement.scope || 'system',
       trackId: announcement.track_id || '',
       cohortId: announcement.cohort_id || '',
+      audience: announcement.audience || 'all',
       sendEmail: announcement.send_email !== false,
       publishAt: announcement.publish_at ? new Date(announcement.publish_at).toISOString().slice(0, 16) : '',
     });
@@ -117,7 +120,7 @@ export default function AdminAnnouncementsPage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setForm({ title: '', body: '', scope: 'system', trackId: '', cohortId: '', sendEmail: true, publishAt: '' });
+    setForm({ title: '', body: '', scope: 'system', trackId: '', cohortId: '', audience: 'all', sendEmail: true, publishAt: '' });
   };
 
   return (
@@ -193,6 +196,19 @@ export default function AdminAnnouncementsPage() {
               </select>
             </AdminFormField>
           )}
+          {form.scope !== 'system' && (
+            <AdminFormField label="Audience">
+              <select
+                value={form.audience}
+                onChange={(e) => setForm((f) => ({ ...f, audience: e.target.value }))}
+                className={inputClass}
+              >
+                <option value="all">Everyone (participants & facilitators)</option>
+                <option value="participants">Participants only</option>
+                <option value="facilitators">Facilitators only</option>
+              </select>
+            </AdminFormField>
+          )}
           {!editingId && (
             <label className="admin-form-checkbox">
               <input
@@ -246,6 +262,7 @@ export default function AdminAnnouncementsPage() {
                 <p className="admin-list-item-meta">
                   {a.is_published ? 'Published' : 'Scheduled'}
                   {a.publish_at && ` · ${new Date(a.publish_at).toLocaleString()}`}
+                  {a.audience && a.audience !== 'all' && ` · ${a.audience === 'participants' ? 'Participants only' : 'Facilitators only'}`}
                 </p>
                 <p className="admin-list-item-body">{a.body}</p>
               </li>

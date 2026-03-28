@@ -23,7 +23,7 @@ export async function POST(request) {
     const admin = await getAdminOrUserFromRequest(request);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await request.json();
-    const { title, body: message, scope, trackId, cohortId, isPublished, sendEmail, publishAt } = body;
+    const { title, body: message, scope, trackId, cohortId, isPublished, sendEmail, publishAt, audience } = body;
     if (!title?.trim() || !message?.trim()) {
       return NextResponse.json({ error: 'title and body are required' }, { status: 400 });
     }
@@ -47,6 +47,7 @@ export async function POST(request) {
       isPublished: shouldPublishNow && (isPublished ?? true),
       publishAt: publishDate,
       sendEmail: sendEmail !== false,
+      audience: audience || 'all',
     });
     let recipientsCount = 0;
     if (shouldPublishNow) {

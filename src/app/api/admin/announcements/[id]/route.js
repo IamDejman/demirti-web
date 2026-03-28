@@ -63,7 +63,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ announcement: updated, recipients: recipientsResult.recipients.length });
     }
 
-    const { title, body: message, scope, trackId, cohortId, publishAt, sendEmail } = body;
+    const { title, body: message, scope, trackId, cohortId, publishAt, sendEmail, audience } = body;
     if (!title?.trim() || !message?.trim()) {
       return NextResponse.json({ error: 'title and body are required' }, { status: 400 });
     }
@@ -72,6 +72,7 @@ export async function PUT(request, { params }) {
     const isPublished = publishInFuture ? false : true;
     const parsedTrackId = trackId ? parseInt(trackId, 10) : null;
     const parsedCohortId = cohortId || null;
+    const validAudience = ['all', 'participants', 'facilitators'].includes(audience) ? audience : 'all';
     const result = await sql`
       UPDATE announcements
       SET title = ${title.trim()},
@@ -81,7 +82,8 @@ export async function PUT(request, { params }) {
           cohort_id = ${parsedCohortId},
           publish_at = ${publishDate},
           is_published = ${isPublished},
-          send_email = ${sendEmail !== false}
+          send_email = ${sendEmail !== false},
+          audience = ${validAudience}
       WHERE id = ${id}
       RETURNING *;
     `;

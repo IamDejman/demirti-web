@@ -26,7 +26,7 @@ export async function sendAnnouncementEmails({ recipients, announcement }) {
           ${escapeHtml(announcement.body)?.replace(/\n/g, '<br/>') || ''}
         </div>
         <p style="margin-top:16px;">You can log in to your dashboard for more details.</p>
-        <a href="${baseUrl}" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
+        <a href="${baseUrl}/login" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
       </div>
     `;
     try {
@@ -66,7 +66,7 @@ export async function sendChatMessageEmails({ recipients, message, sender, roomT
           ${escapeHtml(resolvedBody).replace(/\n/g, '<br/>')}
         </div>
         <p style="margin-top:16px;">Open your dashboard to reply.</p>
-        <a href="${baseUrl}" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
+        <a href="${baseUrl}/login" style="display:inline-block; margin-top:8px; color:#0066cc;">Open CVERSE Academy</a>
       </div>
     `;
     try {

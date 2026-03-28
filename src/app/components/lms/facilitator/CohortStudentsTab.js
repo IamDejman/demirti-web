@@ -13,7 +13,7 @@ export default function CohortStudentsTab({ students }) {
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
-      <LmsCard title="Students" subtitle={`${students.length} enrolled`} icon={LmsIcons.users} hoverable={false}>
+      <LmsCard title="Students" subtitle={`${students.length} enrolled`} icon={LmsIcons.users}>
         {students.length === 0 ? (
           <LmsEmptyState icon={LmsIcons.users} title="No students enrolled" description="Students enroll through the admin or application flow." />
         ) : (

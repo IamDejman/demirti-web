@@ -31,7 +31,7 @@ export default function ChatMessageList({
 
   if (!selectedRoom) {
     return (
-      <LmsCard className="md:col-span-2 flex flex-col min-h-[400px]" hoverable={false}>
+      <LmsCard className="md:col-span-2 flex flex-col min-h-[400px]">
         <div className="flex-1 flex items-center justify-center">
           <p style={{ fontSize: '0.875rem', color: 'var(--neutral-400)' }}>
             Select a conversation or start a new one.
@@ -45,7 +45,7 @@ export default function ChatMessageList({
     <LmsCard
       title={selectedRoom.displayTitle || 'Messages'}
       className="md:col-span-2 flex flex-col"
-      hoverable={false}
+     
       action={
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button

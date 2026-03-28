@@ -47,7 +47,7 @@
   --header-offset-tablet: 88px;
   --header-offset-mobile: 82px;
   /* LMS top navigation height (used for fixed header + content offset) */
-  --lms-topnav-height: 64px;
+  --lms-topnav-height: 52px;
   /* Standard section spacing */
   --section-padding-y: 5rem;
   --section-padding-y-sm: 4rem;
@@ -75,12 +75,23 @@
   --lms-space-6: 1.5rem;
   --lms-space-8: 2rem;
   --lms-space-10: 2.5rem;
+  --lms-space-12: 3rem;
+  --lms-space-16: 4rem;
   /* LMS typography */
+  --lms-title-lg: 1.75rem;
   --lms-title: 1.5rem;
   --lms-title-sm: 1.125rem;
-  --lms-body: 0.9375rem;
+  --lms-body: 1rem;
   --lms-body-sm: 0.875rem;
+  --lms-caption: 0.8125rem;
   --lms-line-height: 1.6;
+  /* LMS shadows (scoped to avoid affecting admin/marketing pages) */
+  --lms-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --lms-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --lms-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* LMS transitions */
+  --lms-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --lms-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 
@@ -3676,7 +3687,7 @@ main.admin-with-fixed-nav {
   padding: var(--lms-space-6) var(--lms-space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--lms-space-8);
+  gap: var(--lms-space-10);
 }
 @media (min-width: 1024px) {
   .lms-main-content {
@@ -3693,7 +3704,7 @@ main.admin-with-fixed-nav {
   z-index: 50;
   height: var(--lms-topnav-height);
   background: var(--background-color);
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--neutral-100);
 }
 .lms-topnav-inner {
   display: flex;
@@ -3754,12 +3765,12 @@ main.admin-with-fixed-nav {
   gap: 6px;
   padding: 0 14px;
   height: var(--lms-topnav-height);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--neutral-500);
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.15s;
+  transition: color var(--lms-transition-fast);
 }
 .lms-topnav-link:hover {
   color: var(--neutral-800);
@@ -3774,7 +3785,7 @@ main.admin-with-fixed-nav {
   bottom: 0;
   left: 10px;
   right: 10px;
-  height: 2.5px;
+  height: 2px;
   background: var(--primary-color);
   border-radius: 2px 2px 0 0;
 }
@@ -3789,7 +3800,7 @@ main.admin-with-fixed-nav {
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 9px;
+  border-radius: 6px;
   color: white;
   background: var(--primary-color);
 }
@@ -3798,14 +3809,12 @@ main.admin-with-fixed-nav {
 .lms-topnav-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: auto;
   flex-shrink: 0;
 }
 @media (max-width: 768px) {
   .lms-topnav-actions-mobile-open > *:not(.lms-topnav-hamburger) {
-    /* When the mobile menu is open, keep only the toggle icon in the top bar
-       so the dropdown below feels like a single, unified menu instead of two bars. */
     display: none;
   }
 }
@@ -3814,12 +3823,12 @@ main.admin-with-fixed-nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   color: var(--neutral-500);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--lms-transition-fast), color var(--lms-transition-fast);
 }
 .lms-topnav-icon-badge {
   position: absolute;
@@ -3845,24 +3854,24 @@ main.admin-with-fixed-nav {
   color: var(--neutral-800);
 }
 .lms-topnav-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   overflow: hidden;
-  background: rgba(0, 82, 163, 0.1);
-  color: var(--primary-color);
+  background: var(--neutral-100);
+  color: var(--neutral-600);
   text-decoration: none;
   flex-shrink: 0;
-  border: 2px solid var(--neutral-200);
-  transition: border-color 0.15s;
+  border: 1px solid var(--neutral-200);
+  transition: border-color var(--lms-transition-fast);
 }
 .lms-topnav-avatar:hover {
-  border-color: var(--primary-color);
+  border-color: var(--neutral-400);
 }
 .lms-topnav-avatar-sm {
   width: 30px;
@@ -3995,31 +4004,23 @@ main.admin-with-fixed-nav {
 
 .lms-card {
   background: var(--background-color);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--neutral-200);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+  transition: background-color var(--lms-transition-fast);
 }
 
 .lms-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  background-color: var(--neutral-50);
 }
-
-/* Card accent variants */
-.lms-card-accent-primary { border-left: 4px solid var(--primary-color); }
-.lms-card-accent-success { border-left: 4px solid #10b981; }
-.lms-card-accent-warning { border-left: 4px solid #f59e0b; }
-.lms-card-accent-danger { border-left: 4px solid #ef4444; }
-.lms-card-accent-info { border-left: 4px solid #3b82f6; }
 
 .lms-empty-state {
   background: transparent;
 }
 
 .lms-empty-state-icon svg {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
 }
 
 /* LMS Form inputs - focus ring (override preflight) */
@@ -4031,7 +4032,7 @@ textarea.lms-form-textarea.border-token:focus,
 select.lms-form-select.border-token:focus {
   outline: none !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 22%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent) !important;
 }
 
 /* LMS loading skeleton */
@@ -4118,25 +4119,23 @@ select.lms-form-select.border-token:focus {
 }
 
 .lms-table thead {
-  background-color: var(--neutral-50);
-  border-bottom: 1px solid var(--neutral-200);
+  background-color: transparent;
+  border-bottom: 1px solid var(--neutral-100);
 }
 
 .lms-table th {
   text-align: left;
-  padding: var(--lms-space-3) var(--lms-space-4);
+  padding: var(--lms-space-4) var(--lms-space-5);
   font-size: var(--lms-body-sm);
-  font-weight: 600;
-  color: var(--neutral-600);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  font-weight: 500;
+  color: var(--neutral-400);
 }
 
 .lms-table td {
-  padding: var(--lms-space-3) var(--lms-space-4);
+  padding: var(--lms-space-4) var(--lms-space-5);
   font-size: var(--lms-body);
   color: var(--neutral-700);
-  border-bottom: 1px solid var(--neutral-100);
+  border-bottom: 1px solid var(--neutral-50);
 }
 
 .lms-table tbody tr:hover {
@@ -4234,56 +4233,42 @@ select.lms-form-select.border-token:focus {
 /* LMS stat cards */
 .lms-stat-card {
   background: var(--background-color);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--neutral-200);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   padding: var(--lms-space-6);
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color var(--lms-transition-fast);
 }
 
 .lms-stat-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.lms-stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color, #00c896));
-  border-radius: 12px 12px 0 0;
+  background-color: var(--neutral-50);
 }
 
 .lms-stat-value {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--neutral-900);
   line-height: 1.2;
 }
 
 .lms-stat-label {
   font-size: var(--lms-body-sm);
-  font-weight: 500;
-  color: var(--neutral-500);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 400;
+  color: var(--neutral-400);
   margin-top: var(--lms-space-1);
 }
 
 .lms-stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.1));
-  color: var(--primary-color);
+  background: var(--neutral-100);
+  color: var(--neutral-500);
   margin-bottom: var(--lms-space-3);
 }
 
@@ -4293,11 +4278,11 @@ select.lms-form-select.border-token:focus {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-size: var(--lms-body-sm);
   font-weight: 600;
-  border-radius: 10px;
-  min-height: 44px;
+  border-radius: 8px;
+  min-height: 40px;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
@@ -4310,7 +4295,7 @@ select.lms-form-select.border-token:focus {
     transform: scale(0.98);
   }
   .lms-btn:focus-visible {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 30%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 30%, transparent);
   }
 }
 
@@ -4323,13 +4308,10 @@ select.lms-form-select.border-token:focus {
 .lms-btn-primary {
   background: var(--primary-color);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .lms-btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary-color) 35%, transparent);
-  transform: translateY(-1px);
 }
 
 .lms-btn-secondary {
@@ -4346,7 +4328,7 @@ select.lms-form-select.border-token:focus {
 .lms-btn-outline {
   background: transparent;
   color: var(--primary-color);
-  border: 1.5px solid var(--primary-color);
+  border: 1px solid var(--primary-color);
 }
 
 .lms-btn-outline:hover:not(:disabled) {
@@ -4356,10 +4338,10 @@ select.lms-form-select.border-token:focus {
 }
 
 .lms-btn-sm {
-  padding: 0.5rem 1rem;
+  padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
-  min-height: 38px;
-  border-radius: 8px;
+  min-height: 34px;
+  border-radius: 6px;
 }
 
 .lms-btn:disabled {
@@ -4390,7 +4372,7 @@ select.lms-form-select.border-token:focus {
 .lms-tabs-list {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid var(--neutral-200);
+  border-bottom: 1px solid var(--neutral-100);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -4404,18 +4386,18 @@ select.lms-form-select.border-token:focus {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.25rem;
+  padding: 0.75rem 1.125rem;
   font-size: var(--lms-body-sm);
   font-weight: 500;
   color: var(--neutral-500);
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color var(--lms-transition-fast), border-color var(--lms-transition-fast);
   white-space: nowrap;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .lms-tabs-tab:hover {
@@ -4425,7 +4407,8 @@ select.lms-form-select.border-token:focus {
 .lms-tabs-tab-active {
   color: var(--primary-color);
   font-weight: 600;
-  border-bottom-color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: -1px;
 }
 
 .lms-tabs-tab-icon {
@@ -4521,7 +4504,7 @@ select.lms-form-select.border-token:focus {
 .lms-input:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 22%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent);
 }
 
 .lms-input:disabled {
@@ -5126,14 +5109,14 @@ textarea.lms-form-textarea.border-token {
 /* LMS card icon box (announcements, etc.) */
 .lms-card-icon-box {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(0, 82, 163, 0.1), rgba(0, 166, 126, 0.08));
-  color: var(--primary-color);
+  background: var(--neutral-100);
+  color: var(--neutral-500);
 }
 
 /* LMS certificate card */
@@ -5144,11 +5127,11 @@ textarea.lms-form-textarea.border-token {
 }
 .lms-certificate-card-header {
   padding: var(--lms-space-5) var(--lms-space-6);
-  background: linear-gradient(135deg, var(--primary-color) 0%, #0066cc 50%, #00a67e 100%);
+  background: var(--neutral-900);
   color: white;
 }
 .lms-certificate-card-header-sub {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.6);
 }
 .lms-certificate-card-body {
   padding: var(--lms-space-4) var(--lms-space-6);
@@ -5157,14 +5140,14 @@ textarea.lms-form-textarea.border-token {
 
 /* LMS slot card (office hours) */
 .lms-slot-card {
-  border-radius: 12px;
+  border-radius: 10px;
   padding: var(--lms-space-5);
-  border: 1px solid var(--neutral-100);
+  border: 1px solid var(--neutral-200);
   background: white;
-  transition: box-shadow 0.2s ease;
+  transition: background-color var(--lms-transition-fast);
 }
 .lms-slot-card:hover {
-  box-shadow: var(--shadow-md);
+  background-color: var(--neutral-50);
 }
 .lms-slot-card-divider {
   border-top: 1px solid var(--neutral-100);
@@ -5357,8 +5340,8 @@ textarea.lms-form-textarea.border-token {
 
 /* LMS greeting header */
 .lms-greeting {
-  font-size: 1.75rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--neutral-900);
   line-height: 1.2;
 }

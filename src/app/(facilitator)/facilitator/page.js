@@ -82,7 +82,7 @@ export default function FacilitatorDashboardPage() {
 
       <div className="grid md:grid-cols-2" style={{ gap: 'var(--lms-space-6)', alignItems: 'start' }}>
         {/* Cohorts */}
-        <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`} accent="primary">
+        <LmsCard title="Your cohorts" subtitle={`${cohorts.length} cohort${cohorts.length !== 1 ? 's' : ''} assigned`}>
           {cohorts.length === 0 ? (
             <LmsEmptyState icon={LmsIcons.inbox} title="No cohorts assigned yet" description="Contact an admin to get assigned to cohorts." />
           ) : (
@@ -105,7 +105,7 @@ export default function FacilitatorDashboardPage() {
         {/* Upcoming events */}
         <LmsCard
           title="Upcoming events"
-          accent="info"
+         
           action={
             <a href="/api/calendar/ics" className="lms-btn lms-btn-sm lms-btn-outline">
               Download .ics

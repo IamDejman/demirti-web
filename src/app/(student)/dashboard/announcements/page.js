@@ -50,7 +50,7 @@ export default function AnnouncementsPage() {
     return (
       <div className="flex flex-col" style={{ gap: 'var(--lms-space-8)' }}>
         <LmsPageHeader title="Announcements" />
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState
             icon={LmsIcons.megaphone}
             title="Failed to load announcements"
@@ -66,7 +66,7 @@ export default function AnnouncementsPage() {
       <LmsPageHeader title="Announcements" />
 
       {announcements.length === 0 ? (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState
             icon={LmsIcons.megaphone}
             title="No announcements yet"
@@ -76,7 +76,7 @@ export default function AnnouncementsPage() {
       ) : (
         <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
           {announcements.map((a, i) => (
-            <LmsCard key={a.id} accent={i === 0 ? 'primary' : undefined} hoverable={false}>
+            <LmsCard key={a.id}>
               <div className="flex items-start gap-4">
                 <div className="lms-card-icon-box">
                   {LmsIcons.megaphone}

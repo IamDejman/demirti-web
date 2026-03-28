@@ -36,7 +36,7 @@ export default function StudentWeeksPage() {
       />
 
       {weeks.length === 0 ? (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState
             title="No weeks yet"
             description="Weeks will appear here when your cohort curriculum is set up."

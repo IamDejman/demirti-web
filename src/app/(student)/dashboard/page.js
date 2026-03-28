@@ -92,7 +92,7 @@ export default function StudentDashboardPage() {
 
   if (error) {
     return (
-      <LmsCard hoverable={false}>
+      <LmsCard>
         <LmsEmptyState
           icon={LmsIcons.inbox}
           title="Failed to load dashboard"
@@ -121,7 +121,7 @@ export default function StudentDashboardPage() {
       </div>
 
       {!currentCohort ? (
-        <LmsCard hoverable={false}>
+        <LmsCard>
           <LmsEmptyState
             icon={LmsIcons.inbox}
             title="You're not enrolled in any cohort yet"
@@ -163,7 +163,7 @@ export default function StudentDashboardPage() {
               const endD = nextLiveClass.end ? new Date(nextLiveClass.end) : new Date(startD.getTime() + 2 * 60 * 60 * 1000);
               const isLive = now >= startD && now <= endD;
               return (
-                <LmsCard accent="info" hoverable={false}>
+                <LmsCard>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.video}</div>
@@ -214,7 +214,7 @@ export default function StudentDashboardPage() {
 
             {/* Next assignment deadline */}
             {upcomingDeadlines.length > 0 && (
-              <LmsCard hoverable={false}>
+              <LmsCard>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.clipboard}</div>
@@ -237,7 +237,7 @@ export default function StudentDashboardPage() {
 
             {/* Latest announcement */}
             {latestAnnouncement && (
-              <LmsCard hoverable={false}>
+              <LmsCard>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.megaphone}</div>
@@ -259,7 +259,7 @@ export default function StudentDashboardPage() {
 
             {/* Current week quick link */}
             {currentWeek && (
-              <LmsCard hoverable={false}>
+              <LmsCard>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="lms-card-icon-box w-10 h-10 flex-shrink-0">{LmsIcons.book}</div>

@@ -27,7 +27,8 @@ function isSuccessFeedback(message) {
     lower.includes('scheduled') ||
     lower.includes('assigned') ||
     lower.includes('removed') ||
-    lower.includes('enrolled')
+    lower.includes('enrolled') ||
+    lower.includes('resent')
   );
 }
 

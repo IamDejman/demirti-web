@@ -530,6 +530,7 @@ export async function initializeLmsSchema() {
   `;
   await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS publish_at TIMESTAMP;`.catch(() => {});
   await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS send_email BOOLEAN DEFAULT true;`.catch(() => {});
+  await sql`ALTER TABLE announcements ADD COLUMN IF NOT EXISTS audience VARCHAR(20) DEFAULT 'all';`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_announcements_scope ON announcements(scope);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_announcements_track_id ON announcements(track_id);`.catch(() => {});
   await sql`CREATE INDEX IF NOT EXISTS idx_announcements_cohort_id ON announcements(cohort_id);`.catch(() => {});
@@ -1789,14 +1790,15 @@ export async function bulkUpdateAttendance(liveClassId, updates, markedBy) {
 }
 
 // --- Announcements & Notifications ---
-export async function createAnnouncement({ title, body, scope = 'system', trackId = null, cohortId = null, createdBy = null, isPublished = true, publishAt = null, sendEmail = true }) {
+export async function createAnnouncement({ title, body, scope = 'system', trackId = null, cohortId = null, createdBy = null, isPublished = true, publishAt = null, sendEmail = true, audience = 'all' }) {
   await ensureLmsSchema();
   const { stripHtml, sanitizeHtml } = await import('@/lib/sanitize');
   const safeTitle = stripHtml(title);
   const safeBody = sanitizeHtml(body);
+  const validAudience = ['all', 'participants', 'facilitators'].includes(audience) ? audience : 'all';
   const result = await sql`
-    INSERT INTO announcements (title, body, scope, track_id, cohort_id, created_by, is_published, publish_at, send_email)
-    VALUES (${safeTitle}, ${safeBody}, ${scope}, ${trackId}, ${cohortId}, ${createdBy}, ${isPublished}, ${publishAt}, ${sendEmail})
+    INSERT INTO announcements (title, body, scope, track_id, cohort_id, created_by, is_published, publish_at, send_email, audience)
+    VALUES (${safeTitle}, ${safeBody}, ${scope}, ${trackId}, ${cohortId}, ${createdBy}, ${isPublished}, ${publishAt}, ${sendEmail}, ${validAudience})
     RETURNING *;
   `;
   return result.rows[0];
@@ -1947,7 +1949,8 @@ export async function markAnnouncementsRead(userId, announcementIds) {
 export async function createAnnouncementNotifications(announcement) {
   await ensureLmsSchema();
   if (!announcement) return [];
-  const { scope, track_id: trackId, cohort_id: cohortId, title, body } = announcement;
+  const { scope, track_id: trackId, cohort_id: cohortId, title, body, audience } = announcement;
+  const aud = audience || 'all';
   let recipients = [];
   let trackName = null;
   let cohortName = null;
@@ -1976,33 +1979,75 @@ export async function createAnnouncementNotifications(announcement) {
     `;
     recipients = res.rows;
   } else if (scope === 'track' && trackId) {
-    const res = await sql`
-      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
-      FROM users u
-      JOIN cohort_students cs ON cs.student_id = u.id
-      JOIN cohorts c ON c.id = cs.cohort_id
-      WHERE c.track_id = ${trackId}
-      UNION
-      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
-      FROM users u
-      JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
-      JOIN cohorts c ON c.id = cf.cohort_id
-      WHERE c.track_id = ${trackId};
-    `;
-    recipients = res.rows;
+    const includeParticipants = aud === 'all' || aud === 'participants';
+    const includeFacilitators = aud === 'all' || aud === 'facilitators';
+    if (includeParticipants && includeFacilitators) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_students cs ON cs.student_id = u.id
+        JOIN cohorts c ON c.id = cs.cohort_id
+        WHERE c.track_id = ${trackId}
+        UNION
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
+        JOIN cohorts c ON c.id = cf.cohort_id
+        WHERE c.track_id = ${trackId};
+      `;
+      recipients = res.rows;
+    } else if (includeParticipants) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_students cs ON cs.student_id = u.id
+        JOIN cohorts c ON c.id = cs.cohort_id
+        WHERE c.track_id = ${trackId};
+      `;
+      recipients = res.rows;
+    } else if (includeFacilitators) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
+        JOIN cohorts c ON c.id = cf.cohort_id
+        WHERE c.track_id = ${trackId};
+      `;
+      recipients = res.rows;
+    }
   } else if (scope === 'cohort' && cohortId) {
-    const res = await sql`
-      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
-      FROM users u
-      JOIN cohort_students cs ON cs.student_id = u.id
-      WHERE cs.cohort_id = ${cohortId}
-      UNION
-      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
-      FROM users u
-      JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
-      WHERE cf.cohort_id = ${cohortId};
-    `;
-    recipients = res.rows;
+    const includeParticipants = aud === 'all' || aud === 'participants';
+    const includeFacilitators = aud === 'all' || aud === 'facilitators';
+    if (includeParticipants && includeFacilitators) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_students cs ON cs.student_id = u.id
+        WHERE cs.cohort_id = ${cohortId}
+        UNION
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
+        WHERE cf.cohort_id = ${cohortId};
+      `;
+      recipients = res.rows;
+    } else if (includeParticipants) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_students cs ON cs.student_id = u.id
+        WHERE cs.cohort_id = ${cohortId};
+      `;
+      recipients = res.rows;
+    } else if (includeFacilitators) {
+      const res = await sql`
+        SELECT DISTINCT u.id, u.email, u.first_name, u.last_name
+        FROM users u
+        JOIN cohort_facilitators cf ON cf.facilitator_id = u.id
+        WHERE cf.cohort_id = ${cohortId};
+      `;
+      recipients = res.rows;
+    }
   }
 
   if (recipients.length > 0) {

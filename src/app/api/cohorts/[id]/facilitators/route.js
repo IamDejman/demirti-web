@@ -90,6 +90,46 @@ export async function POST(request, { params }) {
   }
 }
 
+export async function PATCH(request, { params }) {
+  try {
+    const admin = await getAdminOrUserFromRequest(request);
+    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { id } = await params;
+    if (!id) return NextResponse.json({ error: 'Cohort ID required' }, { status: 400 });
+    const cohort = await getCohortById(id);
+    if (!cohort) return NextResponse.json({ error: 'Cohort not found' }, { status: 404 });
+    const body = await request.json();
+    const { facilitatorId } = body;
+    if (!facilitatorId) {
+      return NextResponse.json({ error: 'facilitatorId is required' }, { status: 400 });
+    }
+    const userRes = await sql`SELECT id, email, first_name, last_name, role FROM users WHERE id = ${facilitatorId} LIMIT 1;`;
+    const user = userRes.rows[0];
+    if (!user) return NextResponse.json({ error: 'Facilitator not found' }, { status: 404 });
+
+    await sendFacilitatorWelcomeEmail({
+      recipient: user,
+      cohort,
+      tempPassword: null,
+    });
+
+    recordAuditLog({
+      userId: String(admin.id),
+      action: 'facilitator.invite_resent',
+      targetType: 'cohort',
+      targetId: id,
+      details: { facilitator_email: user.email, cohort_name: cohort.name },
+      actorEmail: admin.email,
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+    }).catch(() => {});
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    reportError(e, { route: 'PATCH /api/cohorts/[id]/facilitators' });
+    return NextResponse.json({ error: 'Failed to resend invitation' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     const admin = await getAdminOrUserFromRequest(request);

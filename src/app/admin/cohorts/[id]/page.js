@@ -63,10 +63,10 @@ function StatusBadge({ status }) {
 }
 
 const TABS = [
-  { key: 'curriculum', label: 'Curriculum', icon: '📚' },
-  { key: 'students', label: 'Students', icon: '👥' },
-  { key: 'facilitators', label: 'Facilitators', icon: '🎓' },
-  { key: 'enrollment', label: 'Enrollment', icon: '📋' },
+  { key: 'curriculum', label: 'Curriculum' },
+  { key: 'students', label: 'Students' },
+  { key: 'facilitators', label: 'Facilitators' },
+  { key: 'enrollment', label: 'Enrollment' },
 ];
 
 export default function AdminCohortDetailPage() {
@@ -748,10 +748,10 @@ export default function AdminCohortDetailPage() {
       {/* Stats overview */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          { label: 'Students', value: students.length, color: '#0052a3', icon: '👥' },
-          { label: 'Facilitators', value: facilitators.length, color: '#7c3aed', icon: '🎓' },
-          { label: 'Weeks', value: `${unlockedWeeks}/${weeks.length}`, color: '#059669', icon: '📅' },
-          { label: 'Live classes', value: liveClasses.length, color: '#ea580c', icon: '📹' },
+          { label: 'Students', value: students.length, color: '#0052a3' },
+          { label: 'Facilitators', value: facilitators.length, color: '#7c3aed' },
+          { label: 'Weeks', value: `${unlockedWeeks}/${weeks.length}`, color: '#059669' },
+          { label: 'Live classes', value: liveClasses.length, color: '#ea580c' },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -763,9 +763,8 @@ export default function AdminCohortDetailPage() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <div style={{ marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)', fontWeight: 500 }}>{stat.label}</span>
-              <span style={{ fontSize: '1.25rem' }}>{stat.icon}</span>
             </div>
             <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-color)' }}>{stat.value}</div>
           </div>
@@ -830,7 +829,6 @@ export default function AdminCohortDetailPage() {
               gap: '0.375rem',
             }}
           >
-            <span style={{ fontSize: '1rem' }}>{tab.icon}</span>
             {tab.label}
             {tab.key === 'students' && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>({students.length})</span>}
             {tab.key === 'facilitators' && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>({facilitators.length})</span>}
@@ -890,10 +888,7 @@ export default function AdminCohortDetailPage() {
       {/* Facilitators tab */}
       {activeTab === 'facilitators' && (
         <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>🎓</span>
-            Facilitators
-          </h2>
+          <h2 className="admin-card-title">Facilitators</h2>
           <form onSubmit={handleAssignFacilitator} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', padding: '1rem', background: '#f9fafb', borderRadius: 8, marginBottom: '1.5rem' }}>
             <div className="admin-form-field" style={{ flex: '1 1 140px' }}>
               <label className="admin-form-label">First name</label>
@@ -913,7 +908,6 @@ export default function AdminCohortDetailPage() {
 
           {facilitators.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f3f4f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', marginBottom: '0.75rem' }}>🎓</div>
               <p style={{ fontSize: '0.9375rem' }}>No facilitators assigned yet.</p>
             </div>
           ) : (
@@ -957,10 +951,7 @@ export default function AdminCohortDetailPage() {
       {activeTab === 'enrollment' && (
         <>
           <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>✉️</span>
-              Enroll by email
-            </h2>
+            <h2 className="admin-card-title">Enroll by email</h2>
             <form onSubmit={handleEnrollByEmail} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', padding: '1rem', background: '#f9fafb', borderRadius: 8 }}>
               <div className="admin-form-field" style={{ flex: '1 1 280px' }}>
                 <label className="admin-form-label">Student email</label>
@@ -980,10 +971,7 @@ export default function AdminCohortDetailPage() {
 
           {applicationsNotEnrolled.length > 0 && (
             <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: '1.5rem' }}>
-              <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #fff7ed, #fed7aa)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>📋</span>
-                Applicants ({applicationsNotEnrolled.length})
-              </h2>
+              <h2 className="admin-card-title">Applicants ({applicationsNotEnrolled.length})</h2>
               <p style={{ color: 'var(--text-light)', fontSize: '0.8125rem', marginBottom: '1rem' }}>Applicants for this track not yet enrolled. Click Enroll to add them.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {applicationsPaginated.map((app) => (

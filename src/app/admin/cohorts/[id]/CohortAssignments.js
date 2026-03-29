@@ -22,7 +22,7 @@ function isSuccessFeedback(message) {
   );
 }
 
-function SectionCard({ icon, iconBg, title, children }) {
+function SectionCard({ title, children }) {
   return (
     <div style={{
       background: '#fff',
@@ -33,16 +33,7 @@ function SectionCard({ icon, iconBg, title, children }) {
       <div style={{
         padding: '1rem 1.25rem',
         borderBottom: '1px solid #f3f4f6',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
       }}>
-        <span style={{
-          width: 28, height: 28, borderRadius: 6,
-          background: iconBg || 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.8125rem',
-        }}>{icon}</span>
         <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-color)' }}>{title}</h3>
       </div>
       <div style={{ padding: '1.25rem' }}>
@@ -114,7 +105,7 @@ export default function CohortAssignments({
 
       {/* Week management row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <SectionCard icon="+" iconBg="linear-gradient(135deg, #ecfdf5, #d1fae5)" title="Create week">
+        <SectionCard title="Create week">
           <form onSubmit={handleCreateWeek} style={formGroupStyle}>
             <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.75rem' }}>
               <div className="admin-form-field" style={formFieldStyle}>
@@ -152,7 +143,7 @@ export default function CohortAssignments({
           </form>
         </SectionCard>
 
-        <SectionCard icon="📅" iconBg="linear-gradient(135deg, #eff6ff, #dbeafe)" title="Weeks overview">
+        <SectionCard title="Weeks overview">
           <div className="admin-form-field" style={{ marginBottom: '1rem' }}>
             <select
               value={selectedWeekId}
@@ -162,7 +153,7 @@ export default function CohortAssignments({
               <option value="">Select a week to manage</option>
               {weeks.map((w) => (
                 <option key={w.id} value={w.id}>
-                  Week {w.week_number} · {w.title} {w.is_locked ? '🔒' : '🔓'}
+                  Week {w.week_number} · {w.title}{w.is_locked ? ' (Locked)' : ''}
                 </option>
               ))}
             </select>
@@ -205,7 +196,7 @@ export default function CohortAssignments({
                   }}>
                     {w.title}
                   </span>
-                  <span style={{ fontSize: '0.75rem' }}>{w.is_locked ? '🔒' : '🔓'}</span>
+                  {w.is_locked && <span style={{ fontSize: '0.6875rem', color: '#9ca3af', fontWeight: 500 }}>Locked</span>}
                 </div>
               ))}
             </div>
@@ -226,7 +217,7 @@ export default function CohortAssignments({
       {/* Content/material/assignment forms — shown when a week is selected */}
       {selectedWeekId && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <SectionCard icon="📄" iconBg="linear-gradient(135deg, #fef3c7, #fde68a)" title="Add content">
+          <SectionCard title="Add content">
             <form onSubmit={handleCreateContent} style={formGroupStyle}>
               <div className="admin-form-field">
                 <select value={contentForm.type} onChange={(e) => setContentForm((f) => ({ ...f, type: e.target.value }))}>
@@ -253,7 +244,7 @@ export default function CohortAssignments({
             </form>
           </SectionCard>
 
-          <SectionCard icon="📦" iconBg="linear-gradient(135deg, #f0f9ff, #bae6fd)" title="Add material">
+          <SectionCard title="Add material">
             <form onSubmit={handleCreateMaterial} style={formGroupStyle}>
               <div className="admin-form-field">
                 <select value={materialForm.type} onChange={(e) => setMaterialForm((f) => ({ ...f, type: e.target.value }))}>
@@ -271,7 +262,7 @@ export default function CohortAssignments({
             </form>
           </SectionCard>
 
-          <SectionCard icon="📝" iconBg="linear-gradient(135deg, #fdf2f8, #fce7f3)" title="Add assignment">
+          <SectionCard title="Add assignment">
             <form onSubmit={handleCreateAssignment} style={formGroupStyle}>
               <div className="admin-form-field">
                 <select
@@ -311,7 +302,7 @@ export default function CohortAssignments({
       {/* Existing content/materials list */}
       {selectedWeekId && weekDetails && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <SectionCard icon="📄" iconBg="linear-gradient(135deg, #fef3c7, #fde68a)" title="Current content">
+          <SectionCard title="Current content">
             {weekDetails.contentItems?.length ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {weekDetails.contentItems.map((item) => (
@@ -340,7 +331,7 @@ export default function CohortAssignments({
             )}
           </SectionCard>
 
-          <SectionCard icon="📦" iconBg="linear-gradient(135deg, #f0f9ff, #bae6fd)" title="Current materials">
+          <SectionCard title="Current materials">
             {weekDetails.materials?.length ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {weekDetails.materials.map((item) => (
@@ -374,7 +365,6 @@ export default function CohortAssignments({
       {/* Live classes */}
       <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #fef2f2, #fecaca)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>📹</span>
           Live classes
           <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 400, marginLeft: 'auto' }}>All times in WAT (UTC+1)</span>
         </h2>
@@ -412,7 +402,6 @@ export default function CohortAssignments({
 
         {liveClasses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f3f4f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', marginBottom: '0.75rem' }}>📹</div>
             <p style={{ fontSize: '0.9375rem' }}>No live classes scheduled yet.</p>
           </div>
         ) : (
@@ -422,12 +411,6 @@ export default function CohortAssignments({
                 display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem',
                 padding: '0.875rem 1rem', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff',
               }}>
-                <span style={{
-                  width: 32, height: 32, borderRadius: 6,
-                  background: 'linear-gradient(135deg, #fef2f2, #fecaca)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.8125rem', flexShrink: 0,
-                }}>📹</span>
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{lc.week_title || `Week ${lc.week_number}`}</div>
                   <div style={{ fontSize: '0.8125rem', color: 'var(--text-light)' }}>

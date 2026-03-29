@@ -2,18 +2,101 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AdminPageHeader,
-  AdminCard,
-  AdminFormField,
-  AdminButton,
-  AdminMessage,
-  AdminEmptyState,
-} from '../../components/admin';
-
+import { AdminPageHeader, AdminButton } from '../../components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
 
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+const STATUS_CONFIG = {
+  published: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Published' },
+  scheduled: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Scheduled' },
+};
+
+function StatusBadge({ published }) {
+  const config = published ? STATUS_CONFIG.published : STATUS_CONFIG.scheduled;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.3rem 0.75rem',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        borderRadius: 20,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.color}30`,
+      }}
+    >
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: config.color }} />
+      {config.label}
+    </span>
+  );
+}
+
+const labelStyle = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.375rem',
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '0.5rem 0.75rem',
+  border: '1px solid #d1d5db',
+  borderRadius: 8,
+  fontSize: '0.875rem',
+  outline: 'none',
+  background: '#fff',
+};
+
+const cardStyle = {
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  background: '#fff',
+  overflow: 'hidden',
+};
+
+const cardHeaderStyle = {
+  padding: '1rem 1.25rem',
+  borderBottom: '1px solid #e5e7eb',
+  fontWeight: 600,
+  fontSize: '0.9375rem',
+  color: '#111827',
+};
+
+const cardBodyStyle = {
+  padding: '1.25rem',
+};
+
+const rowStyle = {
+  borderRadius: 8,
+  border: '1px solid #e5e7eb',
+  padding: '0.875rem 1rem',
+  marginBottom: '0.625rem',
+};
+
+const metaTextStyle = {
+  fontSize: '0.8125rem',
+  color: '#6b7280',
+  margin: 0,
+  lineHeight: 1.5,
+};
+
+const smallBtnBase = {
+  padding: '0.3rem 0.625rem',
+  fontSize: '0.75rem',
+  fontWeight: 500,
+  borderRadius: 6,
+  border: '1px solid',
+  cursor: 'pointer',
+  background: 'transparent',
+};
 
 export default function AdminAnnouncementsPage() {
   const router = useRouter();
@@ -124,152 +207,236 @@ export default function AdminAnnouncementsPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1rem' }}>
       <AdminPageHeader title="Announcements" description="Create and manage LMS announcements for students." />
 
-      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+      {message && (
+        <div
+          style={{
+            padding: '0.75rem 1rem',
+            borderRadius: 8,
+            marginBottom: '1.25rem',
+            fontSize: '0.875rem',
+            border: `1px solid ${messageType === 'success' ? '#059669' : '#dc2626'}30`,
+            backgroundColor: messageType === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+            color: messageType === 'success' ? '#059669' : '#dc2626',
+          }}
+        >
+          {message}
+        </div>
+      )}
 
-      <AdminCard title={editingId ? 'Edit announcement' : 'Create announcement'}>
-        <form onSubmit={handleSubmit} className="admin-form-section">
-          <AdminFormField label="Title">
-            <input
-              type="text"
-              placeholder="Announcement title"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Message">
-            <textarea
-              placeholder="Announcement content"
-              rows={4}
-              value={form.body}
-              onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Publish at (optional)">
-            <input
-              type="datetime-local"
-              value={form.publishAt}
-              onChange={(e) => setForm((f) => ({ ...f, publishAt: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Scope">
-            <select
-              value={form.scope}
-              onChange={(e) => setForm((f) => ({ ...f, scope: e.target.value }))}
-              className={inputClass}
-            >
-              <option value="system">System-wide</option>
-              <option value="track">Track</option>
-              <option value="cohort">Cohort</option>
-            </select>
-          </AdminFormField>
-          {form.scope === 'track' && (
-            <AdminFormField label="Track">
-              <select
-                value={form.trackId}
-                onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="">Select track</option>
-                {tracks.map((t) => (
-                  <option key={t.id} value={t.id}>{t.track_name}</option>
-                ))}
-              </select>
-            </AdminFormField>
-          )}
-          {form.scope === 'cohort' && (
-            <AdminFormField label="Cohort">
-              <select
-                value={form.cohortId}
-                onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="">Select cohort</option>
-                {cohorts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </AdminFormField>
-          )}
-          {form.scope !== 'system' && (
-            <AdminFormField label="Audience">
-              <select
-                value={form.audience}
-                onChange={(e) => setForm((f) => ({ ...f, audience: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="all">Everyone (participants & facilitators)</option>
-                <option value="participants">Participants only</option>
-                <option value="facilitators">Facilitators only</option>
-              </select>
-            </AdminFormField>
-          )}
-          {!editingId && (
-            <label className="admin-form-checkbox">
-              <input
-                type="checkbox"
-                checked={form.sendEmail}
-                onChange={(e) => setForm((f) => ({ ...f, sendEmail: e.target.checked }))}
-              />
-              <span>Send email notification (Resend)</span>
-            </label>
-          )}
-          <div className="admin-action-group" style={{ marginTop: '1rem' }}>
-            <AdminButton type="submit" variant="primary">
-              {editingId ? 'Update' : 'Publish'}
-            </AdminButton>
-            {editingId && (
-              <AdminButton type="button" variant="secondary" onClick={resetForm}>
-                Cancel
-              </AdminButton>
-            )}
-          </div>
-        </form>
-      </AdminCard>
+      {/* Form Card */}
+      <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
+        <div style={cardHeaderStyle}>
+          {editingId ? 'Edit Announcement' : 'Create Announcement'}
+        </div>
+        <div style={cardBodyStyle}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <label style={labelStyle}>Title</label>
+                <input
+                  type="text"
+                  placeholder="Announcement title"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  style={inputStyle}
+                />
+              </div>
 
-      <AdminCard title="Recent announcements">
-        {announcements.length === 0 ? (
-          <AdminEmptyState message="No announcements yet." description="Create your first announcement above." />
-        ) : (
-          <ul className="admin-list">
-            {announcements.map((a) => (
-              <li key={a.id} className="admin-list-item">
-                <div className="admin-list-item-header">
-                  <p className="admin-list-item-title">{a.title}</p>
-                  <div className="admin-action-group">
-                    {!a.is_published && (
+              <div>
+                <label style={labelStyle}>Message</label>
+                <textarea
+                  placeholder="Announcement content"
+                  rows={4}
+                  value={form.body}
+                  onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>Publish at (optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={form.publishAt}
+                    onChange={(e) => setForm((f) => ({ ...f, publishAt: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Scope</label>
+                  <select
+                    value={form.scope}
+                    onChange={(e) => setForm((f) => ({ ...f, scope: e.target.value }))}
+                    style={inputStyle}
+                  >
+                    <option value="system">System-wide</option>
+                    <option value="track">Track</option>
+                    <option value="cohort">Cohort</option>
+                  </select>
+                </div>
+              </div>
+
+              {form.scope === 'track' && (
+                <div>
+                  <label style={labelStyle}>Track</label>
+                  <select
+                    value={form.trackId}
+                    onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
+                    style={inputStyle}
+                  >
+                    <option value="">Select track</option>
+                    {tracks.map((t) => (
+                      <option key={t.id} value={t.id}>{t.track_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {form.scope === 'cohort' && (
+                <div>
+                  <label style={labelStyle}>Cohort</label>
+                  <select
+                    value={form.cohortId}
+                    onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
+                    style={inputStyle}
+                  >
+                    <option value="">Select cohort</option>
+                    {cohorts.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {form.scope !== 'system' && (
+                <div>
+                  <label style={labelStyle}>Audience</label>
+                  <select
+                    value={form.audience}
+                    onChange={(e) => setForm((f) => ({ ...f, audience: e.target.value }))}
+                    style={inputStyle}
+                  >
+                    <option value="all">Everyone (participants & facilitators)</option>
+                    <option value="participants">Participants only</option>
+                    <option value="facilitators">Facilitators only</option>
+                  </select>
+                </div>
+              )}
+
+              {!editingId && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#374151', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.sendEmail}
+                    onChange={(e) => setForm((f) => ({ ...f, sendEmail: e.target.checked }))}
+                    style={{ accentColor: '#059669' }}
+                  />
+                  Send email notification (Resend)
+                </label>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.625rem', marginTop: '0.25rem' }}>
+                <AdminButton type="submit" variant="primary">
+                  {editingId ? 'Update' : 'Publish'}
+                </AdminButton>
+                {editingId && (
+                  <AdminButton type="button" variant="secondary" onClick={resetForm}>
+                    Cancel
+                  </AdminButton>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Announcements List Card */}
+      <div style={cardStyle}>
+        <div style={cardHeaderStyle}>
+          Recent Announcements
+        </div>
+        <div style={cardBodyStyle}>
+          {announcements.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#9ca3af' }}>
+              <p style={{ fontSize: '0.9375rem', fontWeight: 500, margin: '0 0 0.375rem' }}>No announcements yet</p>
+              <p style={{ fontSize: '0.8125rem', margin: 0 }}>Create your first announcement above.</p>
+            </div>
+          ) : (
+            <div>
+              {announcements.map((a) => (
+                <div key={a.id} style={rowStyle}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.375rem' }}>
+                        <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827' }}>
+                          {a.title}
+                        </span>
+                        <StatusBadge published={a.is_published} />
+                      </div>
+                      <p style={{ ...metaTextStyle, marginBottom: '0.375rem' }}>
+                        {a.scope === 'system' ? 'System-wide' : a.scope === 'track' ? 'Track' : 'Cohort'}
+                        {a.publish_at && ` \u00B7 ${new Date(a.publish_at).toLocaleString()}`}
+                        {a.audience && a.audience !== 'all' && ` \u00B7 ${a.audience === 'participants' ? 'Participants only' : 'Facilitators only'}`}
+                      </p>
+                      <p style={{ fontSize: '0.8125rem', color: '#374151', margin: 0, lineHeight: 1.5 }}>
+                        {a.body}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.375rem', flexShrink: 0 }}>
+                      {!a.is_published && (
+                        <button
+                          type="button"
+                          onClick={() => handlePublishNow(a)}
+                          style={{
+                            ...smallBtnBase,
+                            borderColor: '#05966930',
+                            color: '#059669',
+                          }}
+                          onMouseEnter={(e) => { e.target.style.backgroundColor = 'rgba(5,150,105,0.06)'; }}
+                          onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; }}
+                        >
+                          Publish now
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => handlePublishNow(a)}
-                        className="admin-link admin-link-success"
+                        onClick={() => handleEdit(a)}
+                        style={{
+                          ...smallBtnBase,
+                          borderColor: '#2563eb30',
+                          color: '#2563eb',
+                        }}
+                        onMouseEnter={(e) => { e.target.style.backgroundColor = 'rgba(37,99,235,0.06)'; }}
+                        onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; }}
                       >
-                        Publish now
+                        Edit
                       </button>
-                    )}
-                    <button type="button" onClick={() => handleEdit(a)} className="admin-link admin-link-primary">
-                      Edit
-                    </button>
-                    <button type="button" onClick={() => handleDelete(a.id)} className="admin-link admin-link-danger">
-                      Delete
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(a.id)}
+                        style={{
+                          ...smallBtnBase,
+                          borderColor: '#dc262630',
+                          color: '#dc2626',
+                        }}
+                        onMouseEnter={(e) => { e.target.style.backgroundColor = 'rgba(220,38,38,0.06)'; }}
+                        onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <p className="admin-list-item-meta">
-                  {a.is_published ? 'Published' : 'Scheduled'}
-                  {a.publish_at && ` · ${new Date(a.publish_at).toLocaleString()}`}
-                  {a.audience && a.audience !== 'all' && ` · ${a.audience === 'participants' ? 'Participants only' : 'Facilitators only'}`}
-                </p>
-                <p className="admin-list-item-body">{a.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </AdminCard>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

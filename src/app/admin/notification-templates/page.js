@@ -2,16 +2,37 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AdminPageHeader,
-  AdminCard,
-  AdminFormField,
-  AdminButton,
-  AdminMessage,
-  AdminEmptyState,
-} from '../../components/admin';
-
+import { AdminPageHeader } from '../../components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
+
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '0.9375rem',
+  color: 'var(--text-color)',
+  background: '#fff',
+  boxSizing: 'border-box',
+};
+
+const CARD_STYLE = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1rem',
+};
 
 const emptyForm = {
   eventKey: '',
@@ -20,8 +41,6 @@ const emptyForm = {
   emailEnabled: true,
   inAppEnabled: true,
 };
-
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 
 export default function AdminNotificationTemplatesPage() {
   const router = useRouter();
@@ -92,99 +111,257 @@ export default function AdminNotificationTemplatesPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <AdminPageHeader
-        title="Notification Templates"
-        description="Edit notification templates for events. Toggle in-app and email delivery per template."
-      />
+    <div className="admin-dashboard admin-content-area">
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Notification Templates"
+          description="Edit notification templates for events. Toggle in-app and email delivery per template."
+        />
 
-      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
-
-      <AdminCard title={editingId ? 'Edit template' : 'Create template'}>
-        <form onSubmit={handleSubmit} className="admin-form-section">
-          <AdminFormField label="Event key">
-            <input
-              type="text"
-              placeholder="e.g. assignment_posted"
-              value={form.eventKey}
-              onChange={(e) => setForm((f) => ({ ...f, eventKey: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Title template">
-            <input
-              type="text"
-              placeholder="Title template"
-              value={form.titleTemplate}
-              onChange={(e) => setForm((f) => ({ ...f, titleTemplate: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Body template">
-            <textarea
-              rows={3}
-              placeholder="Body template"
-              value={form.bodyTemplate}
-              onChange={(e) => setForm((f) => ({ ...f, bodyTemplate: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <label className="admin-form-checkbox">
-            <input
-              type="checkbox"
-              checked={form.inAppEnabled}
-              onChange={(e) => setForm((f) => ({ ...f, inAppEnabled: e.target.checked }))}
-            />
-            <span>In-app enabled</span>
-          </label>
-          <label className="admin-form-checkbox">
-            <input
-              type="checkbox"
-              checked={form.emailEnabled}
-              onChange={(e) => setForm((f) => ({ ...f, emailEnabled: e.target.checked }))}
-            />
-            <span>Email enabled</span>
-          </label>
-          <div className="admin-action-group" style={{ marginTop: '1rem' }}>
-            <AdminButton type="submit" variant="primary">
-              {editingId ? 'Update' : 'Save'}
-            </AdminButton>
-            {editingId && (
-              <AdminButton type="button" variant="secondary" onClick={resetForm}>
-                Cancel
-              </AdminButton>
-            )}
+        {message && (
+          <div style={{
+            ...CARD_STYLE,
+            padding: '0.875rem 1rem',
+            background: messageType === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+            borderColor: messageType === 'success' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(220, 38, 38, 0.2)',
+            color: messageType === 'success' ? '#059669' : '#dc2626',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <span style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: messageType === 'success' ? '#059669' : '#dc2626',
+              flexShrink: 0,
+            }} />
+            {message}
           </div>
-        </form>
-      </AdminCard>
-
-      <AdminCard title="Templates">
-        {templates.length === 0 ? (
-          <AdminEmptyState message="No templates yet." description="Create a template above." />
-        ) : (
-          <ul className="admin-list">
-            {templates.map((t) => (
-              <li key={t.id} className="admin-list-item">
-                <div className="admin-list-item-header">
-                  <p className="admin-list-item-title">{t.event_key}</p>
-                  <div className="admin-action-group">
-                    <button type="button" onClick={() => handleEdit(t)} className="admin-link admin-link-primary">
-                      Edit
-                    </button>
-                    <button type="button" onClick={() => handleDelete(t.id)} className="admin-link admin-link-danger">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-                <p className="admin-list-item-meta">
-                  In-app: {t.in_app_enabled !== false ? 'On' : 'Off'} · Email: {t.email_enabled !== false ? 'On' : 'Off'}
-                </p>
-                {t.title_template && <p className="admin-list-item-body">Title: {t.title_template}</p>}
-              </li>
-            ))}
-          </ul>
         )}
-      </AdminCard>
+
+        {/* Form card */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+            marginTop: 0,
+          }}>{editingId ? 'Edit template' : 'Create template'}</h3>
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={LABEL_STYLE}>Event key</label>
+                <input
+                  type="text"
+                  placeholder="e.g. assignment_posted"
+                  value={form.eventKey}
+                  onChange={(e) => setForm((f) => ({ ...f, eventKey: e.target.value }))}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              <div>
+                <label style={LABEL_STYLE}>Title template</label>
+                <input
+                  type="text"
+                  placeholder="Title template"
+                  value={form.titleTemplate}
+                  onChange={(e) => setForm((f) => ({ ...f, titleTemplate: e.target.value }))}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              <div>
+                <label style={LABEL_STYLE}>Body template</label>
+                <textarea
+                  rows={3}
+                  placeholder="Body template"
+                  value={form.bodyTemplate}
+                  onChange={(e) => setForm((f) => ({ ...f, bodyTemplate: e.target.value }))}
+                  style={{ ...INPUT_STYLE, resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-color)' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.inAppEnabled}
+                    onChange={(e) => setForm((f) => ({ ...f, inAppEnabled: e.target.checked }))}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  In-app enabled
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-color)' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.emailEnabled}
+                    onChange={(e) => setForm((f) => ({ ...f, emailEnabled: e.target.checked }))}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  Email enabled
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.625rem 1.5rem',
+                    background: 'var(--primary-color, #0052a3)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {editingId ? 'Update' : 'Save'}
+                </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{
+                      padding: '0.625rem 1.5rem',
+                      background: '#f3f4f6',
+                      color: 'var(--text-color)',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 8,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Templates list */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+            marginTop: 0,
+          }}>Templates</h3>
+
+          {templates.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
+              <p style={{ fontWeight: 600, color: 'var(--text-color)', marginBottom: '0.25rem' }}>No templates yet</p>
+              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Create a template above.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {templates.map((t) => (
+                <div
+                  key={t.id}
+                  style={{
+                    padding: '0.875rem 1rem',
+                    borderRadius: 8,
+                    border: '1px solid #e5e7eb',
+                    background: '#fff',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9375rem', flex: '1 1 auto' }}>
+                      {t.event_key}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(t)}
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          color: 'var(--primary-color, #0052a3)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(t.id)}
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          color: '#dc2626',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.375rem', fontSize: '0.8125rem' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: t.in_app_enabled !== false ? 'rgba(5, 150, 105, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                      color: t.in_app_enabled !== false ? '#059669' : '#6b7280',
+                    }}>
+                      <span style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: t.in_app_enabled !== false ? '#059669' : '#6b7280',
+                      }} />
+                      In-app {t.in_app_enabled !== false ? 'On' : 'Off'}
+                    </span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: t.email_enabled !== false ? 'rgba(5, 150, 105, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                      color: t.email_enabled !== false ? '#059669' : '#6b7280',
+                    }}>
+                      <span style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: t.email_enabled !== false ? '#059669' : '#6b7280',
+                      }} />
+                      Email {t.email_enabled !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                  {t.title_template && (
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-light)', marginTop: '0.375rem' }}>
+                      Title: {t.title_template}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

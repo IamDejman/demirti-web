@@ -3342,6 +3342,119 @@ textarea:focus {
 }
 
 /* ============================================
+   ADMIN MOBILE RESPONSIVE ENHANCEMENTS
+============================================ */
+@media (max-width: 768px) {
+  /* Tables: always allow horizontal scroll */
+  .admin-table-container,
+  .admin-table-desktop,
+  .admin-cohort-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Form groups: stack on mobile */
+  .admin-form-group[style*="display: flex"],
+  form[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Buttons: full width on mobile when inside forms */
+  .admin-card form .admin-btn-primary,
+  .admin-card form .admin-btn-secondary {
+    width: 100%;
+  }
+
+  /* Action groups: stack vertically */
+  .admin-page-header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .admin-page-header-actions .admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Card toolbar: wrap nicely */
+  .admin-card-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-card-toolbar > * {
+    width: 100%;
+  }
+
+  /* Stats grid: 2 columns on tablet */
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Modal: better mobile sizing */
+  .admin-modal {
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Track stats grid: single column */
+  .admin-track-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* User detail grid: single column */
+  .admin-user-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cohort detail: inline grids collapse */
+  .admin-cohort-detail div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stats grid: single column on small phones */
+  .admin-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Page header: tighter padding */
+  .admin-page-header {
+    padding: 1rem 1.25rem;
+  }
+  .admin-page-title {
+    font-size: 1.25rem !important;
+  }
+
+  /* Cards: tighter padding */
+  .admin-card {
+    padding: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  .admin-card-title {
+    font-size: 1rem;
+  }
+
+  /* Buttons: ensure minimum touch target */
+  .admin-btn {
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+  .admin-btn-sm {
+    min-height: 38px;
+  }
+
+  /* Form fields: prevent zoom on iOS */
+  .admin-form-field input,
+  .admin-form-field textarea,
+  .admin-form-field select,
+  .admin-form-input {
+    font-size: 16px !important;
+  }
+}
+
+/* ============================================
    DATA SCIENCE SI FAQ PAGE
 ============================================ */
 .faq-question {

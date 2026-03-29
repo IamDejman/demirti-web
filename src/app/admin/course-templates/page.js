@@ -2,19 +2,39 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AdminPageHeader,
-  AdminCard,
-  AdminFormField,
-  AdminButton,
-  AdminMessage,
-  AdminEmptyState,
-} from '../../components/admin';
-
+import { AdminPageHeader } from '../../components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
 
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '0.9375rem',
+  color: 'var(--text-color)',
+  background: '#fff',
+  boxSizing: 'border-box',
+};
+
+const CARD_STYLE = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1rem',
+};
+
 const emptyForm = { name: '', trackId: '', cohortId: '' };
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
 
 export default function AdminCourseTemplatesPage() {
   const router = useRouter();
@@ -84,89 +104,190 @@ export default function AdminCourseTemplatesPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <AdminPageHeader
-        title="Course Templates"
-        description="Create templates and apply them to cohorts to structure course content."
-      />
+    <div className="admin-dashboard admin-content-area">
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Course Templates"
+          description="Create templates and apply them to cohorts to structure course content."
+        />
 
-      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
-
-      <AdminCard title="Create template">
-        <form onSubmit={handleCreate} className="admin-form-section">
-          <AdminFormField label="Template name">
-            <input
-              type="text"
-              placeholder="Template name"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <div className="admin-form-grid">
-            <AdminFormField label="Optional track">
-              <select
-                value={form.trackId}
-                onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="">Select track</option>
-                {tracks.map((t) => (
-                  <option key={t.id} value={t.id}>{t.track_name}</option>
-                ))}
-              </select>
-            </AdminFormField>
-            <AdminFormField label="Copy from cohort (optional)">
-              <select
-                value={form.cohortId}
-                onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="">Select cohort</option>
-                {cohorts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </AdminFormField>
+        {message && (
+          <div style={{
+            ...CARD_STYLE,
+            padding: '0.875rem 1rem',
+            background: messageType === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+            borderColor: messageType === 'success' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(220, 38, 38, 0.2)',
+            color: messageType === 'success' ? '#059669' : '#dc2626',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <span style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: messageType === 'success' ? '#059669' : '#dc2626',
+              flexShrink: 0,
+            }} />
+            {message}
           </div>
-          <AdminButton type="submit" variant="primary">
-            Create template
-          </AdminButton>
-        </form>
-      </AdminCard>
+        )}
 
-      <AdminCard title="Templates">
-        {templates.length === 0 ? (
-          <AdminEmptyState message="No templates yet." description="Create a template above." />
-        ) : (
-          <ul className="admin-list">
-            {templates.map((t) => (
-              <li key={t.id} className="admin-list-item">
-                <div className="admin-list-item-header">
-                  <p className="admin-list-item-title">{t.name}</p>
-                  <span className="admin-badge">{t.track_id ? 'Track template' : 'General'}</span>
-                </div>
-                <div className="admin-action-group" style={{ marginTop: '0.75rem' }}>
+        {/* Create template form */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+          }}>Create template</h3>
+          <form onSubmit={handleCreate}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={LABEL_STYLE}>Template name</label>
+                <input
+                  type="text"
+                  placeholder="Template name"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={LABEL_STYLE}>Optional track</label>
                   <select
-                    value={applyTarget[t.id] || ''}
-                    onChange={(e) => setApplyTarget((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                    className={inputClass}
-                    style={{ width: 'auto', minWidth: '180px', flex: '1 1 auto' }}
+                    value={form.trackId}
+                    onChange={(e) => setForm((f) => ({ ...f, trackId: e.target.value }))}
+                    style={INPUT_STYLE}
                   >
-                    <option value="">Apply to cohort</option>
+                    <option value="">Select track</option>
+                    {tracks.map((t) => (
+                      <option key={t.id} value={t.id}>{t.track_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={LABEL_STYLE}>Copy from cohort (optional)</label>
+                  <select
+                    value={form.cohortId}
+                    onChange={(e) => setForm((f) => ({ ...f, cohortId: e.target.value }))}
+                    style={INPUT_STYLE}
+                  >
+                    <option value="">Select cohort</option>
                     {cohorts.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                  <AdminButton variant="primary" onClick={() => handleApply(t.id)}>
-                    Apply
-                  </AdminButton>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </AdminCard>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.625rem 1.5rem',
+                    background: 'var(--primary-color, #0052a3)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Create template
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Templates list */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+          }}>Templates</h3>
+
+          {templates.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
+              <p style={{ fontWeight: 600, color: 'var(--text-color)', marginBottom: '0.25rem' }}>No templates yet</p>
+              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Create a template above.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {templates.map((t) => (
+                <div
+                  key={t.id}
+                  style={{
+                    padding: '0.875rem 1rem',
+                    borderRadius: 8,
+                    border: '1px solid #e5e7eb',
+                    background: '#fff',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9375rem', flex: '1 1 auto' }}>
+                      {t.name}
+                    </div>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: t.track_id ? 'rgba(37, 99, 235, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                      color: t.track_id ? '#2563eb' : '#6b7280',
+                    }}>
+                      <span style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: t.track_id ? '#2563eb' : '#6b7280',
+                      }} />
+                      {t.track_id ? 'Track template' : 'General'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                    <select
+                      value={applyTarget[t.id] || ''}
+                      onChange={(e) => setApplyTarget((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                      style={{ ...INPUT_STYLE, width: 'auto', minWidth: 180, flex: '1 1 auto' }}
+                    >
+                      <option value="">Apply to cohort</option>
+                      {cohorts.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => handleApply(t.id)}
+                      style={{
+                        padding: '0.625rem 1.25rem',
+                        background: 'var(--primary-color, #0052a3)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

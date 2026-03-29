@@ -4,6 +4,37 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminPageHeader } from '../../components/admin';
 
+const AVAILABILITY_CONFIG = {
+  available: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Available' },
+  full: { color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', label: 'Full' },
+};
+
+function StatusBadge({ available, remaining }) {
+  const config = available ? AVAILABILITY_CONFIG.available : AVAILABILITY_CONFIG.full;
+  const label = available ? `${remaining} remaining` : config.label;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.3rem 0.75rem',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        borderRadius: 20,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.color}30`,
+      }}
+    >
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: config.color }} />
+      {label}
+    </span>
+  );
+}
+
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState([]);
   const [scholarshipRecipients, setScholarshipRecipients] = useState([]);
@@ -17,7 +48,6 @@ export default function ScholarshipsPage() {
       router.push('/admin/login');
     }
   }, [router]);
-
 
   useEffect(() => {
     loadData();
@@ -49,198 +79,261 @@ export default function ScholarshipsPage() {
 
   // Format payment amounts - these are stored in kobo (from Paystack)
   const formatCurrency = (amount) => {
-    if (!amount) return '₦0';
-    return `₦${(amount / 100).toLocaleString()}`;
+    if (!amount) return '\u20A60';
+    return `\u20A6${(amount / 100).toLocaleString()}`;
   };
+
+  const totalScholarships = scholarships.reduce((sum, s) => sum + (s.limit || 0), 0);
+  const totalUsed = scholarships.reduce((sum, s) => sum + (s.count || 0), 0);
+  const totalRemaining = scholarships.reduce((sum, s) => sum + (s.remaining || 0), 0);
+  const totalRecipients = scholarshipRecipients.reduce((sum, t) => sum + (t.recipients?.length || 0), 0);
 
   return (
     <div className="admin-dashboard admin-content-area">
-        <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          {/* Header */}
-          <AdminPageHeader
-            title="Scholarships"
-            description="Manage scholarship applications and recipients by track."
-          />
+      <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Scholarships"
+          description="Manage scholarship applications and recipients by track."
+        />
 
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem' }}>
-              <p style={{ fontSize: '1.25rem', color: '#666' }}>Loading...</p>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '4rem' }}>
+            <p style={{ fontSize: '1.25rem', color: '#666' }}>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {/* Stats Overview */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', borderTop: '3px solid #2563eb', padding: '1.25rem' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  Total Slots
+                </div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{totalScholarships}</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', borderTop: '3px solid #059669', padding: '1.25rem' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  Used
+                </div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{totalUsed}</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', borderTop: '3px solid #f59e0b', padding: '1.25rem' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  Remaining
+                </div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{totalRemaining}</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', borderTop: '3px solid #8b5cf6', padding: '1.25rem' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  Recipients
+                </div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{totalRecipients}</div>
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Scholarship Status Cards */}
-              <div className="admin-card" style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-                  Scholarship Status by Track
-                </h2>
-                
-                {scholarships.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                    No scholarship data available
-                  </p>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                    {scholarships.map((scholarship) => (
-                      <div key={scholarship.trackName} style={{
-                        padding: '1.5rem',
-                        backgroundColor: scholarship.available ? '#e8f5e9' : '#fff3cd',
-                        borderRadius: '12px',
-                        border: `2px solid ${scholarship.available ? '#00c896' : '#ffc107'}`,
-                        borderLeft: `6px solid ${scholarship.available ? '#00c896' : '#ffc107'}`
-                      }}>
-                        <h3 style={{ 
-                          fontSize: '1.5rem', 
-                          fontWeight: '700', 
-                          marginBottom: '1rem',
-                          color: '#1a1a1a'
-                        }}>
+
+            {/* Scholarship Status by Track */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: '1.5rem', marginBottom: '2rem' }}>
+              <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '1rem' }}>
+                Scholarship Status by Track
+              </div>
+
+              {scholarships.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  No scholarship data available
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                  {scholarships.map((scholarship) => (
+                    <div
+                      key={scholarship.trackName}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '0.875rem 1rem',
+                        borderRadius: 8,
+                        border: '1px solid #e5e7eb',
+                      }}
+                    >
+                      {/* Track icon */}
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {scholarship.trackName?.charAt(0)?.toUpperCase() || 'T'}
+                      </div>
+
+                      {/* Track name */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: '#111827' }}>
                           {scholarship.trackName}
-                        </h3>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#666', fontWeight: '600' }}>Scholarship Limit:</span>
-                            <span style={{ color: '#1a1a1a', fontWeight: '700', fontSize: '1.1rem' }}>
-                              {scholarship.limit}
-                            </span>
-                          </div>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#666', fontWeight: '600' }}>Used:</span>
-                            <span style={{ color: '#1a1a1a', fontWeight: '700', fontSize: '1.1rem' }}>
-                              {scholarship.count} / {scholarship.limit}
-                            </span>
-                          </div>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#666', fontWeight: '600' }}>Remaining:</span>
-                            <span style={{ 
-                              color: scholarship.available ? '#00c896' : '#dc3545',
-                              fontWeight: '700',
-                              fontSize: '1.25rem'
-                            }}>
-                              {scholarship.remaining}
-                            </span>
-                          </div>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#666', fontWeight: '600' }}>Discount:</span>
-                            <span style={{ color: '#1a1a1a', fontWeight: '700' }}>
-                              {Math.round(scholarship.discountPercentage)}%
-                            </span>
-                          </div>
-                          
-                          <div style={{
-                            marginTop: '1rem',
-                            padding: '0.75rem',
-                            backgroundColor: scholarship.available ? '#c8e6c9' : '#ffe082',
-                            borderRadius: '8px',
-                            textAlign: 'center'
-                          }}>
-                            <p style={{ 
-                              margin: 0, 
-                              fontWeight: '600',
-                              color: scholarship.available ? '#2e7d32' : '#f57c00'
-                            }}>
-                              {scholarship.available 
-                                ? `✅ ${scholarship.remaining} scholarship${scholarship.remaining !== 1 ? 's' : ''} available`
-                                : '❌ All scholarships taken'
-                              }
-                            </p>
-                          </div>
+                        </div>
+                        <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                          {Math.round(scholarship.discountPercentage)}% discount
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+
+                      {/* Usage stats */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280' }}>
+                            Used
+                          </div>
+                          <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#111827' }}>
+                            {scholarship.count} / {scholarship.limit}
+                          </div>
+                        </div>
+                        <StatusBadge available={scholarship.available} remaining={scholarship.remaining} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Scholarship Recipients */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: '1.5rem' }}>
+              <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', marginBottom: '1rem' }}>
+                Scholarship Recipients
               </div>
 
-              {/* Scholarship Recipients List */}
-              <div className="admin-card">
-                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-                  Scholarship Recipients
-                </h2>
-                
-                {scholarshipRecipients.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                    No scholarship recipients yet
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {scholarshipRecipients.map((trackData) => (
-                      <div key={trackData.trackName}>
-                        <h3 style={{ 
-                          fontSize: '1.25rem', 
-                          fontWeight: '700', 
-                          marginBottom: '1rem',
-                          color: '#0066cc',
-                          borderBottom: '2px solid #e1e4e8',
-                          paddingBottom: '0.5rem'
-                        }}>
-                          {trackData.trackName} - {trackData.recipients.length} Recipient{trackData.recipients.length !== 1 ? 's' : ''}
-                          <span style={{ 
-                            fontSize: '0.9rem', 
-                            fontWeight: '500', 
-                            color: '#666',
-                            marginLeft: '0.5rem'
-                          }}>
-                            ({Math.round(trackData.discountPercentage)}% discount)
+              {scholarshipRecipients.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  No scholarship recipients yet
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {scholarshipRecipients.map((trackData) => (
+                    <div key={trackData.trackName}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '0.75rem',
+                        paddingBottom: '0.5rem',
+                        borderBottom: '1px solid #e5e7eb',
+                      }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: '#111827' }}>
+                          {trackData.trackName}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
+                            {Math.round(trackData.discountPercentage)}% discount
                           </span>
-                        </h3>
-                        
-                        {trackData.recipients.length === 0 ? (
-                          <p style={{ color: '#666', fontStyle: 'italic' }}>
-                            No recipients for this track yet
-                          </p>
-                        ) : (
-                          <div style={{ overflowX: 'auto' }}>
-                            <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                              <thead>
-                                <tr style={{ borderBottom: '2px solid #e1e4e8', backgroundColor: '#f8f9fa' }}>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>#</th>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>Name</th>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>Email</th>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>Phone</th>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>Amount Paid</th>
-                                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#666', fontSize: '0.875rem' }}>Paid Date</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {trackData.recipients.map((recipient, index) => (
-                                  <tr key={recipient.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                    <td style={{ padding: '0.75rem', color: '#666', fontSize: '0.875rem' }}>
-                                      {index + 1}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', color: '#1a1a1a', fontWeight: '600' }}>
-                                      {recipient.firstName} {recipient.lastName}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', color: '#1a1a1a' }}>
-                                      {recipient.email}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', color: '#666', fontSize: '0.875rem' }}>
-                                      {recipient.phone}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', color: '#00c896', fontWeight: '600' }}>
-                                      {formatCurrency(recipient.amount)}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', color: '#666', fontSize: '0.875rem' }}>
-                                      {formatDate(recipient.paidAt)}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '0.2rem 0.625rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            borderRadius: 20,
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            color: '#2563eb',
+                          }}>
+                            {trackData.recipients.length} recipient{trackData.recipients.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+
+                      {trackData.recipients.length === 0 ? (
+                        <p style={{ color: '#6b7280', fontStyle: 'italic', fontSize: '0.875rem' }}>
+                          No recipients for this track yet
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {trackData.recipients.map((recipient, index) => (
+                            <div
+                              key={recipient.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.875rem',
+                                padding: '0.875rem 1rem',
+                                borderRadius: 8,
+                                border: '1px solid #e5e7eb',
+                              }}
+                            >
+                              {/* Avatar */}
+                              <div
+                                style={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#fff',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {(recipient.firstName?.charAt(0) || '').toUpperCase()}
+                                {(recipient.lastName?.charAt(0) || '').toUpperCase()}
+                              </div>
+
+                              {/* Name and email */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: '#111827' }}>
+                                  {recipient.firstName} {recipient.lastName}
+                                </div>
+                                <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                                  {recipient.email}
+                                </div>
+                              </div>
+
+                              {/* Phone */}
+                              <div style={{ flexShrink: 0, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.125rem' }}>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280' }}>
+                                  Phone
+                                </div>
+                                <div style={{ fontSize: '0.8125rem', color: '#111827' }}>
+                                  {recipient.phone || 'N/A'}
+                                </div>
+                              </div>
+
+                              {/* Amount */}
+                              <div style={{ flexShrink: 0, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.125rem' }}>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280' }}>
+                                  Paid
+                                </div>
+                                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#059669' }}>
+                                  {formatCurrency(recipient.amount)}
+                                </div>
+                              </div>
+
+                              {/* Date */}
+                              <div style={{ flexShrink: 0, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.125rem' }}>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280' }}>
+                                  Date
+                                </div>
+                                <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
+                                  {formatDate(recipient.paidAt)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
+    </div>
   );
 }
-

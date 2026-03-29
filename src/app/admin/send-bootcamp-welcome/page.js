@@ -2,10 +2,66 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminPageHeader } from '@/app/components/admin';
+import { AdminPageHeader, AdminButton } from '@/app/components/admin';
 import { DEFAULT_SPONSORED_COHORT } from '@/lib/config';
 import { getAuthHeaders } from '@/lib/authClient';
 import { useToast } from '@/app/components/ToastProvider';
+
+const STATUS_CONFIG = {
+  Paid: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', border: 'rgba(5, 150, 105, 0.2)' },
+  Sponsored: { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)', border: 'rgba(37, 99, 235, 0.2)' },
+  Unpaid: { color: '#d97706', bg: 'rgba(217, 119, 6, 0.1)', border: 'rgba(217, 119, 6, 0.2)' },
+};
+
+function StatusBadge({ status }) {
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.Unpaid;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.25rem 0.625rem',
+        fontSize: '0.6875rem',
+        fontWeight: 600,
+        borderRadius: 20,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`,
+      }}
+    >
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: config.color }} />
+      {status}
+    </span>
+  );
+}
+
+function AvatarCircle({ name }) {
+  const initials = name && name !== '\u2014'
+    ? name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
+  return (
+    <div
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        flexShrink: 0,
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
 
 export default function SendBootcampWelcomePage() {
   const router = useRouter();
@@ -49,7 +105,7 @@ export default function SendBootcampWelcomePage() {
             seenEmails.add(email);
             list.push({
               email,
-              name: [app.first_name, app.last_name].filter(Boolean).join(' ').trim() || '—',
+              name: [app.first_name, app.last_name].filter(Boolean).join(' ').trim() || '\u2014',
               status: app.status === 'paid' ? 'Paid' : 'Unpaid',
             });
           }
@@ -64,7 +120,7 @@ export default function SendBootcampWelcomePage() {
             seenEmails.add(email);
             list.push({
               email,
-              name: [s.first_name, s.last_name].filter(Boolean).join(' ').trim() || '—',
+              name: [s.first_name, s.last_name].filter(Boolean).join(' ').trim() || '\u2014',
               status: 'Sponsored',
             });
           }
@@ -148,6 +204,16 @@ export default function SendBootcampWelcomePage() {
   };
 
   const selectedCount = selectedEmails.size;
+  const paidCount = participants.filter((p) => p.status === 'Paid').length;
+  const sponsoredCount = participants.filter((p) => p.status === 'Sponsored').length;
+  const unpaidCount = participants.filter((p) => p.status === 'Unpaid').length;
+
+  const statCards = [
+    { label: 'Total Participants', value: participants.length },
+    { label: 'Paid', value: paidCount },
+    { label: 'Sponsored', value: sponsoredCount },
+    { label: 'Unpaid', value: unpaidCount },
+  ];
 
   return (
     <div className="admin-dashboard admin-content-area">
@@ -159,177 +225,173 @@ export default function SendBootcampWelcomePage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '4rem' }}>
-            <p style={{ fontSize: '1.25rem', color: '#666' }}>Loading...</p>
+            <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>Loading...</p>
           </div>
         ) : (
           <>
+            {/* Stats overview */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+              {statCards.map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    background: '#fff',
+                    borderRadius: 12,
+                    border: '1px solid #e5e7eb',
+                    padding: '1.25rem 1rem',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: '#6b7280',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    {stat.label}
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Participant list card */}
             <div
-              className="bootcamp-welcome-list"
               style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                background: '#fff',
+                borderRadius: 12,
+                border: '1px solid #e5e7eb',
                 marginBottom: '1.5rem',
                 overflow: 'hidden',
               }}
             >
-              <div className="bootcamp-welcome-header"
+              {/* List header */}
+              <div
                 style={{
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: '1px solid #e1e4e8',
-                  fontWeight: '600',
-                  color: '#666',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '1rem 1.25rem',
+                  borderBottom: '1px solid #e5e7eb',
                 }}
               >
-                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    ref={selectAllRef}
-                    checked={participants.length > 0 && selectedEmails.size === participants.length}
-                    onChange={(e) => toggleSelectAll(e.target.checked)}
-                    aria-label="Select all"
-                    style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#0066cc' }}
-                  />
-                </label>
-                <span>Name</span>
-                <span>Email</span>
-                <span>Status</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      ref={selectAllRef}
+                      checked={participants.length > 0 && selectedEmails.size === participants.length}
+                      onChange={(e) => toggleSelectAll(e.target.checked)}
+                      aria-label="Select all"
+                      style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#0052a3' }}
+                    />
+                  </label>
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: '#6b7280',
+                    }}
+                  >
+                    {selectedCount > 0 ? `${selectedCount} selected` : `${participants.length} participants`}
+                  </span>
+                </div>
               </div>
+
+              {/* Participant rows */}
               {participants.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
                   No participants found.
                 </div>
               ) : (
-                participants.map((p) => {
-                  const isChecked = selectedEmails.has(p.email);
-                  return (
-                  <div
-                    key={p.email}
-                    className="bootcamp-welcome-row"
-                    style={{
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #e1e4e8',
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleSelect(p.email)}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        padding: 0,
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                      aria-label={isChecked ? 'Deselect' : 'Select'}
-                    >
-                      {isChecked ? (
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="2" width="16" height="16" rx="3" fill="#0066cc" stroke="#0066cc" />
-                          <path d="M6 10l3 3 5-6" stroke="white" strokeWidth="2" fill="none" />
-                        </svg>
-                      ) : (
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="2" width="16" height="16" rx="3" fill="none" stroke="#999" />
-                        </svg>
-                      )}
-                    </button>
-                    <span style={{ color: '#1a1a1a' }}>{p.name}</span>
-                    <span style={{ color: '#666' }}>{p.email}</span>
-                    <span
-                      style={{
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                        fontWeight: '500',
-                        backgroundColor:
-                          p.status === 'Paid'
-                            ? '#e8f5e9'
-                            : p.status === 'Sponsored'
-                              ? '#e3f2fd'
-                              : '#fff3cd',
-                        color:
-                          p.status === 'Paid'
-                            ? '#1b5e20'
-                            : p.status === 'Sponsored'
-                              ? '#0d47a1'
-                              : '#856404',
-                      }}
-                    >
-                      {p.status}
-                    </span>
-                  </div>
-                  );
-                })
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.75rem' }}>
+                  {participants.map((p) => {
+                    const isChecked = selectedEmails.has(p.email);
+                    return (
+                      <div
+                        key={p.email}
+                        onClick={() => toggleSelect(p.email)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.875rem',
+                          padding: '0.875rem 1rem',
+                          borderRadius: 8,
+                          border: `1px solid ${isChecked ? '#0052a3' : '#e5e7eb'}`,
+                          background: isChecked ? 'rgba(0, 82, 163, 0.03)' : '#fff',
+                          cursor: 'pointer',
+                          transition: 'border-color 0.15s, background 0.15s',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}}
+                          tabIndex={-1}
+                          style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#0052a3', flexShrink: 0 }}
+                        />
+                        <AvatarCircle name={p.name} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#111827', marginBottom: '0.125rem' }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: '0.8125rem', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.email}
+                          </div>
+                        </div>
+                        <StatusBadge status={p.status} />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
 
+            {/* Success/info message */}
             {message.text && message.type !== 'error' && (
               <div
                 style={{
-                  padding: '1rem',
-                  borderRadius: '8px',
+                  padding: '1rem 1.25rem',
+                  borderRadius: 12,
+                  border: '1px solid',
                   marginBottom: '1rem',
+                  fontSize: '0.875rem',
                   backgroundColor:
-                    message.type === 'success'
-                      ? '#e8f5e9'
-                      : message.type === 'error'
-                        ? '#ffebee'
-                        : '#e3f2fd',
+                    message.type === 'success' ? 'rgba(5, 150, 105, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                  borderColor:
+                    message.type === 'success' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(37, 99, 235, 0.2)',
                   color:
-                    message.type === 'success'
-                      ? '#1b5e20'
-                      : message.type === 'error'
-                        ? '#c62828'
-                        : '#0d47a1',
+                    message.type === 'success' ? '#059669' : '#2563eb',
                 }}
               >
                 {message.text}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <AdminButton
+                variant="primary"
                 onClick={sendToSelected}
                 disabled={isSubmitting || selectedCount === 0}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  backgroundColor: selectedCount === 0 || isSubmitting ? '#999' : '#0066cc',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: selectedCount === 0 || isSubmitting ? 'not-allowed' : 'pointer',
-                }}
               >
                 {isSubmitting ? 'Sending...' : `Send to selected (${selectedCount})`}
-              </button>
-              <button
-                type="button"
+              </AdminButton>
+              <AdminButton
+                variant="secondary"
                 onClick={sendToAll}
                 disabled={isSubmitting || participants.length === 0}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  backgroundColor:
-                    participants.length === 0 || isSubmitting ? '#999' : '#00c896',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: participants.length === 0 || isSubmitting ? 'not-allowed' : 'pointer',
-                }}
               >
                 {isSubmitting ? 'Sending...' : `Send to all (${participants.length})`}
-              </button>
+              </AdminButton>
             </div>
           </>
         )}

@@ -2,17 +2,37 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AdminPageHeader,
-  AdminCard,
-  AdminFormField,
-  AdminButton,
-  AdminMessage,
-} from '../../components/admin';
-
+import { AdminPageHeader } from '../../components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
 
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '0.9375rem',
+  color: 'var(--text-color)',
+  background: '#fff',
+  boxSizing: 'border-box',
+};
+
+const CARD_STYLE = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1rem',
+};
 
 export default function AdminAiSettingsPage() {
   const router = useRouter();
@@ -87,62 +107,126 @@ export default function AdminAiSettingsPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <AdminPageHeader
-        title="AI Settings"
-        description="Configure the AI assistant: system prompt, limits, and blocked phrases."
-      />
+    <div className="admin-dashboard admin-content-area">
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <AdminPageHeader
+          title="AI Settings"
+          description="Configure the AI assistant: system prompt, limits, and blocked phrases."
+        />
 
-      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+        {message && (
+          <div style={{
+            ...CARD_STYLE,
+            padding: '0.875rem 1rem',
+            background: messageType === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+            borderColor: messageType === 'success' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(220, 38, 38, 0.2)',
+            color: messageType === 'success' ? '#059669' : '#dc2626',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <span style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: messageType === 'success' ? '#059669' : '#dc2626',
+              flexShrink: 0,
+            }} />
+            {message}
+          </div>
+        )}
 
-      {loading ? (
-        <p className="admin-loading">Loading settings...</p>
-      ) : (
-        <AdminCard>
-          <form onSubmit={handleSave} className="admin-form-section">
-            <AdminFormField label="System prompt">
-              <textarea
-                rows={5}
-                value={form.systemPrompt}
-                onChange={(e) => setForm((prev) => ({ ...prev, systemPrompt: e.target.value }))}
-                className={inputClass}
-              />
-            </AdminFormField>
-            <div className="admin-form-grid">
-              <AdminFormField label="Daily limit">
-                <input
-                  type="number"
-                  value={form.dailyLimit}
-                  onChange={(e) => setForm((prev) => ({ ...prev, dailyLimit: e.target.value }))}
-                  className={inputClass}
-                />
-              </AdminFormField>
-              <AdminFormField label="Max tokens">
-                <input
-                  type="number"
-                  value={form.maxTokens}
-                  onChange={(e) => setForm((prev) => ({ ...prev, maxTokens: e.target.value }))}
-                  className={inputClass}
-                />
-              </AdminFormField>
-            </div>
-            <AdminFormField
-              label="Blocked phrases (one per line)"
-              hint="Messages containing these phrases will be blocked."
-            >
-              <textarea
-                rows={4}
-                value={form.blockedPhrases}
-                onChange={(e) => setForm((prev) => ({ ...prev, blockedPhrases: e.target.value }))}
-                className={inputClass}
-              />
-            </AdminFormField>
-            <AdminButton type="submit" variant="primary">
-              Save settings
-            </AdminButton>
-          </form>
-        </AdminCard>
-      )}
+        {loading ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '30vh',
+            gap: '1rem',
+          }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              border: '3px solid #dbeafe',
+              borderTopColor: 'var(--primary-color, #0052a3)',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9375rem' }}>Loading settings...</p>
+          </div>
+        ) : (
+          <div style={CARD_STYLE}>
+            <form onSubmit={handleSave}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={LABEL_STYLE}>System prompt</label>
+                  <textarea
+                    rows={5}
+                    value={form.systemPrompt}
+                    onChange={(e) => setForm((prev) => ({ ...prev, systemPrompt: e.target.value }))}
+                    style={{ ...INPUT_STYLE, resize: 'vertical' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={LABEL_STYLE}>Daily limit</label>
+                    <input
+                      type="number"
+                      value={form.dailyLimit}
+                      onChange={(e) => setForm((prev) => ({ ...prev, dailyLimit: e.target.value }))}
+                      style={INPUT_STYLE}
+                    />
+                  </div>
+                  <div>
+                    <label style={LABEL_STYLE}>Max tokens</label>
+                    <input
+                      type="number"
+                      value={form.maxTokens}
+                      onChange={(e) => setForm((prev) => ({ ...prev, maxTokens: e.target.value }))}
+                      style={INPUT_STYLE}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={LABEL_STYLE}>Blocked phrases (one per line)</label>
+                  <p style={{ fontSize: '0.8125rem', color: '#9ca3af', marginBottom: '0.375rem', marginTop: 0 }}>
+                    Messages containing these phrases will be blocked.
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={form.blockedPhrases}
+                    onChange={(e) => setForm((prev) => ({ ...prev, blockedPhrases: e.target.value }))}
+                    style={{ ...INPUT_STYLE, resize: 'vertical' }}
+                  />
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '0.625rem 1.5rem',
+                      background: 'var(--primary-color, #0052a3)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Save settings
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

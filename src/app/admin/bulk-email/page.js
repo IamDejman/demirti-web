@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/ToastProvider';
-import { AdminPageHeader } from '@/app/components/admin';
+import { AdminPageHeader, AdminButton } from '@/app/components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
 
 // Simple URL regex for linkifying (http(s) and common patterns)
@@ -51,12 +51,9 @@ ${bodyContent}
 function looksLikePlainText(str) {
   if (!str || !str.trim()) return true;
   const trimmed = str.trim();
-  // Has no opening tag, or only very short fragment – treat as plain text
   if (!trimmed.includes('<')) return true;
   if (!trimmed.includes('>') || !trimmed.includes('</')) return true;
-  // Starts with a known HTML document prefix – treat as HTML
   if (/^\s*<!DOCTYPE\s+/i.test(trimmed) || /^\s*<html[\s>]/i.test(trimmed) || /^\s*<head[\s>]/i.test(trimmed) || /^\s*<body[\s>]/i.test(trimmed)) return false;
-  // Has substantial HTML (e.g. <p>, <div>) – treat as HTML
   if (/<([a-z][a-z0-9]*)\b[\s>]/i.test(trimmed)) return false;
   return true;
 }
@@ -78,22 +75,163 @@ function htmlToPlain(html) {
     .trim();
 }
 
+/* ── Shared style constants ─────────────────────────────────────────── */
+const CARD = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1.5rem',
+};
+
+const LABEL = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '0.9375rem',
+  color: '#1f2937',
+  background: '#fff',
+  outline: 'none',
+  transition: 'border-color 0.15s',
+};
+
+const SECTION_TITLE = {
+  fontSize: '1rem',
+  fontWeight: 600,
+  color: '#1f2937',
+  margin: '0 0 1rem',
+};
+
+/* ── Preview overlay (wider than standard Modal for email preview) ── */
+function PreviewOverlay({ isOpen, onClose, subject, html }) {
+  const handleEscape = useCallback(
+    (e) => { if (e.key === 'Escape') onClose?.(); },
+    [onClose]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, handleEscape]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '1.5rem',
+        animation: 'fadeIn 0.2s ease',
+      }}
+    >
+      <div style={{
+        background: '#fff',
+        borderRadius: 12,
+        border: '1px solid #e5e7eb',
+        maxWidth: 720,
+        width: '100%',
+        maxHeight: 'calc(100vh - 3rem)',
+        display: 'flex',
+        flexDirection: 'column',
+        animation: 'slideUp 0.25s ease',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.25rem',
+          borderBottom: '1px solid #e5e7eb',
+        }}>
+          <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>
+            Email Preview
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close preview"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              border: 'none',
+              background: 'transparent',
+              color: '#6b7280',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              borderRadius: 8,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: '1.25rem', overflowY: 'auto', flex: 1, minHeight: 0 }}>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <span style={{ ...LABEL, marginBottom: 0, display: 'inline' }}>SUBJECT</span>
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.9375rem', color: '#1f2937' }}>
+              {subject || '(no subject)'}
+            </span>
+          </div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+            <iframe
+              title="Email preview"
+              srcDoc={html || '<p style="padding:1rem;color:#999;">No content yet.</p>'}
+              style={{ width: '100%', minHeight: '400px', height: '60vh', border: 'none', display: 'block' }}
+              sandbox="allow-same-origin"
+            />
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
+  );
+}
+
 export default function BulkEmailPage() {
   const router = useRouter();
   const [recipients, setRecipients] = useState([]);
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
-  const [contentMode, setContentMode] = useState('html'); // 'plain' | 'html'
+  const [contentMode, setContentMode] = useState('html');
   const [plainTextContent, setPlainTextContent] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState({ type: '', message: '' });
   const [pasteEmailsInput, setPasteEmailsInput] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const { showToast } = useToast();
 
-  // Single source of truth for preview and send: apply design when content is plain text (computed each render to avoid hook-order issues)
   const effectiveHtml =
     contentMode === 'plain'
       ? plainToHtml(plainTextContent ?? '')
@@ -334,7 +472,6 @@ export default function BulkEmailPage() {
   </div>
 </body>
 </html>`);
-    setStatus({ type: 'success', message: 'Data Science cohort template loaded' });
     showToast({ type: 'success', message: 'Data Science cohort template loaded. Add recipients and send.' });
   };
 
@@ -361,7 +498,7 @@ export default function BulkEmailPage() {
 </body>
 </html>`;
     setHtmlContent(defaultTemplate);
-    setStatus({ type: 'success', message: 'Default template loaded successfully' });
+    showToast({ type: 'success', message: 'Default template loaded.' });
   };
 
   const handleSubmit = async (e) => {
@@ -437,102 +574,214 @@ export default function BulkEmailPage() {
 
   return (
     <div className="admin-dashboard admin-content-area">
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div className="container" style={{ maxWidth: 900, margin: '0 auto' }}>
         <AdminPageHeader
           title="Bulk Email"
           description="Send emails to multiple recipients. Add manually or import from CSV."
         />
-        <div className="bulk-email-page" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div className="bulk-email-card">
-          {status.message && (
-            <div style={{
-              padding: '1rem', marginBottom: '1.5rem', borderRadius: '4px',
-              backgroundColor: status.type === 'success' ? '#d4edda' : '#f8d7da',
-              color: status.type === 'success' ? '#155724' : '#721c24',
-              border: `1px solid ${status.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
-              whiteSpace: 'pre-wrap', wordBreak: 'break-word'
-            }}>
-              {status.message}
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.2rem', color: '#555', margin: 0, marginBottom: '1rem' }}>Recipients</h2>
-              <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Paste emails (one per line or comma-separated)</label>
-                <textarea value={pasteEmailsInput} onChange={(e) => setPasteEmailsInput(e.target.value)} placeholder="Paste emails here..."
-                  rows={3} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem', marginBottom: '0.5rem', fontFamily: 'monospace' }} />
-                <button type="button" onClick={addFromPaste} disabled={isSubmitting || !pasteEmailsInput.trim()} style={{ padding: '0.5rem 1rem', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem', opacity: (!pasteEmailsInput.trim() || isSubmitting) ? 0.5 : 1 }}>Add from paste</button>
-              </div>
-              <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload CSV (First Name, Last Name, Email)</label>
-                <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '0.5rem' }}>
-                  Use <strong>First Name</strong>, <strong>Last Name</strong>, and <strong>Email</strong> columns. In your email use <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{First_Name}}'}</code>, <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{Last_Name}}'}</code>, or <code style={{ background: '#eee', padding: '0.1em 0.3em', borderRadius: '3px' }}>{'{{name}}'}</code> for personalization.
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                  <button type="button" onClick={downloadSampleCSV} disabled={isSubmitting} style={{ padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>Download sample CSV</button>
-                  <input type="file" accept=".csv" onChange={handleCSVUpload} disabled={isSubmitting} style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
-                </div>
-              </div>
-              <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f9f9f9' }}>
-                {recipients.length === 0 ? <p style={{ color: '#999', fontStyle: 'italic' }}>No recipients yet.</p> : (
-                  recipients.map((r, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'white', marginBottom: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}>
-                      <span>{(r.firstName || r.lastName) ? [r.firstName, r.lastName].filter(Boolean).join(' ') : (r.name || r.email)}</span>
-                      <button type="button" onClick={() => removeRecipient(i)} disabled={isSubmitting} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
-                    </div>
-                  ))
-                )}
-              </div>
-              <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>Total: {recipients.length}</p>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Subject *</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Email subject line"
-                disabled={isSubmitting}
-                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Template</label>
-              <select
-                className="bulk-email-template-select"
-                value={selectedTemplateId}
-                onChange={(e) => loadTemplate(e.target.value)}
-                disabled={isSubmitting}
-                style={{ padding: '0.5rem 0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', backgroundColor: 'white', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+        <form onSubmit={handleSubmit}>
+          {/* ── Stats overview ───────────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            {[
+              { label: 'Recipients', value: recipients.length, color: '#0052a3' },
+              { label: 'Attachments', value: attachments.length, color: '#7c3aed' },
+              { label: 'Mode', value: contentMode === 'plain' ? 'Plain text' : 'HTML', color: '#059669' },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  background: '#fff',
+                  borderRadius: 12,
+                  padding: '1.25rem',
+                  border: '1px solid #e5e7eb',
+                  borderTop: `3px solid ${stat.color}`,
+                }}
               >
-                <option value="">Select a template...</option>
-                <option value="data-science-cohort">Data Science Cohort</option>
-                <option value="default">Default Template</option>
-              </select>
-              <input type="file" accept=".html,.htm" onChange={handleHTMLFileUpload} disabled={isSubmitting} style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.875rem' }} />
+                <div style={{ marginBottom: '0.375rem' }}>
+                  <span style={{ fontSize: '0.8125rem', color: '#6b7280', fontWeight: 500 }}>{stat.label}</span>
+                </div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937' }}>{stat.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Recipients card ──────────────────────────────────── */}
+          <div style={CARD}>
+            <h3 style={SECTION_TITLE}>Recipients</h3>
+
+            {/* Paste emails */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={LABEL}>Paste Emails</label>
+              <p style={{ fontSize: '0.8125rem', color: '#9ca3af', margin: '0 0 0.5rem' }}>
+                One per line, or comma / semicolon separated.
+              </p>
+              <textarea
+                value={pasteEmailsInput}
+                onChange={(e) => setPasteEmailsInput(e.target.value)}
+                placeholder="jane@example.com, john@example.com"
+                rows={3}
+                disabled={isSubmitting}
+                style={{ ...INPUT, fontFamily: 'monospace', fontSize: '0.875rem', resize: 'vertical' }}
+              />
+              <div style={{ marginTop: '0.5rem' }}>
+                <AdminButton
+                  variant="secondary"
+                  onClick={addFromPaste}
+                  disabled={isSubmitting || !pasteEmailsInput.trim()}
+                >
+                  Add from paste
+                </AdminButton>
+              </div>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                <label style={{ fontWeight: '500' }}>Content *</label>
-                <div style={{ display: 'flex', gap: '0.25rem' }}>
+            {/* CSV upload */}
+            <div style={{ marginBottom: '1.25rem', padding: '1rem', background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+              <label style={LABEL}>Import from CSV</label>
+              <p style={{ fontSize: '0.8125rem', color: '#9ca3af', margin: '0 0 0.75rem' }}>
+                Columns: <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>First Name</code>,{' '}
+                <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>Last Name</code>,{' '}
+                <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>Email</code>.{' '}
+                Use <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>{'{{First_Name}}'}</code>,{' '}
+                <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>{'{{Last_Name}}'}</code>, or{' '}
+                <code style={{ background: '#e5e7eb', padding: '0.1em 0.35em', borderRadius: 4, fontSize: '0.75rem' }}>{'{{name}}'}</code>{' '}
+                for personalization.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                <AdminButton variant="ghost" onClick={downloadSampleCSV} disabled={isSubmitting}>
+                  Download sample CSV
+                </AdminButton>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVUpload}
+                  disabled={isSubmitting}
+                  style={{ fontSize: '0.875rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Recipient list */}
+            <label style={LABEL}>Recipient List ({recipients.length})</label>
+            <div style={{ maxHeight: 220, overflowY: 'auto', borderRadius: 8, border: '1px solid #e5e7eb', background: '#f9fafb', padding: recipients.length > 0 ? '0.5rem' : '1rem' }}>
+              {recipients.length === 0 ? (
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: 0, textAlign: 'center' }}>No recipients added yet.</p>
+              ) : (
+                recipients.map((r, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.5rem 0.75rem',
+                      background: '#fff',
+                      borderRadius: 8,
+                      border: '1px solid #e5e7eb',
+                      marginBottom: i < recipients.length - 1 ? '0.375rem' : 0,
+                    }}
+                  >
+                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1f2937' }}>
+                        {(r.firstName || r.lastName)
+                          ? [r.firstName, r.lastName].filter(Boolean).join(' ')
+                          : (r.name || r.email)}
+                      </span>
+                      {(r.firstName || r.lastName || r.name) && (
+                        <span style={{ fontSize: '0.8125rem', color: '#6b7280', marginLeft: '0.5rem' }}>{r.email}</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRecipient(i)}
+                      disabled={isSubmitting}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#9ca3af',
+                        cursor: 'pointer',
+                        fontSize: '1.25rem',
+                        lineHeight: 1,
+                        padding: '0.25rem',
+                        borderRadius: 4,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* ── Subject card ─────────────────────────────────────── */}
+          <div style={CARD}>
+            <label style={LABEL}>Subject *</label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Email subject line"
+              disabled={isSubmitting}
+              style={INPUT}
+            />
+          </div>
+
+          {/* ── Template card ────────────────────────────────────── */}
+          <div style={CARD}>
+            <h3 style={SECTION_TITLE}>Template</h3>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+              <div style={{ flex: '1 1 200px' }}>
+                <label style={LABEL}>Load Template</label>
+                <select
+                  value={selectedTemplateId}
+                  onChange={(e) => loadTemplate(e.target.value)}
+                  disabled={isSubmitting}
+                  style={{ ...INPUT, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  <option value="">Select a template...</option>
+                  <option value="data-science-cohort">Data Science Cohort</option>
+                  <option value="default">Default Template</option>
+                </select>
+              </div>
+
+              <div style={{ flex: '1 1 200px' }}>
+                <label style={LABEL}>Or Upload HTML File</label>
+                <input
+                  type="file"
+                  accept=".html,.htm"
+                  onChange={handleHTMLFileUpload}
+                  disabled={isSubmitting}
+                  style={{ fontSize: '0.875rem' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Content card ─────────────────────────────────────── */}
+          <div style={CARD}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+              <h3 style={{ ...SECTION_TITLE, margin: 0 }}>Content *</h3>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {/* Mode toggle */}
+                <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 8, padding: '0.1875rem' }}>
                   <button
                     type="button"
                     onClick={switchToPlain}
                     disabled={isSubmitting}
                     style={{
-                      padding: '0.35rem 0.75rem',
-                      border: `1px solid ${contentMode === 'plain' ? '#0066cc' : '#ddd'}`,
-                      borderRadius: '4px',
-                      background: contentMode === 'plain' ? '#e8f2ff' : '#fff',
-                      color: contentMode === 'plain' ? '#0066cc' : '#333',
+                      padding: '0.375rem 0.75rem',
+                      borderRadius: 6,
+                      border: 'none',
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8125rem',
                       fontWeight: contentMode === 'plain' ? 600 : 400,
+                      background: contentMode === 'plain' ? '#fff' : 'transparent',
+                      color: contentMode === 'plain' ? '#1f2937' : '#6b7280',
+                      transition: 'all 0.15s',
                     }}
                   >
                     Plain text
@@ -542,86 +791,70 @@ export default function BulkEmailPage() {
                     onClick={switchToHtml}
                     disabled={isSubmitting}
                     style={{
-                      padding: '0.35rem 0.75rem',
-                      border: `1px solid ${contentMode === 'html' ? '#0066cc' : '#ddd'}`,
-                      borderRadius: '4px',
-                      background: contentMode === 'html' ? '#e8f2ff' : '#fff',
-                      color: contentMode === 'html' ? '#0066cc' : '#333',
+                      padding: '0.375rem 0.75rem',
+                      borderRadius: 6,
+                      border: 'none',
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8125rem',
                       fontWeight: contentMode === 'html' ? 600 : 400,
+                      background: contentMode === 'html' ? '#fff' : 'transparent',
+                      color: contentMode === 'html' ? '#1f2937' : '#6b7280',
+                      transition: 'all 0.15s',
                     }}
                   >
                     HTML
                   </button>
                 </div>
-                <button
-                  type="button"
+
+                <AdminButton
+                  variant="ghost"
                   onClick={() => setShowPreview(true)}
                   disabled={isSubmitting}
-                  style={{
-                    marginLeft: 'auto',
-                    padding: '0.35rem 0.75rem',
-                    border: '1px solid #0066cc',
-                    borderRadius: '4px',
-                    background: 'transparent',
-                    color: '#0066cc',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    fontSize: '0.875rem',
-                  }}
                 >
-                  Preview email
-                </button>
+                  Preview
+                </AdminButton>
               </div>
-              {contentMode === 'plain' ? (
-                <textarea
-                  value={plainTextContent}
-                  onChange={(e) => setPlainTextContent(e.target.value)}
-                  placeholder="Type your message in plain text. Line breaks become &lt;br&gt;, blank lines start new paragraphs. Use {{name}} for personalization."
-                  rows={12}
-                  disabled={isSubmitting}
-                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit' }}
-                />
-              ) : (
-                <textarea
-                  value={htmlContent}
-                  onChange={(e) => setHtmlContent(e.target.value)}
-                  placeholder="HTML email content. Use {{name}} for personalization."
-                  rows={12}
-                  disabled={isSubmitting}
-                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'monospace' }}
-                />
-              )}
             </div>
 
-            <button type="submit" disabled={isSubmitting}
-              style={{ width: '100%', padding: '1rem', backgroundColor: isSubmitting ? '#6c757d' : '#28a745', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1.1rem', fontWeight: '600', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
-              {isSubmitting ? 'Sending...' : `Send to ${recipients.length} recipient(s)`}
-            </button>
-          </form>
-        </div>
-      </div>
+            {contentMode === 'plain' ? (
+              <textarea
+                value={plainTextContent}
+                onChange={(e) => setPlainTextContent(e.target.value)}
+                placeholder="Type your message in plain text. Line breaks become <br>, blank lines start new paragraphs. Use {{name}} for personalization."
+                rows={14}
+                disabled={isSubmitting}
+                style={{ ...INPUT, fontFamily: 'inherit', resize: 'vertical' }}
+              />
+            ) : (
+              <textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                placeholder="HTML email content. Use {{name}} for personalization."
+                rows={14}
+                disabled={isSubmitting}
+                style={{ ...INPUT, fontFamily: 'monospace', fontSize: '0.875rem', resize: 'vertical' }}
+              />
+            )}
+          </div>
+
+          {/* ── Send button ──────────────────────────────────────── */}
+          <AdminButton
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+            style={{ width: '100%', padding: '0.875rem', fontSize: '1rem' }}
+          >
+            {isSubmitting ? 'Sending...' : `Send to ${recipients.length} recipient(s)`}
+          </AdminButton>
+        </form>
       </div>
 
-      <Modal
+      <PreviewOverlay
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
-        title="Email preview"
-      >
-        <div style={{ minWidth: 0 }}>
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', color: '#666' }}>
-            <strong>Subject:</strong> {effectiveSubject || '(no subject)'}
-          </p>
-          <div style={{ border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden', background: '#fff' }}>
-            <iframe
-              title="Email preview"
-              srcDoc={effectiveHtml || '<p style="padding:1rem;color:#999;">No content yet.</p>'}
-              style={{ width: '100%', minHeight: '400px', height: '70vh', border: 'none', display: 'block' }}
-              sandbox="allow-same-origin"
-            />
-          </div>
-        </div>
-      </Modal>
+        subject={effectiveSubject}
+        html={effectiveHtml}
+      />
     </div>
   );
 }

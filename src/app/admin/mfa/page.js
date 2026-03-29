@@ -2,10 +2,42 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../components/ToastProvider';
+import { AdminPageHeader } from '../../components/admin';
+
+const CARD_STYLE = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1rem',
+};
+
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '0.875rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '1.25rem',
+  textAlign: 'center',
+  letterSpacing: '0.5em',
+  fontFamily: 'monospace',
+  boxSizing: 'border-box',
+  color: 'var(--text-color)',
+};
 
 export default function AdminMfaSettings() {
-  const [status, setStatus] = useState(null); // null = loading, { enabled }
-  const [setupData, setSetupData] = useState(null); // { secret, uri }
+  const [status, setStatus] = useState(null);
+  const [setupData, setSetupData] = useState(null);
   const [code, setCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -83,173 +115,222 @@ export default function AdminMfaSettings() {
 
   if (status === null) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Loading...</div>
+      <div className="admin-dashboard admin-content-area" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '40vh',
+        gap: '1rem',
+      }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          border: '3px solid #dbeafe',
+          borderTopColor: 'var(--primary-color, #0052a3)',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <p style={{ color: 'var(--text-light)', fontSize: '0.9375rem' }}>Loading...</p>
+      </div>
     );
   }
 
-  const cardExtraStyle = {
-    maxWidth: '560px',
-    margin: '2rem auto',
-    padding: '2rem',
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.875rem',
-    border: '2px solid #e1e4e8',
-    borderRadius: '8px',
-    fontSize: '1.25rem',
-    textAlign: 'center',
-    letterSpacing: '0.5em',
-    fontFamily: 'monospace',
-    boxSizing: 'border-box',
-  };
-
-  const btnPrimary = {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#0066cc',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
-    fontSize: '1rem',
-    cursor: isLoading ? 'not-allowed' : 'pointer',
-    opacity: isLoading ? 0.6 : 1,
-    width: '100%',
-  };
-
-  const btnDanger = { ...btnPrimary, backgroundColor: '#dc2626' };
-
   return (
-    <div style={{ padding: '1rem' }}>
-      <div className="admin-card" style={cardExtraStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          <a href="/admin" style={{ color: '#0066cc', textDecoration: 'none', fontSize: '0.9rem' }}>&larr; Dashboard</a>
-        </div>
-
-        <h1 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-          Two-Factor Authentication
-        </h1>
-        <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '2rem' }}>
-          Add an extra layer of security to your admin account using an authenticator app.
-        </p>
+    <div className="admin-dashboard admin-content-area">
+      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Two-Factor Authentication"
+          description="Add an extra layer of security to your admin account using an authenticator app."
+          breadcrumb={
+            <a href="/admin" style={{ color: 'var(--text-light)', fontSize: '0.875rem', textDecoration: 'none' }}>
+              ← Dashboard
+            </a>
+          }
+        />
 
         {status.enabled ? (
           <>
+            {/* Enabled status */}
             <div style={{
-              padding: '1rem',
-              background: '#f0fdf4',
-              borderRadius: '8px',
-              border: '1px solid #bbf7d0',
-              marginBottom: '2rem',
+              ...CARD_STYLE,
+              padding: '0.875rem 1rem',
+              background: 'rgba(5, 150, 105, 0.08)',
+              borderColor: 'rgba(5, 150, 105, 0.2)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
             }}>
-              <span style={{ fontSize: '1.25rem' }}>&#x2713;</span>
-              <span style={{ fontWeight: '600', color: '#166534' }}>MFA is enabled</span>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#059669',
+                flexShrink: 0,
+              }} />
+              <span style={{ fontWeight: 600, color: '#059669', fontSize: '0.875rem' }}>MFA is enabled</span>
             </div>
 
-            <form onSubmit={handleDisable}>
-              <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
-                To disable MFA, enter a code from your authenticator app:
-              </p>
-              <input
-                type="text"
-                value={disableCode}
-                onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                required
-                disabled={isLoading}
-                style={{ ...inputStyle, marginBottom: '1rem' }}
-              />
-              <button type="submit" disabled={isLoading || disableCode.length !== 6} style={btnDanger}>
-                {isLoading ? 'Disabling...' : 'Disable MFA'}
-              </button>
-            </form>
+            {/* Disable form */}
+            <div style={CARD_STYLE}>
+              <form onSubmit={handleDisable}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', marginBottom: '1rem', marginTop: 0 }}>
+                  To disable MFA, enter a code from your authenticator app:
+                </p>
+                <input
+                  type="text"
+                  value={disableCode}
+                  onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  required
+                  disabled={isLoading}
+                  style={{ ...INPUT_STYLE, marginBottom: '1rem' }}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || disableCode.length !== 6}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1.5rem',
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                >
+                  {isLoading ? 'Disabling...' : 'Disable MFA'}
+                </button>
+              </form>
+            </div>
           </>
         ) : setupData ? (
           <>
+            {/* Setup instructions */}
             <div style={{
-              padding: '1rem',
-              background: '#fffbeb',
-              borderRadius: '8px',
-              border: '1px solid #fde68a',
-              marginBottom: '1.5rem',
+              ...CARD_STYLE,
+              background: 'rgba(234, 179, 8, 0.06)',
+              borderColor: 'rgba(234, 179, 8, 0.2)',
             }}>
-              <p style={{ fontWeight: '600', color: '#92400e', marginBottom: '0.5rem' }}>Setup Instructions</p>
-              <ol style={{ margin: 0, paddingLeft: '1.25rem', color: '#78350f', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              <p style={{
+                ...LABEL_STYLE,
+                color: '#92400e',
+                fontSize: '0.75rem',
+                marginBottom: '0.75rem',
+              }}>Setup Instructions</p>
+              <ol style={{ margin: 0, paddingLeft: '1.25rem', color: '#78350f', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <li>Open your authenticator app (Google Authenticator, Authy, etc.)</li>
                 <li>Add a new account using the secret key below</li>
                 <li>Enter the 6-digit code to verify</li>
               </ol>
             </div>
 
+            {/* Secret key */}
             <div style={{
-              padding: '1rem',
-              background: '#f8fafc',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem',
+              ...CARD_STYLE,
               textAlign: 'center',
+              background: '#f9fafb',
             }}>
-              <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.5rem' }}>Secret Key (enter manually)</p>
+              <p style={{ ...LABEL_STYLE, marginBottom: '0.75rem' }}>Secret Key (enter manually)</p>
               <code style={{
                 fontSize: '1.1rem',
-                fontWeight: '700',
+                fontWeight: 700,
                 letterSpacing: '0.15em',
                 wordBreak: 'break-all',
-                color: '#1a1a1a',
+                color: 'var(--text-color)',
                 userSelect: 'all',
               }}>
                 {setupData.secret.match(/.{1,4}/g)?.join(' ')}
               </code>
             </div>
 
-            <form onSubmit={handleEnable}>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                Verification Code
-              </label>
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                autoFocus
-                required
-                disabled={isLoading}
-                style={{ ...inputStyle, marginBottom: '1rem' }}
-              />
-              <button type="submit" disabled={isLoading || code.length !== 6} style={btnPrimary}>
-                {isLoading ? 'Verifying...' : 'Enable MFA'}
-              </button>
-            </form>
+            {/* Verification form */}
+            <div style={CARD_STYLE}>
+              <form onSubmit={handleEnable}>
+                <label style={LABEL_STYLE}>Verification Code</label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  disabled={isLoading}
+                  style={{ ...INPUT_STYLE, marginBottom: '1rem' }}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || code.length !== 6}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1.5rem',
+                    background: 'var(--primary-color, #0052a3)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                >
+                  {isLoading ? 'Verifying...' : 'Enable MFA'}
+                </button>
+              </form>
+            </div>
           </>
         ) : (
           <>
+            {/* Not enabled status */}
             <div style={{
-              padding: '1rem',
-              background: '#fef2f2',
-              borderRadius: '8px',
-              border: '1px solid #fecaca',
-              marginBottom: '2rem',
+              ...CARD_STYLE,
+              padding: '0.875rem 1rem',
+              background: 'rgba(220, 38, 38, 0.06)',
+              borderColor: 'rgba(220, 38, 38, 0.2)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
             }}>
-              <span style={{ fontSize: '1.25rem' }}>&#x26A0;</span>
-              <span style={{ fontWeight: '600', color: '#991b1b' }}>MFA is not enabled</span>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#dc2626',
+                flexShrink: 0,
+              }} />
+              <span style={{ fontWeight: 600, color: '#991b1b', fontSize: '0.875rem' }}>MFA is not enabled</span>
             </div>
 
-            <button onClick={handleSetup} disabled={isLoading} style={btnPrimary}>
-              {isLoading ? 'Setting up...' : 'Set Up MFA'}
-            </button>
+            {/* Setup button */}
+            <div style={CARD_STYLE}>
+              <button
+                onClick={handleSetup}
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1.5rem',
+                  background: 'var(--primary-color, #0052a3)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.6 : 1,
+                }}
+              >
+                {isLoading ? 'Setting up...' : 'Set Up MFA'}
+              </button>
+            </div>
           </>
         )}
       </div>

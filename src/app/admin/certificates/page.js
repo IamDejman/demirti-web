@@ -2,18 +2,37 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  AdminPageHeader,
-  AdminCard,
-  AdminFormField,
-  AdminButton,
-  AdminMessage,
-  AdminEmptyState,
-} from '../../components/admin';
-
+import { AdminPageHeader } from '../../components/admin';
 import { getAuthHeaders } from '@/lib/authClient';
 
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.5rem',
+};
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  fontSize: '0.9375rem',
+  color: 'var(--text-color)',
+  background: '#fff',
+  boxSizing: 'border-box',
+};
+
+const CARD_STYLE = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  padding: '1.5rem',
+  marginBottom: '1rem',
+};
 
 export default function AdminCertificatesPage() {
   const router = useRouter();
@@ -72,78 +91,163 @@ export default function AdminCertificatesPage() {
   };
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <AdminPageHeader
-        title="Certificates"
-        description="Issue completion certificates to students by email."
-      />
+    <div className="admin-dashboard admin-content-area">
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <AdminPageHeader
+          title="Certificates"
+          description="Issue completion certificates to students by email."
+        />
 
-      {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
+        {message && (
+          <div style={{
+            ...CARD_STYLE,
+            padding: '0.875rem 1rem',
+            background: messageType === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+            borderColor: messageType === 'success' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(220, 38, 38, 0.2)',
+            color: messageType === 'success' ? '#059669' : '#dc2626',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <span style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: messageType === 'success' ? '#059669' : '#dc2626',
+              flexShrink: 0,
+            }} />
+            {message}
+          </div>
+        )}
 
-      <AdminCard title="Issue certificate">
-        <form onSubmit={handleIssue} className="admin-form-section">
-          <AdminFormField label="Student email">
-            <input
-              type="email"
-              placeholder="student@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={inputClass}
-            />
-          </AdminFormField>
-          <AdminFormField label="Cohort (optional)">
-            <select
-              value={cohortId}
-              onChange={(e) => setCohortId(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Select cohort</option>
-              {cohorts.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </AdminFormField>
-          <AdminButton type="submit" variant="primary">
-            Issue certificate
-          </AdminButton>
-        </form>
-      </AdminCard>
+        {/* Issue certificate form */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+          }}>Issue certificate</h3>
+          <form onSubmit={handleIssue}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={LABEL_STYLE}>Student email</label>
+                <input
+                  type="email"
+                  placeholder="student@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              <div>
+                <label style={LABEL_STYLE}>Cohort (optional)</label>
+                <select
+                  value={cohortId}
+                  onChange={(e) => setCohortId(e.target.value)}
+                  style={INPUT_STYLE}
+                >
+                  <option value="">Select cohort</option>
+                  {cohorts.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.625rem 1.5rem',
+                    background: 'var(--primary-color, #0052a3)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Issue certificate
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
 
-      <AdminCard title="Issued certificates">
-        {certificates.length === 0 ? (
-          <AdminEmptyState message="No certificates issued yet." description="Issue a certificate above." />
-        ) : (
-          <ul className="admin-list">
-            {certificates.map((cert) => (
-              <li key={cert.id} className="admin-list-item">
-                <div className="admin-list-item-header">
-                  <p className="admin-list-item-title">{cert.email}</p>
-                  <div className="admin-action-group">
+        {/* Issued certificates list */}
+        <div style={CARD_STYLE}>
+          <h3 style={{
+            ...LABEL_STYLE,
+            fontSize: '0.8125rem',
+            marginBottom: '1.25rem',
+          }}>Issued certificates</h3>
+
+          {certificates.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
+              <p style={{ fontWeight: 600, color: 'var(--text-color)', marginBottom: '0.25rem' }}>No certificates issued yet</p>
+              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Issue a certificate above.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.875rem 1rem',
+                    borderRadius: 8,
+                    border: '1px solid #e5e7eb',
+                    background: '#fff',
+                  }}
+                >
+                  <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9375rem' }}>
+                      {cert.email}
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-light)', marginTop: '0.125rem' }}>
+                      {cert.certificate_number} -- {new Date(cert.issued_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
                     <a
                       href={`/api/certificates/${cert.id}/pdf`}
                       target="_blank"
                       rel="noreferrer"
-                      className="admin-link admin-link-primary"
+                      style={{
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: 'var(--primary-color, #0052a3)',
+                        textDecoration: 'none',
+                      }}
                     >
                       PDF
                     </a>
                     <button
                       type="button"
                       onClick={() => handleDelete(cert.id)}
-                      className="admin-link admin-link-danger"
+                      style={{
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#dc2626',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
                     >
                       Delete
                     </button>
                   </div>
                 </div>
-                <p className="admin-list-item-meta">
-                  {cert.certificate_number} · {new Date(cert.issued_at).toLocaleDateString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </AdminCard>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

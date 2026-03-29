@@ -5,12 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   AdminPageHeader,
-  AdminCard,
   AdminFormField,
   AdminButton,
   AdminMessage,
-  AdminTable,
-  AdminEmptyState,
 } from '../../components/admin';
 import { useToast } from '../../components/ToastProvider';
 
@@ -23,7 +20,40 @@ function formatRoleLabel(role) {
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 }
 
-const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm';
+const STATUS_CONFIG = {
+  active: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Active' },
+  inactive: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Inactive' },
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '0.5rem 0.75rem',
+  border: '1px solid #d1d5db',
+  borderRadius: 8,
+  fontSize: '0.875rem',
+  color: '#111827',
+  background: '#fff',
+  outline: 'none',
+  transition: 'border-color 0.2s',
+};
+
+const labelStyle = {
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+  marginBottom: '0.375rem',
+  display: 'block',
+};
+
+const cardContainerStyle = {
+  borderRadius: 12,
+  border: '1px solid #e5e7eb',
+  background: '#fff',
+  padding: '1.25rem',
+  marginBottom: '1rem',
+};
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -79,7 +109,6 @@ export default function AdminUsersPage() {
       router.push('/admin/login');
       return;
     }
-    // Avoid duplicate initial load (e.g. from React Strict Mode double-mount in dev)
     if (initialLoadDone.current) return;
     initialLoadDone.current = true;
     loadUsers(true);
@@ -166,39 +195,17 @@ export default function AdminUsersPage() {
 
   const pageStart = offset + 1;
   const pageEnd = Math.min(offset + limit, total);
+  const totalPages = Math.ceil(total / limit);
+  const currentPage = Math.floor(offset / limit) + 1;
 
-  const columns = [
-    {
-      key: 'select',
-      label: 'Select',
-      render: (u) => (
-        <input
-          type="checkbox"
-          checked={!!selected[u.id]}
-          onChange={() => toggleSelect(u.id)}
-          aria-label={`Select ${u.first_name} ${u.last_name}`}
-        />
-      ),
-    },
-    {
-      key: 'user',
-      label: 'User',
-      render: (u) => (
-        <div>
-          <Link href={`/admin/users/${u.id}`} className="admin-link-primary" style={{ textDecoration: 'underline' }}>
-            {u.first_name || ''} {u.last_name || ''}
-          </Link>
-          <div className="admin-list-item-meta" style={{ marginTop: '0.25rem' }}>{u.email}</div>
-        </div>
-      ),
-    },
-    { key: 'role', label: 'Role', render: (u) => formatRoleLabel(u.role) },
-    { key: 'status', label: 'Status', render: (u) => (u.is_active ? 'Active' : 'Inactive') },
-    { key: 'created', label: 'Created', render: (u) => new Date(u.created_at).toLocaleDateString() },
-  ];
+  function getInitials(user) {
+    const first = user.first_name?.[0] || user.email?.[0] || '?';
+    const last = user.last_name?.[0] || '';
+    return (first + last).toUpperCase();
+  }
 
   return (
-    <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1rem' }}>
       <AdminPageHeader
         title="Users"
         description="Search, filter, and manage user accounts. Create students and facilitators here; assign them to cohorts from the cohort detail page."
@@ -206,46 +213,75 @@ export default function AdminUsersPage() {
 
       {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
 
+      {/* Create User Section */}
       {!showCreateForm ? (
-        <AdminCard>
+        <div style={cardContainerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            <p className="admin-form-hint" style={{ margin: 0 }}>Create a new student or facilitator, then assign them to a cohort from Admin → Cohorts → [cohort].</p>
-            <AdminButton variant="primary" onClick={() => setShowCreateForm(true)}>
+            <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6b7280' }}>
+              Create a new student or facilitator, then assign them to a cohort from Admin &rarr; Cohorts &rarr; [cohort].
+            </p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              style={{
+                padding: '0.5rem 1.25rem',
+                background: '#0052a3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
               Create user
-            </AdminButton>
+            </button>
           </div>
-        </AdminCard>
+        </div>
       ) : (
-        <AdminCard>
+        <div style={cardContainerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem 1rem', marginBottom: '1rem' }}>
-            <h2 className="admin-card-title" style={{ margin: 0 }}>Create user</h2>
-            <AdminButton variant="secondary" onClick={() => { setShowCreateForm(false); setCreateMessage(''); }} aria-label="Close form">
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#111827' }}>Create user</h2>
+            <button
+              onClick={() => { setShowCreateForm(false); setCreateMessage(''); }}
+              style={{
+                padding: '0.4rem 1rem',
+                background: 'transparent',
+                color: '#6b7280',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              aria-label="Close form"
+            >
               Cancel
-            </AdminButton>
+            </button>
           </div>
-          <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>After creating, assign them to a cohort from Admin → Cohorts → [cohort] → Enroll student / Add facilitator.</p>
-          <form onSubmit={handleCreateUser} className="admin-filters-grid" style={{ alignItems: 'end', gap: '0.75rem 1rem' }}>
-            <AdminFormField>
-              <label className="admin-form-label">Email *</label>
+          <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '1rem' }}>
+            After creating, assign them to a cohort from Admin &rarr; Cohorts &rarr; [cohort] &rarr; Enroll student / Add facilitator.
+          </p>
+          <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem 1rem', alignItems: 'end' }}>
+            <div>
+              <label style={labelStyle}>Email *</label>
               <input
                 type="email"
                 value={createEmail}
                 onChange={(e) => setCreateEmail(e.target.value)}
                 placeholder="user@example.com"
-                className={inputClass}
+                style={inputStyle}
                 required
               />
-            </AdminFormField>
-            <AdminFormField>
-              <label className="admin-form-label">Password (optional)</label>
+            </div>
+            <div>
+              <label style={labelStyle}>Password (optional)</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showCreatePassword ? 'text' : 'password'}
                   value={createPassword}
                   onChange={(e) => setCreatePassword(e.target.value)}
                   placeholder="Leave blank for no login"
-                  className={inputClass}
-                  style={{ paddingRight: '3rem' }}
+                  style={{ ...inputStyle, paddingRight: '3rem' }}
                 />
                 <button
                   type="button"
@@ -261,7 +297,7 @@ export default function AdminUsersPage() {
                     border: 'none',
                     cursor: creating ? 'not-allowed' : 'pointer',
                     color: '#6b7280',
-                    fontSize: '0.875rem',
+                    fontSize: '0.8125rem',
                     fontWeight: 600,
                     padding: '0.25rem 0.5rem',
                   }}
@@ -269,67 +305,87 @@ export default function AdminUsersPage() {
                   {showCreatePassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-            </AdminFormField>
-            <AdminFormField>
-              <label className="admin-form-label">First name</label>
+            </div>
+            <div>
+              <label style={labelStyle}>First name</label>
               <input
                 type="text"
                 value={createFirstName}
                 onChange={(e) => setCreateFirstName(e.target.value)}
                 placeholder="First name"
-                className={inputClass}
+                style={inputStyle}
               />
-            </AdminFormField>
-            <AdminFormField>
-              <label className="admin-form-label">Last name</label>
+            </div>
+            <div>
+              <label style={labelStyle}>Last name</label>
               <input
                 type="text"
                 value={createLastName}
                 onChange={(e) => setCreateLastName(e.target.value)}
                 placeholder="Last name"
-                className={inputClass}
+                style={inputStyle}
               />
-            </AdminFormField>
-            <AdminFormField>
-              <label className="admin-form-label">Role</label>
+            </div>
+            <div>
+              <label style={labelStyle}>Role</label>
               <select
                 value={createRole}
                 onChange={(e) => setCreateRole(e.target.value)}
-                className={inputClass}
+                style={inputStyle}
                 aria-label="Role"
               >
                 {ROLE_OPTIONS.map((r) => (
                   <option key={r} value={r}>{formatRoleLabel(r)}</option>
                 ))}
               </select>
-            </AdminFormField>
-            <AdminFormField style={{ marginBottom: 0 }}>
-              <AdminButton type="submit" variant="primary" disabled={creating}>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="submit"
+                disabled={creating}
+                style={{
+                  padding: '0.5rem 1.25rem',
+                  background: creating ? '#93c5fd' : '#0052a3',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  width: '100%',
+                }}
+              >
                 {creating ? 'Creating...' : 'Create user'}
-              </AdminButton>
-            </AdminFormField>
+              </button>
+            </div>
           </form>
-          {createMessage && <p className="admin-form-hint" style={{ marginTop: '0.75rem', color: '#059669' }}>{createMessage}</p>}
-        </AdminCard>
+          {createMessage && (
+            <p style={{ marginTop: '0.75rem', fontSize: '0.8125rem', color: '#059669', fontWeight: 500 }}>{createMessage}</p>
+          )}
+        </div>
       )}
 
-      <AdminCard>
-        <div className="admin-filters-grid">
-          <AdminFormField>
+      {/* Filters and Bulk Actions */}
+      <div style={cardContainerStyle}>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <span style={labelStyle}>Filters</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div>
             <input
               type="text"
               placeholder="Search name or email"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && loadUsers(true)}
-              className={inputClass}
+              style={inputStyle}
             />
-          </AdminFormField>
-          <AdminFormField>
+          </div>
+          <div>
             <select
               value={roleFilter}
               onChange={(e) => { setRoleFilter(e.target.value); loadUsers(true); }}
-              className={inputClass}
+              style={inputStyle}
               aria-label="Filter by role"
             >
               <option value="">All roles</option>
@@ -337,99 +393,260 @@ export default function AdminUsersPage() {
                 <option key={r} value={r}>{formatRoleLabel(r)}</option>
               ))}
             </select>
-          </AdminFormField>
-          <AdminFormField>
+          </div>
+          <div>
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); loadUsers(true); }}
-              className={inputClass}
+              style={inputStyle}
             >
               <option value="">All statuses</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-          </AdminFormField>
+          </div>
         </div>
-        <div className="admin-action-group" style={{ marginTop: '1rem' }}>
-          <select
-            value={bulkAction}
-            onChange={(e) => setBulkAction(e.target.value)}
-            className={inputClass}
-            style={{ width: 'auto', minWidth: '140px' }}
-          >
-            <option value="">Bulk action</option>
-            <option value="activate">Activate</option>
-            <option value="deactivate">Deactivate</option>
-            <option value="set_role">Set role</option>
-          </select>
-          {bulkAction === 'set_role' && (
-            <select
-              value={bulkRole}
-              onChange={(e) => setBulkRole(e.target.value)}
-              className={inputClass}
-              style={{ width: 'auto', minWidth: '120px' }}
-              aria-label="Select role"
-            >
-              {ROLE_OPTIONS.map((r) => (
-                <option key={r} value={r}>{formatRoleLabel(r)}</option>
-              ))}
-            </select>
-          )}
-          <AdminButton
-            variant="primary"
-            onClick={handleBulk}
-            disabled={selectedIds.length === 0 || !bulkAction}
-          >
-            Apply
-          </AdminButton>
-          <span className="admin-meta">{selectedIds.length} selected</span>
-        </div>
-      </AdminCard>
 
-      <AdminCard>
+        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '0.75rem' }}>
+          <span style={labelStyle}>Bulk Actions</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.375rem' }}>
+            <select
+              value={bulkAction}
+              onChange={(e) => setBulkAction(e.target.value)}
+              style={{ ...inputStyle, width: 'auto', minWidth: 140 }}
+            >
+              <option value="">Bulk action</option>
+              <option value="activate">Activate</option>
+              <option value="deactivate">Deactivate</option>
+              <option value="set_role">Set role</option>
+            </select>
+            {bulkAction === 'set_role' && (
+              <select
+                value={bulkRole}
+                onChange={(e) => setBulkRole(e.target.value)}
+                style={{ ...inputStyle, width: 'auto', minWidth: 120 }}
+                aria-label="Select role"
+              >
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r} value={r}>{formatRoleLabel(r)}</option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={handleBulk}
+              disabled={selectedIds.length === 0 || !bulkAction}
+              style={{
+                padding: '0.5rem 1rem',
+                background: (selectedIds.length === 0 || !bulkAction) ? '#d1d5db' : '#0052a3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: (selectedIds.length === 0 || !bulkAction) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Apply
+            </button>
+            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{selectedIds.length} selected</span>
+          </div>
+        </div>
+      </div>
+
+      {/* User List */}
+      <div style={cardContainerStyle}>
         {loading ? (
-          <p className="admin-loading">Loading users...</p>
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+            <p style={{ fontSize: '0.9375rem' }}>Loading users...</p>
+          </div>
         ) : users.length === 0 ? (
-          <AdminEmptyState message="No users found." description="Try adjusting your search or filters." />
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+            <p style={{ fontSize: '0.9375rem', fontWeight: 500 }}>No users found.</p>
+            <p style={{ fontSize: '0.8125rem', marginTop: '0.25rem' }}>Try adjusting your search or filters.</p>
+          </div>
         ) : (
           <>
-            <div className="admin-table-header">
-              <label className="admin-form-checkbox" style={{ marginBottom: 0 }}>
+            {/* Header Row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8125rem', color: '#374151' }}>
                 <input
                   type="checkbox"
                   checked={users.length > 0 && selectedIds.length === users.length}
                   onChange={(e) => toggleSelectAll(e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: '#0052a3' }}
                 />
-                <span>Select all on page</span>
+                Select all on page
               </label>
-              <span className="admin-meta">Showing {pageStart}-{pageEnd} of {total}</span>
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Showing {pageStart}-{pageEnd} of {total}
+              </span>
             </div>
-            <AdminTable columns={columns} data={users} rowKey="id" />
-            <div className="admin-pagination">
-              <AdminButton
-                variant="secondary"
-                onClick={() => {
-                  const next = Math.max(0, offset - limit);
-                  loadUsers(false, next);
-                }}
-                disabled={offset === 0}
-              >
-                Previous
-              </AdminButton>
-              <AdminButton
-                variant="secondary"
-                onClick={() => {
-                  const next = offset + limit;
-                  if (next < total) loadUsers(false, next);
-                }}
-                disabled={offset + limit >= total}
-              >
-                Next
-              </AdminButton>
+
+            {/* User Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {users.map((u) => {
+                const statusKey = u.is_active ? 'active' : 'inactive';
+                const config = STATUS_CONFIG[statusKey];
+                return (
+                  <div
+                    key={u.id}
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.875rem 1rem',
+                      borderRadius: 8,
+                      border: '1px solid #e5e7eb',
+                      background: selected[u.id] ? 'rgba(0, 82, 163, 0.03)' : '#fff',
+                      transition: 'border-color 0.2s, background 0.2s',
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={!!selected[u.id]}
+                      onChange={() => toggleSelect(u.id)}
+                      aria-label={`Select ${u.first_name || ''} ${u.last_name || ''}`}
+                      style={{ width: 16, height: 16, accentColor: '#0052a3', flexShrink: 0 }}
+                    />
+
+                    {/* Avatar */}
+                    <div style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: '0.8125rem',
+                      flexShrink: 0,
+                    }}>
+                      {getInitials(u)}
+                    </div>
+
+                    {/* Name and Email */}
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        style={{
+                          fontWeight: 600,
+                          color: '#0052a3',
+                          fontSize: '0.9375rem',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {u.first_name || ''} {u.last_name || ''}
+                      </Link>
+                      <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>{u.email}</div>
+                    </div>
+
+                    {/* Role Badge */}
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: 'rgba(0, 82, 163, 0.1)',
+                      color: '#0052a3',
+                      flexShrink: 0,
+                    }}>
+                      {formatRoleLabel(u.role)}
+                    </span>
+
+                    {/* Status Badge */}
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.2rem 0.6rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: config.bg,
+                      color: config.color,
+                      flexShrink: 0,
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: config.color }} />
+                      {config.label}
+                    </span>
+
+                    {/* Created Date */}
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', flexShrink: 0 }}>
+                      {new Date(u.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #f3f4f6',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}>
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    const next = Math.max(0, offset - limit);
+                    loadUsers(false, next);
+                  }}
+                  disabled={offset === 0}
+                  style={{
+                    padding: '0.4rem 1rem',
+                    background: offset === 0 ? '#f9fafb' : '#fff',
+                    color: offset === 0 ? '#d1d5db' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    cursor: offset === 0 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => {
+                    const next = offset + limit;
+                    if (next < total) loadUsers(false, next);
+                  }}
+                  disabled={offset + limit >= total}
+                  style={{
+                    padding: '0.4rem 1rem',
+                    background: offset + limit >= total ? '#f9fafb' : '#fff',
+                    color: offset + limit >= total ? '#d1d5db' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    cursor: offset + limit >= total ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </>
         )}
-      </AdminCard>
+      </div>
     </div>
   );
 }

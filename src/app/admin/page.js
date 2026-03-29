@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminPageHeader, AdminStatsGrid, AdminButton } from '../components/admin';
+import { AdminPageHeader, AdminButton } from '../components/admin';
 
 import { getAuthHeaders } from '@/lib/authClient';
 
@@ -45,6 +45,13 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(link.href);
 }
 
+const STAT_COLORS = {
+  primary: { border: '#0052a3', bg: 'rgba(0, 82, 163, 0.06)' },
+  success: { border: '#059669', bg: 'rgba(5, 150, 105, 0.06)' },
+  warning: { border: '#d97706', bg: 'rgba(217, 119, 6, 0.06)' },
+  revenue: { border: '#7c3aed', bg: 'rgba(124, 58, 237, 0.06)' },
+};
+
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [stats, setStats] = useState(null);
@@ -55,14 +62,13 @@ export default function AdminDashboard() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, { id, name } = single
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const router = useRouter();
 
   const toggleExpanded = (id) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  // Pending (unpaid) applications that can be selected
   const pendingApps = applications.filter((a) => a.status !== 'paid');
 
   const toggleSelect = (id) => {
@@ -82,7 +88,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Check authentication on mount
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
     if (!isAuthenticated) {
@@ -90,17 +95,13 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-
   useEffect(() => {
     loadData();
-    // Note: loadData is intentionally excluded from deps to prevent infinite loops
   }, [selectedTrack, selectedStatus]);
-
 
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load applications
       const trackParam = selectedTrack !== 'all' ? `&track=${encodeURIComponent(selectedTrack)}` : '';
       const statusParam = selectedStatus !== 'all' ? `&status=${selectedStatus}` : '';
       const appsResponse = await fetch(`/api/admin/applications?${trackParam}${statusParam}`, {
@@ -112,8 +113,6 @@ export default function AdminDashboard() {
         setApplications(appsData.applications);
         setStats(appsData.stats);
       }
-
-
     } catch {
     } finally {
       setLoading(false);
@@ -125,7 +124,6 @@ export default function AdminDashboard() {
     return new Date(dateString).toLocaleString();
   };
 
-  // Format payment amounts - these are stored in kobo (from Paystack)
   const formatCurrency = (amount) => {
     if (!amount) return '₦0';
     return `₦${(amount / 100).toLocaleString()}`;
@@ -144,7 +142,6 @@ export default function AdminDashboard() {
     downloadCsv(APPLICATIONS_CSV_HEADER + rows, filename);
   };
 
-  // --- Delete logic ---
   const promptDeleteSingle = (app) => {
     setDeleteTarget({ id: app.id, name: `${app.first_name} ${app.last_name}` });
     setShowDeleteConfirm(true);
@@ -179,7 +176,6 @@ export default function AdminDashboard() {
         await loadData();
       }
     } catch {
-      // silently fail – loadData will show current state
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -191,35 +187,56 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard admin-dashboard-content">
-        <div className="container admin-cohorts-wrap">
-          <AdminPageHeader
-            title="Applications"
-            description="View and manage bootcamp applications, payments, and revenue."
-          />
+      <div className="container admin-cohorts-wrap">
+        <AdminPageHeader
+          title="Applications"
+          description="View and manage bootcamp applications, payments, and revenue."
+        />
 
-          {loading ? (
-            <div className="admin-loading admin-loading-center">
-              <p>Loading...</p>
-            </div>
-          ) : (
-            <>
-              {stats && (
-                <AdminStatsGrid
-                  items={[
-                    { label: 'Total Applications', value: stats.total, accent: 'primary' },
-                    { label: 'Paid', value: stats.paid, accent: 'secondary' },
-                    { label: 'Pending Payment', value: stats.pending, accent: 'warning' },
-                    { label: 'Total Revenue', value: stats.totalRevenue, prefix: '₦', accent: 'success' },
-                  ]}
-                />
-              )}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-light)' }}>
+            <p style={{ fontSize: '0.9375rem' }}>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {/* Stats Overview */}
+            {stats && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {[
+                  { label: 'Total Applications', value: stats.total, accent: 'primary' },
+                  { label: 'Paid', value: stats.paid, accent: 'success' },
+                  { label: 'Pending Payment', value: stats.pending, accent: 'warning' },
+                  { label: 'Total Revenue', value: `₦${stats.totalRevenue ? (stats.totalRevenue / 100).toLocaleString() : '0'}`, accent: 'revenue' },
+                ].map((stat, i) => {
+                  const colors = STAT_COLORS[stat.accent];
+                  return (
+                    <div key={i} style={{
+                      background: '#fff',
+                      borderRadius: 12,
+                      padding: '1.25rem',
+                      border: '1px solid #e5e7eb',
+                      borderTop: `3px solid ${colors.border}`,
+                    }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
+                        {stat.label}
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
+                        {stat.value}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-              <div className="admin-card admin-filters">
-                <label>Filter by Track:</label>
+            {/* Filters */}
+            <div className="admin-card" style={{ borderRadius: 12, marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <select
                   value={selectedTrack}
                   onChange={(e) => setSelectedTrack(e.target.value)}
                   className="admin-form-input"
+                  style={{ minWidth: 160 }}
                 >
                   <option value="all">All Tracks</option>
                   {getUniqueTracks().map(track => (
@@ -227,11 +244,11 @@ export default function AdminDashboard() {
                   ))}
                 </select>
 
-                <label>Filter by Status:</label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   className="admin-form-input"
+                  style={{ minWidth: 140 }}
                 >
                   <option value="all">All Status</option>
                   <option value="paid">Paid</option>
@@ -259,161 +276,238 @@ export default function AdminDashboard() {
                     Delete Selected ({selectedCount})
                   </AdminButton>
                 )}
-              </div>
 
-              <div className="admin-card admin-table-container">
-                <h2 className="admin-card-title">Applications ({applications.length})</h2>
-
-                {applications.length === 0 ? (
-                  <p className="admin-empty-state">No applications found</p>
-                ) : (
-                  <table className="admin-table">
-                    <thead>
-                      <tr className="admin-table-thead-row">
-                        <th className="admin-table-th" style={{ width: '2.5rem' }}>
-                          <input
-                            type="checkbox"
-                            checked={pendingApps.length > 0 && selectedIds.size === pendingApps.length}
-                            onChange={toggleSelectAll}
-                            title="Select all pending applications"
-                            disabled={pendingApps.length === 0}
-                          />
-                        </th>
-                        <th className="admin-table-th" style={{ width: '2.5rem' }} aria-label="Expand" />
-                        <th className="admin-table-th">Name</th>
-                        <th className="admin-table-th">Email</th>
-                        <th className="admin-table-th">Track</th>
-                        <th className="admin-table-th">Status</th>
-                        <th className="admin-table-th">Amount</th>
-                        <th className="admin-table-th" style={{ width: '3rem' }} aria-label="Actions" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.flatMap((app) => {
-                        const isPaid = app.status === 'paid';
-                        const rows = [
-                          <tr
-                            key={`${app.id}-main`}
-                            className={`admin-table-tr ${expandedId === app.id ? 'admin-table-tr-expanded' : ''}`}
-                            onClick={() => toggleExpanded(app.id)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <td className="admin-table-td" onClick={(e) => e.stopPropagation()}>
-                              {!isPaid ? (
-                                <input
-                                  type="checkbox"
-                                  checked={selectedIds.has(app.id)}
-                                  onChange={() => toggleSelect(app.id)}
-                                />
-                              ) : (
-                                <span style={{ display: 'inline-block', width: 16 }} />
-                              )}
-                            </td>
-                            <td className="admin-table-td" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                type="button"
-                                className="admin-table-expand-btn"
-                                onClick={() => toggleExpanded(app.id)}
-                                aria-expanded={expandedId === app.id}
-                                aria-label={expandedId === app.id ? 'Collapse details' : 'Expand details'}
-                              >
-                                {expandedId === app.id ? '▼' : '▶'}
-                              </button>
-                            </td>
-                            <td className="admin-table-td">{app.first_name} {app.last_name}</td>
-                            <td className="admin-table-td">{app.email}</td>
-                            <td className="admin-table-td">{app.track_name}</td>
-                            <td className="admin-table-td">
-                              <span className={isPaid ? 'admin-badge-status-success' : 'admin-badge-status-warning'}>
-                                {isPaid ? 'Paid' : '⏳ Pending'}
-                              </span>
-                            </td>
-                            <td className="admin-table-td admin-table-td-strong">{app.amount ? formatCurrency(app.amount) : 'N/A'}</td>
-                            <td className="admin-table-td" onClick={(e) => e.stopPropagation()}>
-                              {!isPaid && (
-                                <button
-                                  type="button"
-                                  className="admin-delete-btn"
-                                  onClick={() => promptDeleteSingle(app)}
-                                  title="Delete application"
-                                  aria-label={`Delete ${app.first_name} ${app.last_name}`}
-                                >
-                                  🗑
-                                </button>
-                              )}
-                            </td>
-                          </tr>,
-                        ];
-
-                        if (expandedId === app.id) {
-                          rows.push(
-                            <tr key={`${app.id}-detail`} className="admin-table-detail-row">
-                              <td colSpan={8} className="admin-table-detail-cell">
-                                <div className="admin-table-detail-grid">
-                                  <div><strong>Phone</strong><span>{app.phone || '—'}</span></div>
-                                  <div><strong>Referral source</strong><span>{app.referral_source || '—'}</span></div>
-                                  <div><strong>Payment reference</strong><span>{app.payment_reference || '—'}</span></div>
-                                  <div><strong>Discount code</strong><span>{app.discount_code || '—'}</span></div>
-                                  <div><strong>Application ID</strong><span>{app.application_id ?? app.id}</span></div>
-                                  <div><strong>Applied</strong><span>{formatDate(app.created_at)}</span></div>
-                                  <div><strong>Paid</strong><span>{app.paid_at ? formatDate(app.paid_at) : '—'}</span></div>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        }
-
-                        return rows;
-                      })}
-                    </tbody>
-                  </table>
+                {pendingApps.length > 0 && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
+                    <input
+                      type="checkbox"
+                      checked={pendingApps.length > 0 && selectedIds.size === pendingApps.length}
+                      onChange={toggleSelectAll}
+                    />
+                    Select all pending
+                  </label>
                 )}
               </div>
+            </div>
 
-              {stats && stats.byTrack && Object.keys(stats.byTrack).length > 0 && (
-                <div className="admin-card admin-card-last admin-card-mt">
-                  <h2 className="admin-card-title">Statistics by Track</h2>
-                  <div className="admin-track-stats-grid">
-                    {Object.entries(stats.byTrack).map(([trackName, trackStats]) => (
-                      <div key={trackName} className="admin-track-stat-item">
-                        <h3>{trackName}</h3>
-                        <div className="admin-track-stat-row">
-                          <p><strong>Total:</strong> {trackStats.total}</p>
-                          <p className="paid"><strong>Paid:</strong> {trackStats.paid}</p>
-                          <p className="pending"><strong>Pending:</strong> {trackStats.pending}</p>
-                          <p className="revenue"><strong>Revenue:</strong> ₦{(trackStats.revenue / 100).toLocaleString()}</p>
+            {/* Applications List */}
+            <div className="admin-card" style={{ borderRadius: 12 }}>
+              <h2 className="admin-card-title">Applications ({applications.length})</h2>
+
+              {applications.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
+                  <p style={{ fontSize: '0.9375rem' }}>No applications found.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {applications.map((app) => {
+                    const isPaid = app.status === 'paid';
+                    const isExpanded = expandedId === app.id;
+                    return (
+                      <div key={app.id}>
+                        <div
+                          onClick={() => toggleExpanded(app.id)}
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.875rem 1rem',
+                            borderRadius: isExpanded ? '8px 8px 0 0' : 8,
+                            border: '1px solid #e5e7eb',
+                            borderBottom: isExpanded ? '1px solid #f3f4f6' : '1px solid #e5e7eb',
+                            background: '#fff',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.2s',
+                          }}
+                        >
+                          {/* Checkbox for pending */}
+                          <div onClick={(e) => e.stopPropagation()} style={{ flexShrink: 0 }}>
+                            {!isPaid ? (
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(app.id)}
+                                onChange={() => toggleSelect(app.id)}
+                                style={{ width: 16, height: 16 }}
+                              />
+                            ) : (
+                              <span style={{ display: 'inline-block', width: 16 }} />
+                            )}
+                          </div>
+
+                          {/* Avatar */}
+                          <div style={{
+                            width: 36, height: 36, borderRadius: '50%',
+                            background: isPaid ? 'linear-gradient(135deg, #059669, #34d399)' : 'linear-gradient(135deg, #d97706, #fbbf24)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: '#fff', fontWeight: 700, fontSize: '0.8125rem', flexShrink: 0,
+                          }}>
+                            {(app.first_name?.[0] || '?').toUpperCase()}
+                          </div>
+
+                          {/* Name & Email */}
+                          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9375rem' }}>
+                              {app.first_name} {app.last_name}
+                            </div>
+                            <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>{app.email}</div>
+                          </div>
+
+                          {/* Track */}
+                          <div style={{ fontSize: '0.8125rem', color: '#374151', flexShrink: 0 }}>
+                            {app.track_name}
+                          </div>
+
+                          {/* Status badge */}
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.2rem 0.6rem', fontSize: '0.6875rem', fontWeight: 600,
+                            borderRadius: 10, textTransform: 'uppercase', letterSpacing: '0.04em',
+                            background: isPaid ? 'rgba(5, 150, 105, 0.1)' : 'rgba(217, 119, 6, 0.1)',
+                            color: isPaid ? '#059669' : '#d97706',
+                          }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: isPaid ? '#059669' : '#d97706' }} />
+                            {isPaid ? 'Paid' : 'Pending'}
+                          </span>
+
+                          {/* Amount */}
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', flexShrink: 0, minWidth: 80, textAlign: 'right' }}>
+                            {app.amount ? formatCurrency(app.amount) : '—'}
+                          </div>
+
+                          {/* Delete button */}
+                          {!isPaid && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); promptDeleteSingle(app); }}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: '#ef4444', fontSize: '0.8125rem', fontWeight: 600,
+                                padding: '0.25rem 0.5rem', borderRadius: 6,
+                              }}
+                            >
+                              Delete
+                            </button>
+                          )}
+
+                          {/* Expand indicator */}
+                          <span style={{ color: '#9ca3af', fontSize: '0.75rem', flexShrink: 0 }}>
+                            {isExpanded ? '▼' : '▶'}
+                          </span>
                         </div>
+
+                        {/* Expanded details */}
+                        {isExpanded && (
+                          <div style={{
+                            padding: '1rem 1.25rem',
+                            borderRadius: '0 0 8px 8px',
+                            border: '1px solid #e5e7eb',
+                            borderTop: 'none',
+                            background: '#f9fafb',
+                          }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Phone</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.phone || '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Referral Source</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.referral_source || '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Payment Reference</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.payment_reference || '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Discount Code</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.discount_code || '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Application ID</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.application_id ?? app.id}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Applied</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{formatDate(app.created_at)}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Paid</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.paid_at ? formatDate(app.paid_at) : '—'}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* Delete confirmation modal */}
-        {showDeleteConfirm && (
-          <div className="admin-modal-overlay" onClick={cancelDelete}>
-            <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-              <h3 className="admin-modal-title">Confirm Delete</h3>
-              <p className="admin-modal-body">
-                {deleteTarget
-                  ? <>Are you sure you want to delete the application from <strong>{deleteTarget.name}</strong>? This action cannot be undone.</>
-                  : <>Are you sure you want to delete <strong>{selectedCount}</strong> pending application{selectedCount !== 1 ? 's' : ''}? This action cannot be undone.</>
-                }
-              </p>
-              <div className="admin-modal-actions">
-                <AdminButton variant="secondary" onClick={cancelDelete} disabled={deleting}>
-                  Cancel
-                </AdminButton>
-                <AdminButton variant="danger" onClick={confirmDelete} disabled={deleting}>
-                  {deleting ? 'Deleting...' : 'Delete'}
-                </AdminButton>
+            {/* Track Statistics */}
+            {stats && stats.byTrack && Object.keys(stats.byTrack).length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', marginBottom: '1rem' }}>Statistics by Track</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {Object.entries(stats.byTrack).map(([trackName, trackStats]) => (
+                    <div key={trackName} style={{
+                      background: '#fff',
+                      borderRadius: 12,
+                      padding: '1.25rem',
+                      border: '1px solid #e5e7eb',
+                    }}>
+                      <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9375rem', marginBottom: '0.75rem' }}>
+                        {trackName}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>{trackStats.total}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Paid</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#059669' }}>{trackStats.paid}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Pending</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#d97706' }}>{trackStats.pending}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Revenue</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>₦{(trackStats.revenue / 100).toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="admin-modal-overlay" onClick={cancelDelete}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-modal-title">Confirm Delete</h3>
+            <p className="admin-modal-body">
+              {deleteTarget
+                ? <>Are you sure you want to delete the application from <strong>{deleteTarget.name}</strong>? This action cannot be undone.</>
+                : <>Are you sure you want to delete <strong>{selectedCount}</strong> pending application{selectedCount !== 1 ? 's' : ''}? This action cannot be undone.</>
+              }
+            </p>
+            <div className="admin-modal-actions">
+              <AdminButton variant="secondary" onClick={cancelDelete} disabled={deleting}>
+                Cancel
+              </AdminButton>
+              <AdminButton variant="danger" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? 'Deleting...' : 'Delete'}
+              </AdminButton>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

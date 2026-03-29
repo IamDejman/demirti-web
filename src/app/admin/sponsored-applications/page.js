@@ -3,23 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { sanitizeHtml } from '@/lib/sanitize';
-import { AdminPageHeader } from '../../components/admin';
+import { AdminPageHeader, AdminButton } from '../../components/admin';
 import { useToast } from '../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
-
-function useMobile(breakpoint = 768) {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
-    setMobile(mq.matches);
-    const listener = () => setMobile(mq.matches);
-    mq.addEventListener('change', listener);
-    return () => mq.removeEventListener('change', listener);
-  }, [breakpoint]);
-  return mobile;
-}
 
 function escapeCsvCell(s) {
   if (s == null) return '';
@@ -62,6 +49,21 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(link.href);
 }
 
+const STATUS_CONFIG = {
+  pending_review: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Pending' },
+  accepted: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Accepted' },
+  waitlist: { color: '#d97706', bg: 'rgba(217, 119, 6, 0.1)', label: 'Waitlist' },
+  rejected: { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', label: 'Rejected' },
+};
+
+const STAT_COLORS = {
+  total: '#0052a3',
+  pending: '#6b7280',
+  accepted: '#059669',
+  waitlist: '#d97706',
+  rejected: '#ef4444',
+};
+
 export default function SponsoredApplicationsPage() {
   const { showToast } = useToast();
   const [applications, setApplications] = useState([]);
@@ -72,7 +74,6 @@ export default function SponsoredApplicationsPage() {
   const [updatingId, setUpdatingId] = useState(null);
   const [confirmSpotUrl, setConfirmSpotUrl] = useState('');
   const detailPrintRef = useRef(null);
-  const isMobile = useMobile(768);
   const router = useRouter();
 
   useEffect(() => {
@@ -253,200 +254,346 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
     ? applications
     : applications.filter((a) => a.review_status === filterStatus);
   const selectedCount = selectedIds.size;
-  const viewFirstSelected = () => {
-    const first = filtered.find((a) => selectedIds.has(a.id));
-    if (first) setViewApp(first);
+
+  // Compute stats
+  const statCounts = {
+    total: applications.length,
+    pending_review: applications.filter(a => a.review_status === 'pending_review').length,
+    accepted: applications.filter(a => a.review_status === 'accepted').length,
+    waitlist: applications.filter(a => a.review_status === 'waitlist').length,
+    rejected: applications.filter(a => a.review_status === 'rejected').length,
   };
 
-  const sectionStyle = { marginBottom: '1.25rem' };
-  const labelStyle = { fontWeight: '600', color: '#555', fontSize: '0.8rem', marginBottom: '0.25rem' };
-  const valueStyle = { fontSize: '0.95rem', color: '#1a1a1a' };
-  const statusBadge = (app) => ({
-    padding: '0.25rem 0.75rem',
-    borderRadius: '20px',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    display: 'inline-block',
-    backgroundColor: app.review_status === 'accepted' ? '#d4edda' : app.review_status === 'waitlist' ? '#fff3cd' : app.review_status === 'rejected' ? '#f8d7da' : '#e2e3e5',
-    color: app.review_status === 'accepted' ? '#155724' : app.review_status === 'waitlist' ? '#856404' : app.review_status === 'rejected' ? '#721c24' : '#383d41'
-  });
+  const labelStyle = { fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' };
 
   return (
     <>
-    <div className="admin-dashboard admin-dashboard-content sponsored-apps-content" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem', boxSizing: 'border-box' }}>
+      <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <AdminPageHeader
           title="Sponsored Applications"
           description="Review and manage sponsored application submissions."
         />
-        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ fontWeight: '600', color: '#666' }}>Status:</label>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #e1e4e8', minWidth: '140px' }}
-          >
-            <option value="all">All</option>
-            <option value="pending_review">Pending review</option>
-            <option value="accepted">Accepted</option>
-            <option value="waitlist">Waitlist</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <button type="button" onClick={loadApplications} style={{ padding: '0.5rem 1rem', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>Refresh</button>
-          <button type="button" onClick={exportAllCsv} disabled={filtered.length === 0} style={{ padding: '0.5rem 1rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: filtered.length ? 'pointer' : 'not-allowed', fontWeight: '600', opacity: filtered.length ? 1 : 0.6 }}>Export CSV (all)</button>
-          {selectedCount > 0 && (
-            <button type="button" onClick={viewFirstSelected} style={{ padding: '0.5rem 1rem', backgroundColor: '#6f42c1', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>View selected ({selectedCount})</button>
-          )}
+
+        {/* Stats Overview */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          {[
+            { label: 'Total', value: statCounts.total, color: STAT_COLORS.total },
+            { label: 'Pending', value: statCounts.pending_review, color: STAT_COLORS.pending },
+            { label: 'Accepted', value: statCounts.accepted, color: STAT_COLORS.accepted },
+            { label: 'Waitlist', value: statCounts.waitlist, color: STAT_COLORS.waitlist },
+            { label: 'Rejected', value: statCounts.rejected, color: STAT_COLORS.rejected },
+          ].map((stat, i) => (
+            <div key={i} style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: '1.25rem',
+              border: '1px solid #e5e7eb',
+              borderTop: `3px solid ${stat.color}`,
+            }}>
+              <div style={labelStyle}>{stat.label}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>{stat.value}</div>
+            </div>
+          ))}
         </div>
 
-        {loading ? (
-          <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>Loading...</p>
-        ) : (
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '100%' : '400px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e1e4e8' }}>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: '600', color: '#666', width: '44px' }}>
-                    <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleSelectAll} aria-label="Select all" />
-                  </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Name</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Email</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: '600', color: '#666' }}>Applied</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: '600', color: '#666', width: '100px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((app) => (
-                  <tr key={app.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <input type="checkbox" checked={selectedIds.has(app.id)} onChange={() => toggleSelect(app.id)} aria-label={`Select ${app.first_name}`} />
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>{app.first_name} {app.last_name}</td>
-                    <td style={{ padding: '0.75rem 1rem' }}><a href={`mailto:${app.email}`} style={{ color: '#0066cc' }}>{app.email}</a></td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.9rem' }}>{formatDate(app.created_at)}</td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <button type="button" onClick={() => setViewApp(app)} style={{ padding: '0.35rem 0.75rem', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem' }}>View</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && (
-              <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No applications match the filter.</p>
+        {/* Filters */}
+        <div className="admin-card" style={{ borderRadius: 12, marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="admin-form-input"
+              style={{ minWidth: 160 }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending_review">Pending review</option>
+              <option value="accepted">Accepted</option>
+              <option value="waitlist">Waitlist</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            <AdminButton variant="primary" onClick={loadApplications}>Refresh</AdminButton>
+            <AdminButton variant="secondary" onClick={exportAllCsv} disabled={filtered.length === 0}>Export CSV</AdminButton>
+
+            {filtered.length > 0 && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onChange={toggleSelectAll}
+                />
+                Select all ({filtered.length})
+              </label>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Detail view modal */}
-        {viewApp && (
-          <>
-            <div role="dialog" aria-modal="true" aria-labelledby="detail-title" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', boxSizing: 'border-box' }} onClick={() => setViewApp(null)}>
-              <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '640px', width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
-                <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid #e1e4e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 id="detail-title" style={{ margin: 0, fontSize: '1.35rem', fontWeight: '700' }}>Application details</h2>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => exportSingleCsv(viewApp)} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Export CSV</button>
-                    <button type="button" onClick={printDetailPdf} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Print / PDF</button>
-                    <button type="button" onClick={() => setViewApp(null)} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#333', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Close</button>
+        {/* Applications List */}
+        <div className="admin-card" style={{ borderRadius: 12 }}>
+          <h2 className="admin-card-title">Applications ({filtered.length})</h2>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              <p style={{ fontSize: '0.9375rem' }}>Loading...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              <p style={{ fontSize: '0.9375rem' }}>No applications match the filter.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {filtered.map((app) => {
+                const config = STATUS_CONFIG[app.review_status] || STATUS_CONFIG.pending_review;
+                return (
+                  <div key={app.id} style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.875rem 1rem',
+                    borderRadius: 8,
+                    border: '1px solid #e5e7eb',
+                    background: selectedIds.has(app.id) ? 'rgba(0, 82, 163, 0.03)' : '#fff',
+                    transition: 'border-color 0.2s',
+                  }}>
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(app.id)}
+                      onChange={() => toggleSelect(app.id)}
+                      style={{ width: 16, height: 16, flexShrink: 0 }}
+                    />
+
+                    {/* Avatar */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontWeight: 700, fontSize: '0.8125rem', flexShrink: 0,
+                    }}>
+                      {(app.first_name?.[0] || '?').toUpperCase()}
+                    </div>
+
+                    {/* Name & Email */}
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9375rem' }}>
+                        {app.first_name} {app.last_name}
+                      </div>
+                      <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>{app.email}</div>
+                    </div>
+
+                    {/* Status badge */}
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                      padding: '0.2rem 0.6rem', fontSize: '0.6875rem', fontWeight: 600,
+                      borderRadius: 10, textTransform: 'uppercase', letterSpacing: '0.04em',
+                      background: config.bg, color: config.color,
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: config.color }} />
+                      {config.label}{app.forfeited_at ? ' (forfeited)' : ''}
+                    </span>
+
+                    {/* Date */}
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', flexShrink: 0 }}>
+                      Applied {formatDate(app.created_at)}
+                    </div>
+
+                    {/* View button */}
+                    <AdminButton variant="secondary" onClick={() => setViewApp(app)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem' }}>
+                      View
+                    </AdminButton>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Detail view modal */}
+      {viewApp && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="detail-title"
+          style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem', boxSizing: 'border-box',
+          }}
+          onClick={() => setViewApp(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 16,
+              maxWidth: 640,
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: '1px solid #e5e7eb',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+            }}>
+              <h2 id="detail-title" style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
+                Application Details
+              </h2>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <AdminButton variant="secondary" onClick={() => exportSingleCsv(viewApp)}>Export CSV</AdminButton>
+                <AdminButton variant="secondary" onClick={printDetailPdf}>Print / PDF</AdminButton>
+                <AdminButton variant="secondary" onClick={() => setViewApp(null)}>Close</AdminButton>
+              </div>
+            </div>
+
+            {/* Modal body */}
+            <div style={{ padding: '1.5rem' }} ref={detailPrintRef}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <div>
+                  <div style={labelStyle}>Name</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.first_name} {viewApp.last_name}</div>
+                </div>
+                <div>
+                  <div style={labelStyle}>Email</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}><a href={`mailto:${viewApp.email}`} style={{ color: '#0052a3' }}>{viewApp.email}</a></div>
+                </div>
+                <div>
+                  <div style={labelStyle}>Phone</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.phone || '—'}</div>
+                </div>
+                <div>
+                  <div style={labelStyle}>City</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.city || '—'}</div>
+                </div>
+                <div>
+                  <div style={labelStyle}>LinkedIn Profile</div>
+                  <div style={{ fontSize: '0.9375rem' }}>
+                    {viewApp.linkedin_url
+                      ? <a href={viewApp.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0052a3' }}>{viewApp.linkedin_url}</a>
+                      : <span style={{ color: '#6b7280' }}>—</span>
+                    }
                   </div>
                 </div>
-                <div style={{ padding: '1.5rem 2rem' }} ref={detailPrintRef}>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Name</div>
-                    <div style={valueStyle}>{viewApp.first_name} {viewApp.last_name}</div>
+                <div>
+                  <div style={labelStyle}>Occupation</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.occupation || '—'}</div>
+                </div>
+                <div>
+                  <div style={labelStyle}>Review Status</div>
+                  <div>
+                    {(() => {
+                      const cfg = STATUS_CONFIG[viewApp.review_status] || STATUS_CONFIG.pending_review;
+                      return (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                          padding: '0.2rem 0.6rem', fontSize: '0.6875rem', fontWeight: 600,
+                          borderRadius: 10, textTransform: 'uppercase', letterSpacing: '0.04em',
+                          background: cfg.bg, color: cfg.color,
+                        }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color }} />
+                          {cfg.label}{viewApp.forfeited_at ? ' (forfeited)' : ''}
+                        </span>
+                      );
+                    })()}
                   </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Email</div>
-                    <div style={valueStyle}><a href={`mailto:${viewApp.email}`} style={{ color: '#0066cc' }}>{viewApp.email}</a></div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Phone</div>
-                    <div style={valueStyle}>{viewApp.phone || '—'}</div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>LinkedIn profile</div>
-                    <div style={valueStyle}>{viewApp.linkedin_url ? <a href={viewApp.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc' }}>{viewApp.linkedin_url}</a> : '—'}</div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>City</div>
-                    <div style={valueStyle}>{viewApp.city || '—'}</div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Status / Occupation</div>
-                    <div style={valueStyle}>{viewApp.occupation || '—'}</div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Review status</div>
-                    <div style={valueStyle}><span style={statusBadge(viewApp)}>{viewApp.review_status === 'pending_review' ? 'Pending' : viewApp.review_status}{viewApp.forfeited_at ? ' (forfeited)' : ''}</span></div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Essay</div>
-                    <div style={{ ...valueStyle, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{viewApp.essay || '—'}</div>
-                  </div>
-                  <div style={sectionStyle}>
-                    <div style={labelStyle}>Applied</div>
-                    <div style={valueStyle}>{formatDate(viewApp.created_at)}</div>
-                  </div>
-                  {viewApp.accepted_at && (
-                    <div style={sectionStyle}>
-                      <div style={labelStyle}>Accepted at</div>
-                      <div style={valueStyle}>{formatDate(viewApp.accepted_at)}</div>
-                      {getConfirmByDate(viewApp.accepted_at) && !viewApp.confirmed_at && (
-                        <div style={{ fontSize: '0.875rem', color: isPast48h(viewApp.accepted_at) ? '#dc3545' : '#666', marginTop: '0.25rem' }}>Confirm by {getConfirmByDate(viewApp.accepted_at).toLocaleString()}{isPast48h(viewApp.accepted_at) ? ' (expired)' : ''}</div>
-                      )}
-                    </div>
-                  )}
-                  {viewApp.review_status === 'accepted' && !viewApp.confirmed_at && (
-                    <div style={sectionStyle}>
-                      <div style={labelStyle}>Confirm spot (LinkedIn post URL)</div>
-                      {viewApp.linkedin_post_url ? (
-                        <div style={valueStyle}><a href={viewApp.linkedin_post_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc' }}>View post</a></div>
-                      ) : (
-                        <form onSubmit={submitConfirmSpot} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <input type="url" placeholder="https://linkedin.com/..." value={confirmSpotUrl} onChange={(e) => setConfirmSpotUrl(e.target.value)} style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #ccc', width: '100%', boxSizing: 'border-box' }} required />
-                          <button type="submit" disabled={updatingId === viewApp.id} style={{ padding: '0.5rem 1rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', alignSelf: 'flex-start' }}>Save</button>
-                        </form>
-                      )}
-                    </div>
-                  )}
-                  {viewApp.confirmed_at && (
-                    <div style={sectionStyle}>
-                      <div style={labelStyle}>Confirmed at</div>
-                      <div style={valueStyle}>{formatDate(viewApp.confirmed_at)}</div>
-                      {viewApp.linkedin_post_url && <div style={valueStyle}><a href={viewApp.linkedin_post_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc' }}>LinkedIn post</a></div>}
-                    </div>
-                  )}
+                </div>
+                <div>
+                  <div style={labelStyle}>Applied</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{formatDate(viewApp.created_at)}</div>
+                </div>
+              </div>
 
-                  <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e1e4e8' }}>
-                    <div style={labelStyle}>Actions</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {viewApp.review_status === 'pending_review' && (
-                        <>
-                          <button type="button" onClick={() => setReviewStatus(viewApp.id, 'accepted', 'Send acceptance email and set as Accepted?')} disabled={updatingId === viewApp.id} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Accept</button>
-                          <button type="button" onClick={() => setReviewStatus(viewApp.id, 'waitlist', 'Send waitlist email?')} disabled={updatingId === viewApp.id} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#ffc107', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Waitlist</button>
-                          <button type="button" onClick={() => setReviewStatus(viewApp.id, 'rejected', 'Send rejection email?')} disabled={updatingId === viewApp.id} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Reject</button>
-                        </>
-                      )}
-                      {viewApp.review_status === 'accepted' && !viewApp.confirmed_at && isPast48h(viewApp.accepted_at) && !viewApp.forfeited_at && (
-                        <button type="button" onClick={() => markForfeited(viewApp.id)} disabled={updatingId === viewApp.id} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Mark forfeited</button>
-                      )}
-                      {viewApp.review_status === 'waitlist' && (
-                        <button type="button" onClick={() => promoteWaitlist(viewApp.id)} disabled={updatingId === viewApp.id} style={{ padding: '0.4rem 0.75rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>Offer spot</button>
-                      )}
+              {/* Essay */}
+              <div style={{ marginTop: '1.25rem' }}>
+                <div style={labelStyle}>Essay</div>
+                <div style={{ fontSize: '0.9375rem', color: '#111827', whiteSpace: 'pre-wrap', lineHeight: 1.6, marginTop: '0.25rem' }}>
+                  {viewApp.essay || '—'}
+                </div>
+              </div>
+
+              {/* Accepted info */}
+              {viewApp.accepted_at && (
+                <div style={{ marginTop: '1.25rem' }}>
+                  <div style={labelStyle}>Accepted at</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{formatDate(viewApp.accepted_at)}</div>
+                  {getConfirmByDate(viewApp.accepted_at) && !viewApp.confirmed_at && (
+                    <div style={{ fontSize: '0.8125rem', color: isPast48h(viewApp.accepted_at) ? '#ef4444' : '#6b7280', marginTop: '0.25rem' }}>
+                      Confirm by {getConfirmByDate(viewApp.accepted_at).toLocaleString()}{isPast48h(viewApp.accepted_at) ? ' (expired)' : ''}
                     </div>
-                  </div>
+                  )}
+                </div>
+              )}
+
+              {/* Confirm spot form */}
+              {viewApp.review_status === 'accepted' && !viewApp.confirmed_at && (
+                <div style={{ marginTop: '1.25rem' }}>
+                  <div style={labelStyle}>Confirm Spot (LinkedIn Post URL)</div>
+                  {viewApp.linkedin_post_url ? (
+                    <div style={{ fontSize: '0.9375rem' }}>
+                      <a href={viewApp.linkedin_post_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0052a3' }}>View post</a>
+                    </div>
+                  ) : (
+                    <form onSubmit={submitConfirmSpot} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/..."
+                        value={confirmSpotUrl}
+                        onChange={(e) => setConfirmSpotUrl(e.target.value)}
+                        className="admin-form-input"
+                        style={{ flex: 1 }}
+                        required
+                      />
+                      <AdminButton type="submit" variant="primary" disabled={updatingId === viewApp.id}>Save</AdminButton>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* Confirmed info */}
+              {viewApp.confirmed_at && (
+                <div style={{ marginTop: '1.25rem' }}>
+                  <div style={labelStyle}>Confirmed at</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{formatDate(viewApp.confirmed_at)}</div>
+                  {viewApp.linkedin_post_url && (
+                    <a href={viewApp.linkedin_post_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0052a3', fontSize: '0.875rem' }}>LinkedIn post</a>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e5e7eb' }}>
+                <div style={{ ...labelStyle, marginBottom: '0.5rem' }}>Actions</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {viewApp.review_status === 'pending_review' && (
+                    <>
+                      <AdminButton variant="primary" onClick={() => setReviewStatus(viewApp.id, 'accepted', 'Send acceptance email and set as Accepted?')} disabled={updatingId === viewApp.id}>Accept</AdminButton>
+                      <AdminButton variant="secondary" onClick={() => setReviewStatus(viewApp.id, 'waitlist', 'Send waitlist email?')} disabled={updatingId === viewApp.id}>Waitlist</AdminButton>
+                      <AdminButton variant="danger" onClick={() => setReviewStatus(viewApp.id, 'rejected', 'Send rejection email?')} disabled={updatingId === viewApp.id}>Reject</AdminButton>
+                    </>
+                  )}
+                  {viewApp.review_status === 'accepted' && !viewApp.confirmed_at && isPast48h(viewApp.accepted_at) && !viewApp.forfeited_at && (
+                    <AdminButton variant="secondary" onClick={() => markForfeited(viewApp.id)} disabled={updatingId === viewApp.id}>Mark Forfeited</AdminButton>
+                  )}
+                  {viewApp.review_status === 'waitlist' && (
+                    <AdminButton variant="primary" onClick={() => promoteWaitlist(viewApp.id)} disabled={updatingId === viewApp.id}>Offer Spot</AdminButton>
+                  )}
                 </div>
               </div>
             </div>
-          </>
-        )}
-      </div>
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .sponsored-apps-content {
-            padding: 1rem !important;
-          }
-        }
-      `}</style>
+          </div>
+        </div>
+      )}
     </>
   );
 }

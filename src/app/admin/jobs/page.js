@@ -8,7 +8,6 @@ import {
   AdminFormField,
   AdminButton,
   AdminMessage,
-  AdminTable,
   AdminEmptyState,
 } from '../../components/admin';
 
@@ -27,6 +26,65 @@ const emptyForm = {
 };
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg';
+
+const STATUS_CONFIG = {
+  active: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Active' },
+  inactive: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Inactive' },
+};
+
+const labelStyle = {
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: '#6b7280',
+};
+
+function StatusBadge({ active }) {
+  const config = active ? STATUS_CONFIG.active : STATUS_CONFIG.inactive;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.3rem 0.75rem',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        borderRadius: 20,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.color}30`,
+      }}
+    >
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: config.color }} />
+      {config.label}
+    </span>
+  );
+}
+
+function StatCard({ label, value, borderColor }) {
+  return (
+    <div
+      style={{
+        flex: '1 1 0',
+        minWidth: 140,
+        background: '#fff',
+        borderRadius: 12,
+        border: '1px solid #e5e7eb',
+        borderTop: `3px solid ${borderColor}`,
+        padding: '1.25rem 1rem',
+      }}
+    >
+      <div style={labelStyle}>{label}</div>
+      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginTop: '0.25rem' }}>
+        {value}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminJobsPage() {
   const router = useRouter();
@@ -117,34 +175,7 @@ export default function AdminJobsPage() {
     setForm(emptyForm);
   };
 
-  const applicationColumns = [
-    { key: 'job_title', label: 'Job', render: (app) => app.job_title },
-    { key: 'applicant', label: 'Applicant', render: (app) => app.name || app.user_email || 'Applicant' },
-    { key: 'email', label: 'Email', render: (app) => app.email || app.user_email || '-' },
-    {
-      key: 'resume',
-      label: 'Resume',
-      render: (app) =>
-        app.resume_url ? (
-          <a href={app.resume_url} target="_blank" rel="noreferrer" className="admin-link admin-link-primary">
-            Resume
-          </a>
-        ) : (
-          <span className="admin-meta">—</span>
-        ),
-    },
-    {
-      key: 'cover_letter',
-      label: 'Cover letter',
-      render: (app) =>
-        app.cover_letter ? (
-          <span>{app.cover_letter.slice(0, 80)}{app.cover_letter.length > 80 ? '…' : ''}</span>
-        ) : (
-          <span className="admin-meta">—</span>
-        ),
-    },
-    { key: 'submitted', label: 'Submitted', render: (app) => new Date(app.created_at).toLocaleDateString() },
-  ];
+  const activeJobs = jobs.filter((j) => j.is_active !== false).length;
 
   return (
     <div className="admin-dashboard admin-dashboard-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -155,7 +186,26 @@ export default function AdminJobsPage() {
 
       {message && <AdminMessage type={messageType}>{message}</AdminMessage>}
 
-      <AdminCard title={editingId ? 'Edit job' : 'Create job'}>
+      {/* Stats overview */}
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        <StatCard label="Total Jobs" value={jobs.length} borderColor="#2563eb" />
+        <StatCard label="Active Jobs" value={activeJobs} borderColor="#059669" />
+        <StatCard label="Total Applications" value={applications.length} borderColor="#7c3aed" />
+      </div>
+
+      {/* Create / Edit form */}
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '1rem' }}>
+          {editingId ? 'Edit job' : 'Create job'}
+        </h3>
         <form onSubmit={handleSubmit} className="admin-form-section">
           <AdminFormField label="Title">
             <input
@@ -199,7 +249,7 @@ export default function AdminJobsPage() {
             <AdminFormField label="Salary range">
               <input
                 type="text"
-                placeholder="e.g. $50k–80k"
+                placeholder="e.g. $50k-80k"
                 value={form.salaryRange}
                 onChange={(e) => setForm((f) => ({ ...f, salaryRange: e.target.value }))}
                 className={inputClass}
@@ -257,65 +307,228 @@ export default function AdminJobsPage() {
             )}
           </div>
         </form>
-      </AdminCard>
+      </div>
 
-      <AdminCard title="Jobs">
+      {/* Jobs list */}
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '1rem' }}>
+          Jobs
+        </h3>
         {jobs.length === 0 ? (
           <AdminEmptyState message="No jobs yet." description="Create a job above." />
         ) : (
-          <ul className="admin-list">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
             {jobs.map((job) => (
-              <li key={job.id} className="admin-list-item">
-                <div className="admin-list-item-header">
-                  <p className="admin-list-item-title">{job.title}</p>
-                  <div className="admin-action-group">
-                    <button type="button" onClick={() => handleEdit(job)} className="admin-link admin-link-primary">
-                      Edit
-                    </button>
-                    <button type="button" onClick={() => handleDelete(job.id)} className="admin-link admin-link-danger">
-                      Delete
-                    </button>
+              <div
+                key={job.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  padding: '0.875rem 1rem',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827' }}>
+                      {job.title}
+                    </span>
+                    <StatusBadge active={job.is_active !== false} />
                   </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '1.25rem',
+                      flexWrap: 'wrap',
+                      marginTop: '0.5rem',
+                    }}
+                  >
+                    <div>
+                      <span style={labelStyle}>Company</span>
+                      <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                        {job.company || '--'}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={labelStyle}>Location</span>
+                      <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                        {job.location || 'Remote'}
+                      </div>
+                    </div>
+                    {job.track_name && (
+                      <div>
+                        <span style={labelStyle}>Track</span>
+                        <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                          {job.track_name}
+                        </div>
+                      </div>
+                    )}
+                    {job.employment_type && (
+                      <div>
+                        <span style={labelStyle}>Type</span>
+                        <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                          {job.employment_type}
+                        </div>
+                      </div>
+                    )}
+                    {job.salary_range && (
+                      <div>
+                        <span style={labelStyle}>Salary</span>
+                        <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                          {job.salary_range}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {job.description && (
+                    <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                      {job.description.length > 120 ? job.description.slice(0, 120) + '...' : job.description}
+                    </p>
+                  )}
                 </div>
-                <p className="admin-list-item-meta">
-                  {job.company || 'Company'} · {job.location || 'Remote'}
-                  {job.track_name ? ` · ${job.track_name}` : ''}
-                  {!job.is_active ? ' · Inactive' : ''}
-                </p>
-                {job.description && <p className="admin-list-item-body">{job.description}</p>}
-              </li>
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, paddingTop: '0.125rem' }}>
+                  <AdminButton variant="secondary" onClick={() => handleEdit(job)} style={{ fontSize: '0.8125rem' }}>
+                    Edit
+                  </AdminButton>
+                  <AdminButton variant="danger" onClick={() => handleDelete(job.id)} style={{ fontSize: '0.8125rem' }}>
+                    Delete
+                  </AdminButton>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
-      </AdminCard>
+      </div>
 
-      <AdminCard title="Job applications">
-        <div className="admin-card-toolbar">
-          <select
-            value={jobFilter}
-            onChange={async (e) => {
-              const value = e.target.value;
-              setJobFilter(value);
-              await loadApplications(value);
-            }}
-            className={inputClass}
-            style={{ width: 'auto', minWidth: '200px' }}
-          >
-            <option value="">All jobs</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>{job.title}</option>
-            ))}
-          </select>
-          <AdminButton variant="secondary" onClick={() => loadApplications(jobFilter)}>
-            Refresh
-          </AdminButton>
+      {/* Applications */}
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+            Job Applications
+          </h3>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <select
+              value={jobFilter}
+              onChange={async (e) => {
+                const value = e.target.value;
+                setJobFilter(value);
+                await loadApplications(value);
+              }}
+              className={inputClass}
+              style={{ width: 'auto', minWidth: '200px' }}
+            >
+              <option value="">All jobs</option>
+              {jobs.map((job) => (
+                <option key={job.id} value={job.id}>{job.title}</option>
+              ))}
+            </select>
+            <AdminButton variant="secondary" onClick={() => loadApplications(jobFilter)}>
+              Refresh
+            </AdminButton>
+          </div>
         </div>
         {applications.length === 0 ? (
           <AdminEmptyState message="No applications yet." description="Applications will appear here when users apply." />
         ) : (
-          <AdminTable columns={applicationColumns} data={applications} rowKey="id" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {applications.map((app) => (
+              <div
+                key={app.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  padding: '0.875rem 1rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827' }}>
+                    {app.name || app.user_email || 'Applicant'}
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '1.25rem',
+                      flexWrap: 'wrap',
+                      marginTop: '0.5rem',
+                    }}
+                  >
+                    <div>
+                      <span style={labelStyle}>Job</span>
+                      <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                        {app.job_title}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={labelStyle}>Email</span>
+                      <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                        {app.email || app.user_email || '--'}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={labelStyle}>Submitted</span>
+                      <div style={{ fontSize: '0.8125rem', color: '#374151', marginTop: '0.125rem' }}>
+                        {new Date(app.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  {app.cover_letter && (
+                    <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                      {app.cover_letter.length > 120 ? app.cover_letter.slice(0, 120) + '...' : app.cover_letter}
+                    </p>
+                  )}
+                </div>
+                <div style={{ flexShrink: 0, paddingTop: '0.125rem' }}>
+                  {app.resume_url ? (
+                    <a
+                      href={app.resume_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#2563eb',
+                        textDecoration: 'none',
+                        padding: '0.375rem 0.75rem',
+                        borderRadius: 6,
+                        border: '1px solid #2563eb30',
+                        background: 'rgba(37, 99, 235, 0.05)',
+                      }}
+                    >
+                      View Resume
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: '0.8125rem', color: '#9ca3af' }}>No resume</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
-      </AdminCard>
+      </div>
     </div>
   );
 }

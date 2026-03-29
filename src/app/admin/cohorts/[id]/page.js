@@ -11,7 +11,11 @@ import { formatDateLagos } from '@/lib/dateUtils';
 import CohortStudentList from './CohortStudentList';
 import CohortAssignments from './CohortAssignments';
 
-const STATUS_COLORS = { upcoming: '#6b7280', active: '#059669', completed: '#2563eb' };
+const STATUS_CONFIG = {
+  upcoming: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Upcoming' },
+  active: { color: '#059669', bg: 'rgba(5, 150, 105, 0.1)', label: 'Active' },
+  completed: { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)', label: 'Completed' },
+};
 
 function isSuccessFeedback(message) {
   if (!message) return false;
@@ -34,30 +38,43 @@ function isSuccessFeedback(message) {
 }
 
 function StatusBadge({ status }) {
-  const color = STATUS_COLORS[status] || '#6b7280';
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.upcoming;
   return (
     <span
       style={{
-        display: 'inline-block',
-        padding: '0.25rem 0.6rem',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.3rem 0.75rem',
         fontSize: '0.75rem',
         fontWeight: 600,
-        borderRadius: 6,
-        textTransform: 'capitalize',
-        backgroundColor: `${color}20`,
-        color,
+        borderRadius: 20,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.color}30`,
       }}
     >
-      {status}
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: config.color }} />
+      {config.label}
     </span>
   );
 }
+
+const TABS = [
+  { key: 'curriculum', label: 'Curriculum', icon: '📚' },
+  { key: 'students', label: 'Students', icon: '👥' },
+  { key: 'facilitators', label: 'Facilitators', icon: '🎓' },
+  { key: 'enrollment', label: 'Enrollment', icon: '📋' },
+];
 
 export default function AdminCohortDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { showToast } = useToast();
   const id = params?.id;
+  const [activeTab, setActiveTab] = useState('curriculum');
   const [cohort, setCohort] = useState(null);
   const [students, setStudents] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -663,142 +680,166 @@ export default function AdminCohortDetailPage() {
 
   if (loading) {
     return (
-      <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-loading">
-        <div className="admin-cohort-loading-spinner" />
-        <p className="admin-loading">Loading cohort...</p>
+      <div className="admin-dashboard admin-dashboard-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--primary-100, #dbeafe)', borderTopColor: 'var(--primary-color, #0052a3)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <p style={{ color: 'var(--text-light)', fontSize: '0.9375rem' }}>Loading cohort...</p>
       </div>
     );
   }
 
   if (!cohort) {
     return (
-      <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-empty">
-        <div className="admin-cohort-empty-card">
-          <p className="admin-cohort-empty-title">Cohort not found</p>
-          <p style={{ color: 'var(--text-light)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>This cohort may have been deleted or the link is incorrect.</p>
-          <Link href="/admin/cohorts" className="admin-btn admin-btn-secondary">← Back to cohorts</Link>
-        </div>
+      <div className="admin-dashboard admin-dashboard-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, var(--primary-50, #eff6ff), var(--primary-100, #dbeafe))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>?</div>
+        <p style={{ fontWeight: 600, fontSize: '1.125rem', color: 'var(--text-color)' }}>Cohort not found</p>
+        <p style={{ color: 'var(--text-light)', fontSize: '0.9375rem' }}>This cohort may have been deleted or the link is incorrect.</p>
+        <Link href="/admin/cohorts" className="admin-btn admin-btn-secondary" style={{ marginTop: '0.5rem' }}>Back to cohorts</Link>
       </div>
     );
   }
 
+  // Compute progress for active cohorts
+  const startDate = cohort.start_date ? new Date(cohort.start_date) : null;
+  const endDate = cohort.end_date ? new Date(cohort.end_date) : null;
+  const now = new Date();
+  const totalDays = startDate && endDate ? Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24)) : 0;
+  const elapsedDays = startDate ? Math.max(0, (now - startDate) / (1000 * 60 * 60 * 24)) : 0;
+  const progressPct = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
+  const unlockedWeeks = weeks.filter((w) => !w.is_locked).length;
+
   return (
     <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">
-        <AdminPageHeader
-          breadcrumb={<Link href="/admin/cohorts" style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>← Cohorts</Link>}
-          title={cohort.name}
-          description={
-            <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem 1rem', fontSize: '0.9375rem' }}>
-              <span style={{ color: 'var(--text-light)' }}>{cohort.track_name}</span>
-              <span style={{ color: '#9ca3af' }}>·</span>
-              <span style={{ color: 'var(--text-light)' }}>{formatDate(cohort.start_date)} – {formatDate(cohort.end_date)}</span>
-              <StatusBadge status={cohort.status} />
-            </span>
-          }
-          actions={
-            <button
-              type="button"
-              onClick={async () => {
-                if (!confirm(`Delete cohort "${cohort.name}"? This cannot be undone.`)) return;
-                try {
-                  const res = await fetch(`/api/cohorts/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-                  const data = await res.json();
-                  if (res.ok && data.deleted) {
-                    router.push('/admin/cohorts');
-                  } else {
-                    showToast({ type: 'error', message: data.error || 'Failed to delete cohort' });
-                  }
-                } catch {
-                  showToast({ type: 'error', message: 'Failed to delete cohort' });
+      {/* Header */}
+      <AdminPageHeader
+        breadcrumb={<Link href="/admin/cohorts" style={{ color: 'var(--text-light)', fontSize: '0.875rem', textDecoration: 'none' }}>← Cohorts</Link>}
+        title={cohort.name}
+        description={
+          <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem 1rem', fontSize: '0.9375rem' }}>
+            <span style={{ color: 'var(--text-light)' }}>{cohort.track_name}</span>
+            <span style={{ color: '#9ca3af' }}>·</span>
+            <span style={{ color: 'var(--text-light)' }}>{formatDate(cohort.start_date)} – {formatDate(cohort.end_date)}</span>
+            <StatusBadge status={cohort.status} />
+          </span>
+        }
+        actions={
+          <button
+            type="button"
+            onClick={async () => {
+              if (!confirm(`Delete cohort "${cohort.name}"? This cannot be undone.`)) return;
+              try {
+                const res = await fetch(`/api/cohorts/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                const data = await res.json();
+                if (res.ok && data.deleted) {
+                  router.push('/admin/cohorts');
+                } else {
+                  showToast({ type: 'error', message: data.error || 'Failed to delete cohort' });
                 }
-              }}
-              className="admin-btn admin-btn-danger admin-btn-sm"
-            >
-              Delete cohort
-            </button>
-          }
-        />
+              } catch {
+                showToast({ type: 'error', message: 'Failed to delete cohort' });
+              }
+            }}
+            className="admin-btn admin-btn-danger admin-btn-sm"
+          >
+            Delete cohort
+          </button>
+        }
+      />
 
-        <div className="admin-card">
-          <h2 className="admin-card-title">Enroll student</h2>
-          <form onSubmit={handleEnrollByEmail} className="admin-form-group admin-action-group admin-cohort-enroll-form">
-            <div className="admin-form-group admin-cohort-enroll-input">
-              <label className="admin-form-label">Email</label>
-              <div className="admin-form-field">
-                <input
-                  type="email"
-                  value={enrollEmail}
-                  onChange={(e) => setEnrollEmail(e.target.value)}
-                  placeholder="student@example.com"
-                />
-              </div>
+      {/* Stats overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        {[
+          { label: 'Students', value: students.length, color: '#0052a3', icon: '👥' },
+          { label: 'Facilitators', value: facilitators.length, color: '#7c3aed', icon: '🎓' },
+          { label: 'Weeks', value: `${unlockedWeeks}/${weeks.length}`, color: '#059669', icon: '📅' },
+          { label: 'Live classes', value: liveClasses.length, color: '#ea580c', icon: '📹' },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: '1.25rem',
+              borderTop: `3px solid ${stat.color}`,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)', fontWeight: 500 }}>{stat.label}</span>
+              <span style={{ fontSize: '1.25rem' }}>{stat.icon}</span>
             </div>
-            <button type="submit" disabled={enrolling} className="admin-btn admin-btn-primary">
-              {enrolling ? 'Enrolling...' : 'Enroll'}
-            </button>
-          </form>
-          {isSuccessFeedback(enrollMessage) && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: '#059669' }}>{enrollMessage}</p>}
-        </div>
-
-        {applicationsNotEnrolled.length > 0 && (
-          <div className="admin-card">
-            <h2 className="admin-card-title">Enroll from applications</h2>
-            <p className="admin-form-hint" style={{ marginBottom: '1rem' }}>Applicants for this track not yet in this cohort (paid or unpaid). Click Enroll to add them as a student user and enroll in the cohort:</p>
-            <ul className="admin-cohort-app-list">
-              {applicationsPaginated.map((app) => (
-                <li key={app.id} className="admin-cohort-app-card">
-                  <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>{app.first_name} {app.last_name}</span>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>{app.email}</span>
-                    {app.track_name && <span style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{app.track_name}</span>}
-                    {app.status && (
-                      <span style={{ display: 'inline-block', fontSize: '0.7rem', fontWeight: 600, marginTop: 4, padding: '2px 6px', borderRadius: 4, background: app.status === 'paid' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(107, 114, 128, 0.2)', color: app.status === 'paid' ? '#059669' : '#6b7280' }}>
-                        {app.status}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleEnrollFromApplication(app)}
-                    disabled={enrolling}
-                    className="admin-btn admin-btn-primary admin-btn-sm"
-                  >
-                    Enroll
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {applicationsTotalPages > 1 && (
-              <div className="admin-cohort-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color, #e5e7eb)' }}>
-                <span className="admin-form-hint" style={{ margin: 0 }}>
-                  Showing {(applicationsPageSafe - 1) * APPLICATIONS_PAGE_SIZE + 1}–{Math.min(applicationsPageSafe * APPLICATIONS_PAGE_SIZE, applicationsNotEnrolled.length)} of {applicationsNotEnrolled.length}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => setApplicationsPage((p) => Math.max(1, p - 1))}
-                    disabled={applicationsPageSafe <= 1}
-                    className="admin-btn admin-btn-ghost admin-btn-sm"
-                  >
-                    Previous
-                  </button>
-                  <span className="admin-form-hint" style={{ margin: 0, minWidth: '5rem', textAlign: 'center' }}>
-                    Page {applicationsPageSafe} of {applicationsTotalPages}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setApplicationsPage((p) => Math.min(applicationsTotalPages, p + 1))}
-                    disabled={applicationsPageSafe >= applicationsTotalPages}
-                    className="admin-btn admin-btn-ghost admin-btn-sm"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-color)' }}>{stat.value}</div>
           </div>
-        )}
+        ))}
+      </div>
 
+      {/* Progress bar for active cohorts */}
+      {cohort.status === 'active' && (
+        <div style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '1.25rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-color)' }}>Cohort progress</span>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)' }}>{progressPct}% complete</span>
+          </div>
+          <div style={{ height: 8, borderRadius: 4, background: '#e5e7eb', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progressPct}%`, borderRadius: 4, background: 'linear-gradient(90deg, #0052a3, #3b82f6)', transition: 'width 0.3s' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-light)' }}>
+            <span>{formatDate(cohort.start_date)}</span>
+            <span>Week {cohort.current_week || unlockedWeeks} of {weeks.length || 12}</span>
+            <span>{formatDate(cohort.end_date)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Tab navigation */}
+      <div style={{
+        display: 'flex',
+        gap: '0.25rem',
+        background: '#f3f4f6',
+        borderRadius: 10,
+        padding: '0.25rem',
+        marginBottom: '1.5rem',
+        overflowX: 'auto',
+      }}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              flex: '1 1 0',
+              padding: '0.625rem 1rem',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: activeTab === tab.key ? 600 : 400,
+              color: activeTab === tab.key ? 'var(--primary-color, #0052a3)' : 'var(--text-light)',
+              background: activeTab === tab.key ? '#fff' : 'transparent',
+              boxShadow: activeTab === tab.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.375rem',
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>{tab.icon}</span>
+            {tab.label}
+            {tab.key === 'students' && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>({students.length})</span>}
+            {tab.key === 'facilitators' && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>({facilitators.length})</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Curriculum tab */}
+      {activeTab === 'curriculum' && (
         <CohortAssignments
           weeks={weeks}
           selectedWeekId={selectedWeekId}
@@ -839,10 +880,21 @@ export default function AdminCohortDetailPage() {
           handleCancelEditLiveClass={handleCancelEditLiveClass}
           editingLiveClassId={editingLiveClassId}
         />
+      )}
 
-        <div className="admin-card">
-          <h2 className="admin-card-title">Facilitators</h2>
-          <form onSubmit={handleAssignFacilitator} className="admin-form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+      {/* Students tab */}
+      {activeTab === 'students' && (
+        <CohortStudentList students={students} formatDate={formatDate} />
+      )}
+
+      {/* Facilitators tab */}
+      {activeTab === 'facilitators' && (
+        <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>🎓</span>
+            Facilitators
+          </h2>
+          <form onSubmit={handleAssignFacilitator} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', padding: '1rem', background: '#f9fafb', borderRadius: 8, marginBottom: '1.5rem' }}>
             <div className="admin-form-field" style={{ flex: '1 1 140px' }}>
               <label className="admin-form-label">First name</label>
               <input type="text" value={facilitatorForm.firstName} onChange={(e) => setFacilitatorForm((f) => ({ ...f, firstName: e.target.value }))} placeholder="First name" />
@@ -857,40 +909,144 @@ export default function AdminCohortDetailPage() {
             </div>
             <button type="submit" disabled={assigningFacilitator} className="admin-btn admin-btn-primary" style={{ flexShrink: 0 }}>{assigningFacilitator ? 'Assigning...' : 'Assign'}</button>
           </form>
-          {isSuccessFeedback(facilitatorMessage) && <p className="admin-form-hint" style={{ marginTop: '0.5rem', color: '#059669' }}>{facilitatorMessage}</p>}
+          {isSuccessFeedback(facilitatorMessage) && <p style={{ marginBottom: '1rem', color: '#059669', fontSize: '0.875rem', fontWeight: 500 }}>{facilitatorMessage}</p>}
 
           {facilitators.length === 0 ? (
-            <p className="admin-form-hint" style={{ marginTop: '1rem' }}>No facilitators assigned yet.</p>
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f3f4f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', marginBottom: '0.75rem' }}>🎓</div>
+              <p style={{ fontSize: '0.9375rem' }}>No facilitators assigned yet.</p>
+            </div>
           ) : (
-            <div className="admin-cohort-table-wrap">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th className="admin-table-th">Name</th>
-                    <th className="admin-table-th">Email</th>
-                    <th className="admin-table-th">Assigned</th>
-                    <th className="admin-table-th">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {facilitators.map((f) => (
-                    <tr key={f.id} className="admin-table-tr">
-                      <td className="admin-table-td" style={{ fontWeight: 500 }}>{f.first_name} {f.last_name}</td>
-                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{f.email}</td>
-                      <td className="admin-table-td" style={{ color: 'var(--text-light)' }}>{formatDate(f.assigned_at)}</td>
-                      <td className="admin-table-td">
-                        <button type="button" onClick={() => handleResendFacilitatorInvite(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#0066cc' }}>Resend invite</button>
-                        <button type="button" onClick={() => handleRemoveFacilitator(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Remove</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {facilitators.map((f) => (
+                <div key={f.id} style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1rem',
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  background: '#fff',
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0,
+                  }}>
+                    {(f.first_name?.[0] || f.email?.[0] || '?').toUpperCase()}
+                  </div>
+                  <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9375rem' }}>{f.first_name} {f.last_name}</div>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-light)' }}>{f.email}</div>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Assigned {formatDate(f.assigned_at)}</div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                    <button type="button" onClick={() => handleResendFacilitatorInvite(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#0066cc' }}>Resend invite</button>
+                    <button type="button" onClick={() => handleRemoveFacilitator(f.id)} disabled={assigningFacilitator} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545' }}>Remove</button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
+      )}
 
-        <CohortStudentList students={students} formatDate={formatDate} />
-      </div>
+      {/* Enrollment tab */}
+      {activeTab === 'enrollment' && (
+        <>
+          <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>✉️</span>
+              Enroll by email
+            </h2>
+            <form onSubmit={handleEnrollByEmail} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', padding: '1rem', background: '#f9fafb', borderRadius: 8 }}>
+              <div className="admin-form-field" style={{ flex: '1 1 280px' }}>
+                <label className="admin-form-label">Student email</label>
+                <input
+                  type="email"
+                  value={enrollEmail}
+                  onChange={(e) => setEnrollEmail(e.target.value)}
+                  placeholder="student@example.com"
+                />
+              </div>
+              <button type="submit" disabled={enrolling} className="admin-btn admin-btn-primary" style={{ flexShrink: 0 }}>
+                {enrolling ? 'Enrolling...' : 'Enroll'}
+              </button>
+            </form>
+            {isSuccessFeedback(enrollMessage) && <p style={{ marginTop: '0.75rem', color: '#059669', fontSize: '0.875rem', fontWeight: 500 }}>{enrollMessage}</p>}
+          </div>
+
+          {applicationsNotEnrolled.length > 0 && (
+            <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: '1.5rem' }}>
+              <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #fff7ed, #fed7aa)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>📋</span>
+                Applicants ({applicationsNotEnrolled.length})
+              </h2>
+              <p style={{ color: 'var(--text-light)', fontSize: '0.8125rem', marginBottom: '1rem' }}>Applicants for this track not yet enrolled. Click Enroll to add them.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {applicationsPaginated.map((app) => (
+                  <div key={app.id} style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.875rem 1rem',
+                    borderRadius: 8,
+                    border: '1px solid #e5e7eb',
+                    background: '#fff',
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #0052a3, #3b82f6)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontWeight: 700, fontSize: '0.8125rem', flexShrink: 0,
+                    }}>
+                      {(app.first_name?.[0] || '?').toUpperCase()}
+                    </div>
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9375rem' }}>{app.first_name} {app.last_name}</span>
+                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>{app.email}</span>
+                      {app.status && (
+                        <span style={{
+                          display: 'inline-block', fontSize: '0.6875rem', fontWeight: 600, marginLeft: '0.5rem',
+                          padding: '2px 8px', borderRadius: 10,
+                          background: app.status === 'paid' ? 'rgba(5, 150, 105, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                          color: app.status === 'paid' ? '#059669' : '#6b7280',
+                        }}>
+                          {app.status}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleEnrollFromApplication(app)}
+                      disabled={enrolling}
+                      className="admin-btn admin-btn-primary admin-btn-sm"
+                      style={{ flexShrink: 0 }}
+                    >
+                      Enroll
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {applicationsTotalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)' }}>
+                    Showing {(applicationsPageSafe - 1) * APPLICATIONS_PAGE_SIZE + 1}–{Math.min(applicationsPageSafe * APPLICATIONS_PAGE_SIZE, applicationsNotEnrolled.length)} of {applicationsNotEnrolled.length}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button type="button" onClick={() => setApplicationsPage((p) => Math.max(1, p - 1))} disabled={applicationsPageSafe <= 1} className="admin-btn admin-btn-ghost admin-btn-sm">Previous</button>
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--text-light)', minWidth: '5rem', textAlign: 'center' }}>Page {applicationsPageSafe} of {applicationsTotalPages}</span>
+                    <button type="button" onClick={() => setApplicationsPage((p) => Math.min(applicationsTotalPages, p + 1))} disabled={applicationsPageSafe >= applicationsTotalPages} className="admin-btn admin-btn-ghost admin-btn-sm">Next</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

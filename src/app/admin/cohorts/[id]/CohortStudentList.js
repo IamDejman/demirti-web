@@ -9,13 +9,9 @@ const STATUS_CONFIG = {
 export default function CohortStudentList({ students, formatDate }) {
   return (
     <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-      <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>👥</span>
-        Students ({students.length})
-      </h2>
+      <h2 className="admin-card-title">Students ({students.length})</h2>
       {students.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f3f4f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', marginBottom: '0.75rem' }}>👥</div>
           <p style={{ fontSize: '0.9375rem' }}>No students enrolled yet.</p>
         </div>
       ) : (

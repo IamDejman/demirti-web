@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
     }
     return NextResponse.json({ cohort: { ...cohort, facilitators } });
   } catch (e) {
-    reportError(e, { route: 'GET /api/cohorts/[id]' });
+    reportError(e, { route: 'GET /api/cohorts/[id]', code: e?.code, detail: e?.detail, hint: e?.hint });
     return NextResponse.json({ error: 'Failed to fetch cohort' }, { status: 500 });
   }
 }

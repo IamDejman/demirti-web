@@ -73,7 +73,7 @@ export async function GET(request, { params }) {
       checklistItems,
     });
   } catch (e) {
-    reportError(e, { route: 'GET /api/weeks/[id]' });
+    reportError(e, { route: 'GET /api/weeks/[id]', code: e?.code, detail: e?.detail, hint: e?.hint, where: e?.where });
     return NextResponse.json({ error: 'Failed to fetch week' }, { status: 500 });
   }
 }

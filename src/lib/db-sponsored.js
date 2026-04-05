@@ -4,7 +4,7 @@
  */
 
 import './env-db';
-import { sql } from '@vercel/postgres';
+import { sql } from './postgres';
 import { ensureDatabaseInitialized } from './db';
 import { DEFAULT_SPONSORED_COHORT } from './config';
 

@@ -3,7 +3,7 @@
  * RFC 6238 compliant. No external dependencies — uses Node.js crypto.
  */
 import crypto from 'crypto';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureDatabaseInitialized } from './db';
 
 const TOTP_PERIOD = 30;

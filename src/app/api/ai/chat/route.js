@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureLmsSchema, recordLmsEvent, getAiSettings } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 import { sendClaudeMessage } from '@/lib/ai';

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { reportError } from '@/lib/logger';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserByEmail, createUserSession } from '@/lib/auth';

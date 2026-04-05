@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase } from '@/lib/db';
 import { ensureLmsSchema } from '@/lib/db-lms';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { logger } from '@/lib/logger';
 
 /**

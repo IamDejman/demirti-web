@@ -3,7 +3,7 @@ import { getCohortById, enrollStudentInCohort } from '@/lib/db-lms';
 import { reportError } from '@/lib/logger';
 import { getAdminOrUserFromRequest } from '@/lib/adminAuth';
 import { getUserByEmail, createUser } from '@/lib/auth';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendEnrollmentEmail } from '@/lib/notifications';

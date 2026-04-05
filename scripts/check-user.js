@@ -20,10 +20,12 @@ if (fs.existsSync(envPath)) {
     const commentIdx = val.indexOf('#');
     if (commentIdx !== -1) val = val.slice(0, commentIdx).trim();
     val = val.replace(/^["']|["']$/g, '');
-    if (key === 'POSTGRES_URL' || key === 'NEW_POSTGRES_URL') process.env[key] = val;
+    if (key === 'DATABASE_URL' || key === 'POSTGRES_URL' || key === 'NEW_POSTGRES_URL') process.env[key] = val;
   }
 }
-if (!process.env.POSTGRES_URL && process.env.NEW_POSTGRES_URL) process.env.POSTGRES_URL = process.env.NEW_POSTGRES_URL;
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.POSTGRES_URL || process.env.NEW_POSTGRES_URL || '';
+}
 
 const email = (process.argv[2] || 'ayodejieluwande@gmail.com').trim().toLowerCase();
 if (!email) {
@@ -32,7 +34,19 @@ if (!email) {
 }
 
 async function main() {
-  const { sql } = await import('@vercel/postgres');
+  const pg = require('pg');
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+  const sql = (strings, ...values) => {
+    let text = '';
+    for (let i = 0; i < strings.length; i++) {
+      text += strings[i];
+      if (i < values.length) text += `$${i + 1}`;
+    }
+    return pool.query(text, values);
+  };
   const result = await sql`
     SELECT id, email, role, first_name, last_name,
            (password_hash IS NOT NULL) AS has_password, created_at

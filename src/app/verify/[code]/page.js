@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import Navbar from '../../components/Navbar';
 

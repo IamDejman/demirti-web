@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { updateApplicationPayment, saveApplication, incrementScholarshipCount } from '@/lib/db';
 import { sendPaymentConfirmationEmail } from '@/lib/paymentEmails';
 import { enrollPaidApplicant } from '@/lib/lms-enrollment';

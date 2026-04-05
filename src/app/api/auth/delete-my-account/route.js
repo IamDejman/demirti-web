@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { getUserFromRequest, deleteAllUserSessions } from '@/lib/auth';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { reportError } from '@/lib/logger';

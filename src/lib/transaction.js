@@ -1,5 +1,5 @@
 import './env-db';
-import { db } from '@vercel/postgres';
+import { db } from '@/lib/postgres';
 
 /**
  * Execute a callback inside a database transaction.

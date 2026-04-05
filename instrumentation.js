@@ -1,13 +1,18 @@
 /**
  * Runs when the Node process starts (e.g. Vercel serverless cold start).
- * If POSTGRES_URL is not set but NEW_POSTGRES_URL is (Vercel env), use it
- * so @vercel/postgres and all DB code work without changing env var names.
+ * Normalize legacy env var names to DATABASE_URL so all DB code works.
  */
 export async function register() {
-  if (!process.env.POSTGRES_URL?.trim() && process.env.NEW_POSTGRES_URL?.trim()) {
-    process.env.POSTGRES_URL = process.env.NEW_POSTGRES_URL;
+  if (!process.env.DATABASE_URL?.trim()) {
+    process.env.DATABASE_URL =
+      process.env.POSTGRES_URL?.trim() ||
+      process.env.NEW_POSTGRES_URL?.trim() ||
+      '';
   }
-  if (!process.env.POSTGRES_URL_READ_REPLICA?.trim() && process.env.NEW_POSTGRES_URL_READ_REPLICA?.trim()) {
-    process.env.POSTGRES_URL_READ_REPLICA = process.env.NEW_POSTGRES_URL_READ_REPLICA;
+  if (!process.env.DATABASE_URL_READ_REPLICA?.trim()) {
+    process.env.DATABASE_URL_READ_REPLICA =
+      process.env.POSTGRES_URL_READ_REPLICA?.trim() ||
+      process.env.NEW_POSTGRES_URL_READ_REPLICA?.trim() ||
+      '';
   }
 }

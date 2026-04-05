@@ -3,7 +3,7 @@
  * Uses raw SQL with @vercel/postgres; run initializeLmsSchema() once to create tables.
  */
 import './env-db';
-import { sql } from '@vercel/postgres';
+import { sql } from './postgres';
 import { ensureDatabaseInitialized } from './db';
 
 let lmsInitialized = false;

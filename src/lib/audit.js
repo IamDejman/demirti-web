@@ -1,5 +1,5 @@
 import './env-db';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureLmsSchema } from './db-lms';
 
 export async function recordAuditLog({ userId, action, targetType, targetId, details, ipAddress, actorEmail }) {

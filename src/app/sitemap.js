@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://demirti.com'
 

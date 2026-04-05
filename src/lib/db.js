@@ -3,7 +3,7 @@
  * For read-only queries (public catalogs), use sqlRead from @/lib/db-read.
  */
 import './env-db';
-import { sql } from '@vercel/postgres';
+import { sql } from './postgres';
 import { DEFAULT_SPONSORED_COHORT, validateEnv } from './config';
 
 // Check if database is initialized

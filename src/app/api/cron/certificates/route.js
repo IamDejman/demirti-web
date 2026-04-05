@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { reportError } from '@/lib/logger';
 import { ensureLmsSchema, recordLmsEvent } from '@/lib/db-lms';
 import { withTransaction } from '@/lib/transaction';

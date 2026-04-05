@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { completeChecklistItem } from '@/lib/db-lms';
 import { reportError } from '@/lib/logger';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import { ensureLmsSchema } from '@/lib/db-lms';
 import { getUserFromRequest } from '@/lib/auth';
 

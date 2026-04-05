@@ -3,12 +3,12 @@
  * Use env vars where possible; fallbacks for defaults.
  */
 
-/** Validate required env vars at runtime. Call early to fail fast. Accepts NEW_POSTGRES_URL if POSTGRES_URL unset (see instrumentation.js). */
+/** Validate required env vars at runtime. Call early to fail fast. */
 export function validateEnv() {
   if (process.env.NODE_ENV === 'development') return;
-  const hasDb = process.env.POSTGRES_URL?.trim() || process.env.NEW_POSTGRES_URL?.trim();
+  const hasDb = process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim() || process.env.NEW_POSTGRES_URL?.trim();
   if (!hasDb) {
-    throw new Error('Missing required env vars: POSTGRES_URL or NEW_POSTGRES_URL. Copy .env.example to .env.local and fill values.');
+    throw new Error('Missing required env var: DATABASE_URL. Copy .env.example to .env.local and fill values.');
   }
 }
 

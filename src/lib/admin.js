@@ -1,5 +1,5 @@
 import './env-db';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/postgres';
 import bcrypt from 'bcryptjs';
 import { ensureDatabaseInitialized } from './db';
 

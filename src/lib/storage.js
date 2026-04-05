@@ -43,10 +43,7 @@ export function getPublicUrl(key) {
   if (PUBLIC_BASE_URL) {
     return `${PUBLIC_BASE_URL.replace(/\/$/, '')}/${encodeKeyPath(key)}`;
   }
-  // Without a public URL, use the app's file proxy route (handles presigned GET from R2/S3)
-  if (FALLBACK_BASE_URL) {
-    return `${FALLBACK_BASE_URL.replace(/\/$/, '')}/api/uploads/${encodeKeyPath(key)}`;
-  }
+  // Use relative path to avoid http/https mixed-content issues
   return `/api/uploads/${encodeKeyPath(key)}`;
 }
 
@@ -58,8 +55,11 @@ export function getPublicUrl(key) {
 export function normalizeFileUrl(url) {
   if (!url || typeof url !== 'string') return url;
 
-  // Already a proxy URL — no change needed
-  if (url.includes('/api/uploads/')) return url;
+  // If it's an absolute URL with /api/uploads/, strip the origin to avoid mixed-content issues
+  if (url.includes('/api/uploads/')) {
+    const idx = url.indexOf('/api/uploads/');
+    return url.slice(idx);
+  }
 
   // If STORAGE_PUBLIC_URL is set and the URL uses it, it's already public
   if (PUBLIC_BASE_URL && url.startsWith(PUBLIC_BASE_URL)) return url;

@@ -16,6 +16,7 @@ import {
 import { requireAdminOrUser } from '@/lib/adminAuth';
 import { isValidUuid } from '@/lib/validation';
 import { recordAuditLog } from '@/lib/audit';
+import { normalizeFileUrl } from '@/lib/storage';
 
 export async function GET(request, { params }) {
   try {
@@ -68,8 +69,8 @@ export async function GET(request, { params }) {
           status: lc.status,
         })),
       },
-      contentItems,
-      materials,
+      contentItems: contentItems.map((c) => ({ ...c, file_url: normalizeFileUrl(c.file_url) })),
+      materials: materials.map((m) => ({ ...m, file_url: normalizeFileUrl(m.file_url) })),
       checklistItems,
     });
   } catch (e) {

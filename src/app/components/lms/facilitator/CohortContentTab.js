@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LmsCard, LmsEmptyState, LmsBadge } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
-import FileUploadButton from '@/app/components/lms/FileUploadButton';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 
 const CONTENT_TYPES = [
@@ -36,7 +35,7 @@ const EMPTY_FORM = {
   isDownloadable: false,
 };
 
-export default function CohortContentTab({ cohortId, weeks }) {
+export default function CohortContentTab({ cohortId: _cohortId, weeks }) {
   const [weekId, setWeekId] = useState('');
   const [weekContent, setWeekContent] = useState([]);
   const [weekMaterials, setWeekMaterials] = useState([]);

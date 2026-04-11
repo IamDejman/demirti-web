@@ -1,5 +1,4 @@
 import './globals.css'
-import { headers } from 'next/headers'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import ClientAppShell from './components/ClientAppShell'
 
@@ -71,7 +70,6 @@ export const metadata = {
 }
 
 export default async function RootLayout({ children }) {
-  const nonce = (await headers()).get('x-nonce') ?? '';
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${plusJakartaSans.variable}`}>
       <head>

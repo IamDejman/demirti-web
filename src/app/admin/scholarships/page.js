@@ -251,7 +251,7 @@ export default function ScholarshipsPage() {
                         </p>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          {trackData.recipients.map((recipient, index) => (
+                          {trackData.recipients.map((recipient) => (
                             <div
                               key={recipient.id}
                               style={{

@@ -9,11 +9,6 @@ import { useToast } from '../../components/ToastProvider';
 import { getAuthHeaders } from '@/lib/authClient';
 import { formatTimeLagos } from '@/lib/dateUtils';
 
-function renderAction(row) {
-  if (row.action === 'page.view') return 'Viewed page';
-  return row.action || '—';
-}
-
 function renderPage(row) {
   if (row.action === 'page.view') {
     const path = row.details?.path ?? row.target_id;

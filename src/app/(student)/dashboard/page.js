@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { LmsCard, LmsEmptyState, StreakCounter } from '@/app/components/lms';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
-import { formatTimeLagos, formatDateLagos, formatClassTimeLagos } from '@/lib/dateUtils';
+import { formatDateLagos, formatClassTimeLagos } from '@/lib/dateUtils';
 import { useFetch } from '@/hooks/useFetch';
 
 function getGreeting() {

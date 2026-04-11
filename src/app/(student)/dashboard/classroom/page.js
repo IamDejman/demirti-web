@@ -62,7 +62,7 @@ export default function ClassroomPage() {
     }
   };
 
-  const completedWeeks = weeks.filter((w, i) => !w.is_locked && currentWeek && weeks.indexOf(w) < weeks.indexOf(currentWeek)).length;
+  const completedWeeks = weeks.filter((w) => !w.is_locked && currentWeek && weeks.indexOf(w) < weeks.indexOf(currentWeek)).length;
   const totalWeeks = weeks.length || 12;
   const classroomProgress = Math.round((completedWeeks / totalWeeks) * 100);
 

@@ -9,7 +9,6 @@ import {
   updateWeek,
   getCohortById,
   getCohortFacilitators,
-  getLiveClassByWeekId,
   getLiveClassesByWeekId,
   isStudentInCohort,
 } from '@/lib/db-lms';

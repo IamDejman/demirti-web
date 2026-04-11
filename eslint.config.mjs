@@ -2,6 +2,8 @@
 // Since eslint-config-next doesn't fully support ESLint 9 flat config yet,
 // we use a basic config that works with Next.js patterns
 
+import reactPlugin from "eslint-plugin-react";
+
 export default [
   {
     files: ["public/sw.js"],
@@ -27,6 +29,14 @@ export default [
   },
   {
     files: ["**/*.js", "**/*.jsx", "**/*.mjs"],
+    plugins: {
+      react: reactPlugin,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -86,6 +96,8 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
+      // Mark JSX identifiers as used so `no-unused-vars` does not flag `<Component />` as unused imports.
+      "react/jsx-uses-vars": "warn",
       "no-console": "off", // Prefer logger from @/lib/logger for server-side code; allow console for debug/CLI
       "no-undef": "error",
     },

@@ -75,7 +75,7 @@ export default function AnnouncementsPage() {
         </LmsCard>
       ) : (
         <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)' }}>
-          {announcements.map((a, i) => (
+          {announcements.map((a) => (
             <LmsCard key={a.id}>
               <div className="flex items-start gap-4">
                 <div className="lms-card-icon-box">

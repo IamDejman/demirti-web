@@ -7,7 +7,6 @@
 import crypto from 'crypto';
 
 const PUBLIC_BASE_URL = process.env.STORAGE_PUBLIC_URL || '';
-const FALLBACK_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || '';
 
 function getStorageConfig() {
   return {

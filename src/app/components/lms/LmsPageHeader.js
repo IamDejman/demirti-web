@@ -27,7 +27,13 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
         </Link>
       )}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
+        <div className="flex items-start gap-3 min-w-0">
+          {icon && (
+            <div className="flex-shrink-0 mt-0.5" style={{ color: 'var(--primary-color)' }} aria-hidden>
+              {icon}
+            </div>
+          )}
+          <div className="min-w-0">
           <h1
             className="lms-page-header-title font-bold"
             style={{
@@ -51,6 +57,7 @@ export default function LmsPageHeader({ title, subtitle, icon, breadcrumb, child
               {subtitle}
             </p>
           )}
+          </div>
         </div>
         {children && <div className="flex-shrink-0">{children}</div>}
       </div>

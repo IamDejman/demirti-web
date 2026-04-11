@@ -253,7 +253,6 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
   const filtered = filterStatus === 'all'
     ? applications
     : applications.filter((a) => a.review_status === filterStatus);
-  const selectedCount = selectedIds.size;
 
   // Compute stats
   const statCounts = {

@@ -53,7 +53,7 @@ export async function proxy(request) {
 
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.paystack.co${isDev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'unsafe-inline' 'nonce-${nonce}' https://js.paystack.co${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
     "font-src 'self' https://fonts.gstatic.com",

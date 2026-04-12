@@ -64,13 +64,16 @@ export async function proxy(request) {
     "form-action 'self'",
   ];
 
+  const cspHeader = cspDirectives.join('; ');
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', cspHeader);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   response.headers.set('x-request-id', crypto.randomUUID());
-  response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+  response.headers.set('Content-Security-Policy', cspHeader);
 
   if (pathname.startsWith('/api/')) {
     response.headers.set('Cache-Control', 'no-store');

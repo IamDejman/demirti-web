@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { LmsCard, LmsEmptyState, LmsBadge } from '@/app/components/lms';
+import FileUploadButton from '@/app/components/lms/FileUploadButton';
 import { LmsIcons } from '@/app/components/lms/LmsIcons';
 import { getLmsAuthHeaders } from '@/lib/authClient';
 

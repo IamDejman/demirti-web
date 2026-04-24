@@ -7,13 +7,13 @@
 import './env-db';
 import { sql, createPool } from './postgres';
 
-const readConnectionString =
-  process.env.DATABASE_URL_READ_REPLICA?.trim() ||
-  process.env.DATABASE_URL?.trim();
+const replicaUrl = process.env.DATABASE_URL_READ_REPLICA?.trim();
+const primaryUrl = process.env.DATABASE_URL?.trim();
 
-const readPool = readConnectionString
-  ? createPool({ connectionString: readConnectionString })
-  : null;
+const readPool =
+  replicaUrl && replicaUrl !== primaryUrl
+    ? createPool({ connectionString: replicaUrl })
+    : null;
 
 /** Use for read-only queries. Routes to read replica when configured; otherwise primary DB. */
 export const sqlRead = readPool ? readPool.sql : sql;

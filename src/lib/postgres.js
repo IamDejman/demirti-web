@@ -38,10 +38,13 @@ export function sql(strings, ...values) {
  * Create a separate connection pool (e.g. for read replicas).
  * Returns an object with a `sql` tagged template bound to that pool.
  */
-export function createPool({ connectionString }) {
+export function createPool({ connectionString, max = 5 }) {
   const p = new pg.Pool({
     connectionString,
     ssl: { rejectUnauthorized: false },
+    max,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   });
   return {
     sql(strings, ...values) {

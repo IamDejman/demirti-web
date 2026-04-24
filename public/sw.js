@@ -1,6 +1,18 @@
 /* global self */
 const CACHE_NAME = 'cverse-v1';
 
+/** Service workers must not fulfill respondWith with undefined — browsers throw TypeError. */
+function ensureResponse(res) {
+  return (
+    res ||
+    new Response('Unavailable offline', {
+      status: 503,
+      statusText: 'Unavailable',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    })
+  );
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
@@ -31,6 +43,7 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .catch(() => caches.match(request))
         .then((res) => res || caches.match('/offline'))
+        .then(ensureResponse)
     );
     return;
   }
@@ -55,6 +68,7 @@ self.addEventListener('fetch', (event) => {
     fetch(request)
       .then((res) => res)
       .catch(() => caches.match(request))
+      .then(ensureResponse)
   );
 });
 

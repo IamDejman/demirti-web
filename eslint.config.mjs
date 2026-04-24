@@ -98,6 +98,8 @@ export default [
       ],
       // Mark JSX identifiers as used so `no-unused-vars` does not flag `<Component />` as unused imports.
       "react/jsx-uses-vars": "warn",
+      // Catch `<Foo />` when Foo was never imported (runtime ReferenceError in production).
+      "react/jsx-no-undef": "error",
       "no-console": "off", // Prefer logger from @/lib/logger for server-side code; allow console for debug/CLI
       "no-undef": "error",
     },

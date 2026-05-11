@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
+const { withAxiom } = require('next-axiom');
 
 // Normalize DB env vars to DATABASE_URL (supports legacy POSTGRES_URL / NEW_POSTGRES_URL)
 if (!process.env.DATABASE_URL?.trim()) {
@@ -106,5 +107,5 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withAxiom(nextConfig)
 

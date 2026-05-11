@@ -52,23 +52,20 @@ export default function CohortAssignments({
   setWeekForm,
   contentForm,
   setContentForm,
-  editingContentId,
-  setEditingContentId: _setEditingContentId,
   materialForm,
   setMaterialForm,
-  editingMaterialId,
-  setEditingMaterialId: _setEditingMaterialId,
   liveClassForm,
   setLiveClassForm,
   liveClasses,
   handleDeleteLiveClass,
   handleEditLiveClass,
-  handleCancelEditLiveClass,
-  editingLiveClassId,
   assignmentForm,
   setAssignmentForm,
   savingAssignment,
   handleCreateAssignment,
+  assignments,
+  handleOpenEditAssignment,
+  handleDeleteAssignment,
   lmsMessage,
   savingWeek,
   savingContent,
@@ -82,6 +79,7 @@ export default function CohortAssignments({
   handleEditMaterial,
   handleDeleteMaterial,
   handleCreateLiveClass,
+  handleOpenEditWeek,
 }) {
   const formFieldStyle = { display: 'flex', flexDirection: 'column', gap: '0.375rem' };
   const formGroupStyle = { display: 'flex', flexDirection: 'column', gap: '0.75rem' };
@@ -197,6 +195,14 @@ export default function CohortAssignments({
                     {w.title}
                   </span>
                   {w.is_locked && <span style={{ fontSize: '0.6875rem', color: '#9ca3af', fontWeight: 500 }}>Locked</span>}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleOpenEditWeek(w); }}
+                    className="admin-btn admin-btn-ghost admin-btn-sm"
+                    style={{ fontSize: '0.6875rem', padding: '2px 8px' }}
+                  >
+                    Edit
+                  </button>
                 </div>
               ))}
             </div>
@@ -240,7 +246,7 @@ export default function CohortAssignments({
                   Downloadable
                 </label>
               </div>
-              <button type="submit" disabled={savingContent} className="admin-btn admin-btn-primary">{savingContent ? 'Saving...' : editingContentId ? 'Update content' : 'Add content'}</button>
+              <button type="submit" disabled={savingContent} className="admin-btn admin-btn-primary">{savingContent ? 'Saving...' : 'Add content'}</button>
             </form>
           </SectionCard>
 
@@ -258,7 +264,7 @@ export default function CohortAssignments({
               <div className="admin-form-field"><textarea placeholder="Description (optional)" value={materialForm.description} onChange={(e) => setMaterialForm((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
               <div className="admin-form-field"><input type="text" placeholder="URL (optional)" value={materialForm.url} onChange={(e) => setMaterialForm((f) => ({ ...f, url: e.target.value }))} /></div>
               <div className="admin-form-field"><input type="text" placeholder="File URL (optional)" value={materialForm.fileUrl} onChange={(e) => setMaterialForm((f) => ({ ...f, fileUrl: e.target.value }))} /></div>
-              <button type="submit" disabled={savingMaterial} className="admin-btn admin-btn-primary">{savingMaterial ? 'Saving...' : editingMaterialId ? 'Update material' : 'Add material'}</button>
+              <button type="submit" disabled={savingMaterial} className="admin-btn admin-btn-primary">{savingMaterial ? 'Saving...' : 'Add material'}</button>
             </form>
           </SectionCard>
 
@@ -362,6 +368,50 @@ export default function CohortAssignments({
         </div>
       )}
 
+      {/* Assignments list for selected week */}
+      {selectedWeekId && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <SectionCard title={`Assignments${selectedWeekId ? ` — ${weeks.find((w) => w.id === selectedWeekId)?.title || ''}` : ''}`}>
+            {(() => {
+              const weekAssignments = assignments.filter((a) => a.week_id === selectedWeekId);
+              return weekAssignments.length === 0 ? (
+                <p style={{ color: 'var(--text-light)', fontSize: '0.875rem', textAlign: 'center', padding: '1rem 0' }}>No assignments for this week yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {weekAssignments.map((a) => (
+                    <div key={a.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.75rem', borderRadius: 6,
+                      border: '1px solid #f3f4f6', background: '#fafafa',
+                    }}>
+                      <div style={{ flex: '1 1 150px', minWidth: 0 }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{a.title}</span>
+                        {a.deadline_at && (
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '0.125rem' }}>
+                            Due: {new Date(a.deadline_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '0.6875rem', fontWeight: 600, padding: '2px 8px', borderRadius: 10,
+                        background: a.is_published ? 'rgba(5,150,105,0.1)' : 'rgba(107,114,128,0.1)',
+                        color: a.is_published ? '#059669' : '#6b7280',
+                      }}>
+                        {a.is_published ? 'Published' : 'Draft'}
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                        <button type="button" onClick={() => handleOpenEditAssignment(a)} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ fontSize: '0.75rem' }}>Edit</button>
+                        <button type="button" onClick={() => handleDeleteAssignment(a.id)} className="admin-btn admin-btn-ghost admin-btn-sm" style={{ color: '#dc3545', fontSize: '0.75rem' }}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </SectionCard>
+        </div>
+      )}
+
       {/* Live classes */}
       <div className="admin-card" style={{ borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <h2 className="admin-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -392,11 +442,8 @@ export default function CohortAssignments({
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
             <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary">
-              {savingLiveClass ? (editingLiveClassId ? 'Saving...' : 'Scheduling...') : (editingLiveClassId ? 'Save changes' : 'Schedule')}
+              {savingLiveClass ? 'Scheduling...' : 'Schedule'}
             </button>
-            {editingLiveClassId && (
-              <button type="button" onClick={handleCancelEditLiveClass} className="admin-btn admin-btn-ghost">Cancel</button>
-            )}
           </div>
         </form>
 

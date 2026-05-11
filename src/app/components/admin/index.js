@@ -6,3 +6,4 @@ export { default as AdminButton } from './AdminButton';
 export { default as AdminMessage } from './AdminMessage';
 export { default as AdminEmptyState } from './AdminEmptyState';
 export { default as AdminStatsGrid } from './AdminStatsGrid';
+export { default as Modal } from './Modal';

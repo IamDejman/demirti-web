@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AdminPageHeader } from '../../../components/admin';
+import { AdminPageHeader, Modal } from '../../../components/admin';
 import { useToast } from '../../../components/ToastProvider';
 
 import { getAuthHeaders } from '@/lib/authClient';
@@ -141,6 +141,24 @@ export default function AdminCohortDetailPage() {
     isPublished: true,
   });
   const [savingAssignment, setSavingAssignment] = useState(false);
+  const [contentModalOpen, setContentModalOpen] = useState(false);
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
+  const [liveClassModalOpen, setLiveClassModalOpen] = useState(false);
+  // Edit cohort
+  const [cohortEditModalOpen, setCohortEditModalOpen] = useState(false);
+  const [cohortEditForm, setCohortEditForm] = useState({ name: '', startDate: '', endDate: '', status: '', currentWeek: '' });
+  const [savingCohort, setSavingCohort] = useState(false);
+  // Edit week
+  const [weekEditModalOpen, setWeekEditModalOpen] = useState(false);
+  const [editingWeekId, setEditingWeekId] = useState(null);
+  const [weekEditForm, setWeekEditForm] = useState({ title: '', description: '', weekStartDate: '', weekEndDate: '', unlockDate: '', isLocked: true });
+  const [savingWeekEdit, setSavingWeekEdit] = useState(false);
+  // Assignments list + edit
+  const [assignments, setAssignments] = useState([]);
+  const [editingAssignmentId, setEditingAssignmentId] = useState(null);
+  const [assignmentEditForm, setAssignmentEditForm] = useState({ title: '', description: '', deadlineAt: '', maxScore: 100, isPublished: true });
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [savingAssignmentEdit, setSavingAssignmentEdit] = useState(false);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
@@ -151,13 +169,14 @@ export default function AdminCohortDetailPage() {
     if (!id) return;
     (async () => {
       try {
-        const [cohortRes, studentsRes, appsRes, facRes, weeksRes, liveRes] = await Promise.all([
+        const [cohortRes, studentsRes, appsRes, facRes, weeksRes, liveRes, assignmentsRes] = await Promise.all([
           fetch(`/api/cohorts/${id}`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/students`, { headers: getAuthHeaders() }),
           fetch('/api/admin/applications', { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/facilitators`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/weeks`, { headers: getAuthHeaders() }),
           fetch(`/api/cohorts/${id}/live-classes`, { headers: getAuthHeaders() }),
+          fetch(`/api/cohorts/${id}/assignments`, { headers: getAuthHeaders() }),
         ]);
         const cohortData = await cohortRes.json();
         const studentsData = await studentsRes.json();
@@ -165,12 +184,14 @@ export default function AdminCohortDetailPage() {
         const facData = await facRes.json();
         const weeksData = await weeksRes.json();
         const liveData = await liveRes.json();
+        const assignmentsData = await assignmentsRes.json();
         if (cohortRes.ok && cohortData.cohort) setCohort(cohortData.cohort);
         if (studentsRes.ok && studentsData.students) setStudents(studentsData.students);
         if (appsRes.ok && appsData.applications) setApplications(appsData.applications);
         if (facRes.ok && facData.facilitators) setFacilitators(facData.facilitators);
         if (weeksRes.ok && weeksData.weeks) setWeeks(weeksData.weeks);
         if (liveRes.ok && liveData.liveClasses) setLiveClasses(liveData.liveClasses);
+        if (assignmentsRes.ok && assignmentsData.assignments) setAssignments(assignmentsData.assignments);
       } catch {
       } finally {
         setLoading(false);
@@ -427,6 +448,7 @@ export default function AdminCohortDetailPage() {
         if (weekData.week) setWeekDetails(weekData);
         setContentForm({ type: 'document', title: '', description: '', fileUrl: '', externalUrl: '', orderIndex: 0, isDownloadable: false });
         setEditingContentId(null);
+        setContentModalOpen(false);
         setLmsMessage(editingContentId ? 'Content item updated.' : 'Content item added.');
       } else {
         setLmsMessage(data.error || 'Failed to add content');
@@ -464,6 +486,7 @@ export default function AdminCohortDetailPage() {
         if (weekData.week) setWeekDetails(weekData);
         setMaterialForm({ type: 'resource', title: '', description: '', url: '', fileUrl: '' });
         setEditingMaterialId(null);
+        setMaterialModalOpen(false);
         setLmsMessage(editingMaterialId ? 'Material updated.' : 'Material added.');
       } else {
         setLmsMessage(data.error || 'Failed to add material');
@@ -486,13 +509,20 @@ export default function AdminCohortDetailPage() {
       orderIndex: item.order_index ?? 0,
       isDownloadable: Boolean(item.is_downloadable),
     });
+    setContentModalOpen(true);
   };
 
-  const handleDeleteContent = async (id) => {
-    await fetch(`/api/content/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-    const weekRes = await fetch(`/api/weeks/${selectedWeekId}`, { headers: getAuthHeaders() });
-    const weekData = await weekRes.json();
-    if (weekData.week) setWeekDetails(weekData);
+  const handleDeleteContent = async (contentId) => {
+    if (!confirm('Delete this content item? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/content/${contentId}`, { method: 'DELETE', headers: getAuthHeaders() });
+      if (!res.ok) { showToast({ type: 'error', message: 'Failed to delete content item' }); return; }
+      const weekRes = await fetch(`/api/weeks/${selectedWeekId}`, { headers: getAuthHeaders() });
+      const weekData = await weekRes.json();
+      if (weekData.week) setWeekDetails(weekData);
+    } catch {
+      showToast({ type: 'error', message: 'Failed to delete content item' });
+    }
   };
 
   const handleEditMaterial = (item) => {
@@ -504,13 +534,20 @@ export default function AdminCohortDetailPage() {
       url: item.url || '',
       fileUrl: item.file_url || '',
     });
+    setMaterialModalOpen(true);
   };
 
-  const handleDeleteMaterial = async (id) => {
-    await fetch(`/api/materials/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-    const weekRes = await fetch(`/api/weeks/${selectedWeekId}`, { headers: getAuthHeaders() });
-    const weekData = await weekRes.json();
-    if (weekData.week) setWeekDetails(weekData);
+  const handleDeleteMaterial = async (materialId) => {
+    if (!confirm('Delete this material? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/materials/${materialId}`, { method: 'DELETE', headers: getAuthHeaders() });
+      if (!res.ok) { showToast({ type: 'error', message: 'Failed to delete material' }); return; }
+      const weekRes = await fetch(`/api/weeks/${selectedWeekId}`, { headers: getAuthHeaders() });
+      const weekData = await weekRes.json();
+      if (weekData.week) setWeekDetails(weekData);
+    } catch {
+      showToast({ type: 'error', message: 'Failed to delete material' });
+    }
   };
 
   // Parse datetime-local value as WAT (UTC+1) and return UTC ISO string for TIMESTAMP column
@@ -536,12 +573,161 @@ export default function AdminCohortDetailPage() {
       googleMeetLink: lc.google_meet_link || '',
     });
     setLmsMessage('');
+    setLiveClassModalOpen(true);
   };
 
   const handleCancelEditLiveClass = () => {
     setEditingLiveClassId(null);
     setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+    setLiveClassModalOpen(false);
     setLmsMessage('');
+  };
+
+  const handleOpenEditCohort = () => {
+    setCohortEditForm({
+      name: cohort.name || '',
+      startDate: cohort.start_date ? cohort.start_date.slice(0, 10) : '',
+      endDate: cohort.end_date ? cohort.end_date.slice(0, 10) : '',
+      status: cohort.status || 'upcoming',
+      currentWeek: cohort.current_week ?? '',
+    });
+    setCohortEditModalOpen(true);
+  };
+
+  const handleUpdateCohort = async (e) => {
+    e.preventDefault();
+    setSavingCohort(true);
+    try {
+      const res = await fetch(`/api/cohorts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          name: cohortEditForm.name.trim(),
+          startDate: cohortEditForm.startDate || null,
+          endDate: cohortEditForm.endDate || null,
+          status: cohortEditForm.status,
+          currentWeek: cohortEditForm.currentWeek !== '' ? Number(cohortEditForm.currentWeek) : null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.cohort) {
+        setCohort(data.cohort);
+        setCohortEditModalOpen(false);
+        showToast({ type: 'success', message: 'Cohort updated.' });
+      } else {
+        showToast({ type: 'error', message: data.error || 'Failed to update cohort' });
+      }
+    } catch {
+      showToast({ type: 'error', message: 'Failed to update cohort' });
+    } finally {
+      setSavingCohort(false);
+    }
+  };
+
+  const handleOpenEditWeek = (week) => {
+    setEditingWeekId(week.id);
+    setWeekEditForm({
+      title: week.title || '',
+      description: week.description || '',
+      weekStartDate: week.week_start_date ? week.week_start_date.slice(0, 10) : '',
+      weekEndDate: week.week_end_date ? week.week_end_date.slice(0, 10) : '',
+      unlockDate: week.unlock_date ? week.unlock_date.slice(0, 16) : '',
+      isLocked: Boolean(week.is_locked),
+    });
+    setWeekEditModalOpen(true);
+  };
+
+  const handleUpdateWeek = async (e) => {
+    e.preventDefault();
+    if (!editingWeekId || !weekEditForm.title?.trim()) return;
+    setSavingWeekEdit(true);
+    try {
+      const res = await fetch(`/api/weeks/${editingWeekId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          title: weekEditForm.title.trim(),
+          description: weekEditForm.description?.trim() || null,
+          weekStartDate: weekEditForm.weekStartDate || null,
+          weekEndDate: weekEditForm.weekEndDate || null,
+          unlockDate: weekEditForm.unlockDate || null,
+          isLocked: weekEditForm.isLocked,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.week) {
+        setWeeks((prev) => prev.map((w) => w.id === editingWeekId ? { ...w, ...data.week } : w));
+        setWeekEditModalOpen(false);
+        setEditingWeekId(null);
+        showToast({ type: 'success', message: 'Week updated.' });
+      } else {
+        showToast({ type: 'error', message: data.error || 'Failed to update week' });
+      }
+    } catch {
+      showToast({ type: 'error', message: 'Failed to update week' });
+    } finally {
+      setSavingWeekEdit(false);
+    }
+  };
+
+  const handleOpenEditAssignment = (assignment) => {
+    setEditingAssignmentId(assignment.id);
+    setAssignmentEditForm({
+      title: assignment.title || '',
+      description: assignment.description || '',
+      deadlineAt: assignment.deadline_at ? assignment.deadline_at.slice(0, 16) : '',
+      maxScore: assignment.max_score ?? 100,
+      isPublished: Boolean(assignment.is_published),
+    });
+    setAssignmentModalOpen(true);
+  };
+
+  const handleUpdateAssignment = async (e) => {
+    e.preventDefault();
+    if (!editingAssignmentId || !assignmentEditForm.title?.trim()) return;
+    setSavingAssignmentEdit(true);
+    try {
+      const res = await fetch(`/api/assignments/${editingAssignmentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          title: assignmentEditForm.title.trim(),
+          description: assignmentEditForm.description?.trim() || null,
+          deadlineAt: assignmentEditForm.deadlineAt || null,
+          maxScore: Number(assignmentEditForm.maxScore) || 100,
+          isPublished: assignmentEditForm.isPublished,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.assignment) {
+        setAssignments((prev) => prev.map((a) => a.id === editingAssignmentId ? data.assignment : a));
+        setAssignmentModalOpen(false);
+        setEditingAssignmentId(null);
+        showToast({ type: 'success', message: 'Assignment updated.' });
+      } else {
+        showToast({ type: 'error', message: data.error || 'Failed to update assignment' });
+      }
+    } catch {
+      showToast({ type: 'error', message: 'Failed to update assignment' });
+    } finally {
+      setSavingAssignmentEdit(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    if (!confirm('Delete this assignment? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/assignments/${assignmentId}`, { method: 'DELETE', headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok && data.deleted) {
+        setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+        showToast({ type: 'success', message: 'Assignment deleted.' });
+      } else {
+        showToast({ type: 'error', message: data.error || 'Failed to delete assignment' });
+      }
+    } catch {
+      showToast({ type: 'error', message: 'Failed to delete assignment' });
+    }
   };
 
   const handleCreateLiveClass = async (e) => {
@@ -567,6 +753,7 @@ export default function AdminCohortDetailPage() {
           await refreshLiveClasses();
           setEditingLiveClassId(null);
           setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+          setLiveClassModalOpen(false);
           setLmsMessage('Live class updated.');
         } else {
           setLmsMessage(data.error || 'Failed to update live class');
@@ -640,6 +827,7 @@ export default function AdminCohortDetailPage() {
       });
       const data = await res.json();
       if (res.ok && data.assignment) {
+        setAssignments((prev) => [...prev, data.assignment]);
         setAssignmentForm({
           weekId: '',
           title: '',
@@ -739,6 +927,14 @@ export default function AdminCohortDetailPage() {
           </span>
         }
         actions={
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={handleOpenEditCohort}
+            className="admin-btn admin-btn-secondary admin-btn-sm"
+          >
+            Edit cohort
+          </button>
           <button
             type="button"
             onClick={async () => {
@@ -759,6 +955,7 @@ export default function AdminCohortDetailPage() {
           >
             Delete cohort
           </button>
+          </div>
         }
       />
 
@@ -864,12 +1061,8 @@ export default function AdminCohortDetailPage() {
           setWeekForm={setWeekForm}
           contentForm={contentForm}
           setContentForm={setContentForm}
-          editingContentId={editingContentId}
-          setEditingContentId={setEditingContentId}
           materialForm={materialForm}
           setMaterialForm={setMaterialForm}
-          editingMaterialId={editingMaterialId}
-          setEditingMaterialId={setEditingMaterialId}
           liveClassForm={liveClassForm}
           setLiveClassForm={setLiveClassForm}
           liveClasses={liveClasses}
@@ -877,6 +1070,9 @@ export default function AdminCohortDetailPage() {
           setAssignmentForm={setAssignmentForm}
           savingAssignment={savingAssignment}
           handleCreateAssignment={handleCreateAssignment}
+          assignments={assignments}
+          handleOpenEditAssignment={handleOpenEditAssignment}
+          handleDeleteAssignment={handleDeleteAssignment}
           lmsMessage={lmsMessage}
           savingWeek={savingWeek}
           savingContent={savingContent}
@@ -892,8 +1088,7 @@ export default function AdminCohortDetailPage() {
           handleCreateLiveClass={handleCreateLiveClass}
           handleDeleteLiveClass={handleDeleteLiveClass}
           handleEditLiveClass={handleEditLiveClass}
-          handleCancelEditLiveClass={handleCancelEditLiveClass}
-          editingLiveClassId={editingLiveClassId}
+          handleOpenEditWeek={handleOpenEditWeek}
         />
       )}
 
@@ -1051,6 +1246,262 @@ export default function AdminCohortDetailPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Edit content modal */}
+      {contentModalOpen && (
+        <Modal
+          title="Edit content item"
+          onClose={() => {
+            setContentModalOpen(false);
+            setEditingContentId(null);
+            setContentForm({ type: 'document', title: '', description: '', fileUrl: '', externalUrl: '', orderIndex: 0, isDownloadable: false });
+          }}
+        >
+          <form onSubmit={handleCreateContent} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Type</label>
+              <select value={contentForm.type} onChange={(e) => setContentForm((f) => ({ ...f, type: e.target.value }))}>
+                <option value="pdf">PDF</option>
+                <option value="slides">Slides</option>
+                <option value="video_embed">Video</option>
+                <option value="document">Document</option>
+                <option value="link">Link</option>
+                <option value="recording">Recording</option>
+              </select>
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Title</label>
+              <input type="text" value={contentForm.title} onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))} required />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Description</label>
+              <textarea value={contentForm.description} onChange={(e) => setContentForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">File URL</label>
+              <input type="text" value={contentForm.fileUrl} onChange={(e) => setContentForm((f) => ({ ...f, fileUrl: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">External URL</label>
+              <input type="text" value={contentForm.externalUrl} onChange={(e) => setContentForm((f) => ({ ...f, externalUrl: e.target.value }))} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem', alignItems: 'center' }}>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Order</label>
+                <input type="number" value={contentForm.orderIndex} onChange={(e) => setContentForm((f) => ({ ...f, orderIndex: e.target.value }))} />
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', cursor: 'pointer', whiteSpace: 'nowrap', marginTop: '1.25rem' }}>
+                <input type="checkbox" checked={contentForm.isDownloadable} onChange={(e) => setContentForm((f) => ({ ...f, isDownloadable: e.target.checked }))} />
+                Downloadable
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => {
+                setContentModalOpen(false);
+                setEditingContentId(null);
+                setContentForm({ type: 'document', title: '', description: '', fileUrl: '', externalUrl: '', orderIndex: 0, isDownloadable: false });
+              }}>Cancel</button>
+              <button type="submit" disabled={savingContent} className="admin-btn admin-btn-primary">{savingContent ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit material modal */}
+      {materialModalOpen && (
+        <Modal
+          title="Edit material"
+          onClose={() => {
+            setMaterialModalOpen(false);
+            setEditingMaterialId(null);
+            setMaterialForm({ type: 'resource', title: '', description: '', url: '', fileUrl: '' });
+          }}
+        >
+          <form onSubmit={handleCreateMaterial} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Type</label>
+              <select value={materialForm.type} onChange={(e) => setMaterialForm((f) => ({ ...f, type: e.target.value }))}>
+                <option value="book">Book</option>
+                <option value="software">Software</option>
+                <option value="starter_file">Starter file</option>
+                <option value="resource">Resource</option>
+              </select>
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Title</label>
+              <input type="text" value={materialForm.title} onChange={(e) => setMaterialForm((f) => ({ ...f, title: e.target.value }))} required />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Description</label>
+              <textarea value={materialForm.description} onChange={(e) => setMaterialForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">URL</label>
+              <input type="text" value={materialForm.url} onChange={(e) => setMaterialForm((f) => ({ ...f, url: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">File URL</label>
+              <input type="text" value={materialForm.fileUrl} onChange={(e) => setMaterialForm((f) => ({ ...f, fileUrl: e.target.value }))} />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => {
+                setMaterialModalOpen(false);
+                setEditingMaterialId(null);
+                setMaterialForm({ type: 'resource', title: '', description: '', url: '', fileUrl: '' });
+              }}>Cancel</button>
+              <button type="submit" disabled={savingMaterial} className="admin-btn admin-btn-primary">{savingMaterial ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit live class modal */}
+      {liveClassModalOpen && (
+        <Modal
+          title="Edit live class"
+          onClose={handleCancelEditLiveClass}
+        >
+          <form onSubmit={handleCreateLiveClass} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Week</label>
+              <select value={liveClassForm.weekId} onChange={(e) => setLiveClassForm((f) => ({ ...f, weekId: e.target.value }))}>
+                <option value="">Select week</option>
+                {weeks.map((w) => (
+                  <option key={w.id} value={w.id}>Week {w.week_number} · {w.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Start time (WAT)</label>
+              <input type="datetime-local" value={liveClassForm.scheduledAt} onChange={(e) => setLiveClassForm((f) => ({ ...f, scheduledAt: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">End time (WAT)</label>
+              <input type="datetime-local" value={liveClassForm.endTime} onChange={(e) => setLiveClassForm((f) => ({ ...f, endTime: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Google Meet link</label>
+              <input type="text" placeholder="https://meet.google.com/..." value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={handleCancelEditLiveClass}>Cancel</button>
+              <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary">{savingLiveClass ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit cohort modal */}
+      {cohortEditModalOpen && (
+        <Modal title="Edit cohort" onClose={() => setCohortEditModalOpen(false)}>
+          <form onSubmit={handleUpdateCohort} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Name</label>
+              <input type="text" value={cohortEditForm.name} onChange={(e) => setCohortEditForm((f) => ({ ...f, name: e.target.value }))} required />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Start date</label>
+                <input type="date" value={cohortEditForm.startDate} onChange={(e) => setCohortEditForm((f) => ({ ...f, startDate: e.target.value }))} />
+              </div>
+              <div className="admin-form-field">
+                <label className="admin-form-label">End date</label>
+                <input type="date" value={cohortEditForm.endDate} onChange={(e) => setCohortEditForm((f) => ({ ...f, endDate: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Status</label>
+                <select value={cohortEditForm.status} onChange={(e) => setCohortEditForm((f) => ({ ...f, status: e.target.value }))}>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Current week</label>
+                <input type="number" min={0} value={cohortEditForm.currentWeek} onChange={(e) => setCohortEditForm((f) => ({ ...f, currentWeek: e.target.value }))} placeholder="e.g. 3" />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setCohortEditModalOpen(false)}>Cancel</button>
+              <button type="submit" disabled={savingCohort} className="admin-btn admin-btn-primary">{savingCohort ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit week modal */}
+      {weekEditModalOpen && (
+        <Modal title="Edit week" onClose={() => { setWeekEditModalOpen(false); setEditingWeekId(null); }}>
+          <form onSubmit={handleUpdateWeek} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Title</label>
+              <input type="text" value={weekEditForm.title} onChange={(e) => setWeekEditForm((f) => ({ ...f, title: e.target.value }))} required />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Description</label>
+              <textarea value={weekEditForm.description} onChange={(e) => setWeekEditForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Start date</label>
+                <input type="date" value={weekEditForm.weekStartDate} onChange={(e) => setWeekEditForm((f) => ({ ...f, weekStartDate: e.target.value }))} />
+              </div>
+              <div className="admin-form-field">
+                <label className="admin-form-label">End date</label>
+                <input type="date" value={weekEditForm.weekEndDate} onChange={(e) => setWeekEditForm((f) => ({ ...f, weekEndDate: e.target.value }))} />
+              </div>
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Unlock date</label>
+              <input type="datetime-local" value={weekEditForm.unlockDate} onChange={(e) => setWeekEditForm((f) => ({ ...f, unlockDate: e.target.value }))} />
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+              <input type="checkbox" checked={!weekEditForm.isLocked} onChange={(e) => setWeekEditForm((f) => ({ ...f, isLocked: !e.target.checked }))} />
+              Unlocked (visible to students)
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => { setWeekEditModalOpen(false); setEditingWeekId(null); }}>Cancel</button>
+              <button type="submit" disabled={savingWeekEdit} className="admin-btn admin-btn-primary">{savingWeekEdit ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit assignment modal */}
+      {assignmentModalOpen && (
+        <Modal title="Edit assignment" onClose={() => { setAssignmentModalOpen(false); setEditingAssignmentId(null); }}>
+          <form onSubmit={handleUpdateAssignment} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Title</label>
+              <input type="text" value={assignmentEditForm.title} onChange={(e) => setAssignmentEditForm((f) => ({ ...f, title: e.target.value }))} required />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Description</label>
+              <textarea value={assignmentEditForm.description} onChange={(e) => setAssignmentEditForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Deadline</label>
+                <input type="datetime-local" value={assignmentEditForm.deadlineAt} onChange={(e) => setAssignmentEditForm((f) => ({ ...f, deadlineAt: e.target.value }))} />
+              </div>
+              <div className="admin-form-field">
+                <label className="admin-form-label">Max score</label>
+                <input type="number" min={0} value={assignmentEditForm.maxScore} onChange={(e) => setAssignmentEditForm((f) => ({ ...f, maxScore: e.target.value }))} />
+              </div>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+              <input type="checkbox" checked={assignmentEditForm.isPublished} onChange={(e) => setAssignmentEditForm((f) => ({ ...f, isPublished: e.target.checked }))} />
+              Published (visible to students)
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => { setAssignmentModalOpen(false); setEditingAssignmentId(null); }}>Cancel</button>
+              <button type="submit" disabled={savingAssignmentEdit} className="admin-btn admin-btn-primary">{savingAssignmentEdit ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

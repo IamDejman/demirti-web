@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { withAxiom } from 'next-axiom';
 
-export async function proxy(request) {
+export const proxy = withAxiom(async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // Centralized cron auth -- reject unauthorized cron requests early
@@ -80,7 +81,7 @@ export async function proxy(request) {
   }
 
   return response;
-}
+});
 
 export const config = {
   matcher: [

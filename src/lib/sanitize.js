@@ -1,6 +1,6 @@
 /**
  * Centralized HTML sanitization for user- or DB-sourced content (XSS prevention).
- * Pure-JS implementation — no jsdom dependency, works in both browser and serverless.
+ * Pure-JS implementation - no jsdom dependency, works in both browser and serverless.
  */
 
 /** Allowed tags for rich text (assignments, similar content). */
@@ -83,7 +83,7 @@ export function sanitizeHtml(dirty, allowedTags = ALLOWED_TAGS_RICH) {
     '',
   );
 
-  // 4. Process tags — keep allowed ones (with safe attributes), remove others
+  // 4. Process tags - keep allowed ones (with safe attributes), remove others
   clean = clean.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/?>/g, (match, tagName) => {
     const lower = tagName.toLowerCase();
     if (!allowedSet.has(lower)) return '';
@@ -91,7 +91,7 @@ export function sanitizeHtml(dirty, allowedTags = ALLOWED_TAGS_RICH) {
     // Closing tags
     if (match.startsWith('</')) return `</${lower}>`;
 
-    // <a> — only keep href with http(s)
+    // <a> - only keep href with http(s)
     if (lower === 'a') {
       const hrefMatch = match.match(/\s+href\s*=\s*["'](https?:\/\/[^"']*?)["']/i);
       return hrefMatch
@@ -102,7 +102,7 @@ export function sanitizeHtml(dirty, allowedTags = ALLOWED_TAGS_RICH) {
     // Self-closing tags
     if (lower === 'br') return '<br />';
 
-    // All other allowed tags — strip attributes
+    // All other allowed tags - strip attributes
     return `<${lower}>`;
   });
 

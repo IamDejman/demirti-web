@@ -206,15 +206,15 @@ export default function CohortAssignments({
             <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: 6, background: '#f9fafb', fontSize: '0.8125rem', color: 'var(--text-light)' }}>
               <p style={{ margin: '0 0 0.25rem' }}><strong>Period:</strong> {weekDetails.week.week_start_date && weekDetails.week.week_end_date
                 ? `${formatDateLagos(weekDetails.week.week_start_date)} – ${formatDateLagos(weekDetails.week.week_end_date)}`
-                : '—'}
+                : '-'}
               </p>
-              <p style={{ margin: 0 }}><strong>Unlock:</strong> {weekDetails.week.unlock_date ? formatTimeLagos(weekDetails.week.unlock_date) : '—'}</p>
+              <p style={{ margin: 0 }}><strong>Unlock:</strong> {weekDetails.week.unlock_date ? formatTimeLagos(weekDetails.week.unlock_date) : '-'}</p>
             </div>
           )}
         </SectionCard>
       </div>
 
-      {/* Content/material/assignment forms — shown when a week is selected */}
+      {/* Content/material/assignment forms - shown when a week is selected */}
       {selectedWeekId && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <SectionCard title="Add content">
@@ -414,14 +414,38 @@ export default function CohortAssignments({
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-color)' }}>{lc.week_title || `Week ${lc.week_number}`}</div>
                   <div style={{ fontSize: '0.8125rem', color: 'var(--text-light)' }}>
-                    {lc.scheduled_at ? formatTimeLagos(lc.scheduled_at) : '—'}
+                    {lc.scheduled_at ? formatTimeLagos(lc.scheduled_at) : '-'}
                     {lc.end_time ? ` – ${formatTimeLagos(lc.end_time)}` : ''}
                   </div>
                 </div>
                 {lc.google_meet_link && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {lc.google_meet_link}
-                  </span>
+                  <a
+                    href={lc.google_meet_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#0052a3',
+                      maxWidth: 200,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: 4,
+                      background: 'rgba(0,82,163,0.07)',
+                      border: '1px solid rgba(0,82,163,0.15)',
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M7 1h4v4M11 1L5.5 6.5M4 3H2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Join
+                  </a>
                 )}
                 <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
                   <button type="button" onClick={() => handleEditLiveClass(lc)} className="admin-btn admin-btn-ghost admin-btn-sm" disabled={!!editingLiveClassId && editingLiveClassId !== lc.id} style={{ fontSize: '0.75rem' }}>Edit</button>

@@ -20,7 +20,7 @@ export async function sendAcceptanceEmail({ email, firstName }) {
   const confirmUrl = getConfirmSpotUrl();
   const displayName = (firstName && firstName.trim()) ? firstName.trim() : 'there';
 
-  const subject = "You've Been Conditionally Accepted — Action Required Within 48 Hours";
+  const subject = "You've Been Conditionally Accepted - Action Required Within 48 Hours";
   const html = `
 <!DOCTYPE html>
 <html>
@@ -44,7 +44,7 @@ export async function sendAcceptanceEmail({ email, firstName }) {
   <div class="container">
     <div class="content">
       <p class="greeting">Hi ${displayName},</p>
-      <p>Congratulations — you've been selected for a sponsored spot in the CVerse Data Science Academy.</p>
+      <p>Congratulations - you've been selected for a sponsored spot in the CVerse Data Science Academy.</p>
       <p>A sponsor has made this opportunity possible because they believe in investing in people ready to commit. Your application stood out, and we're excited to have you.</p>
       <p>To confirm your spot, you must complete one action within 48 hours:</p>
       <p><strong>Publish a LinkedIn post</strong> that includes:</p>
@@ -55,7 +55,7 @@ export async function sendAcceptanceEmail({ email, firstName }) {
       </ul>
       <p>Once you've posted, reply to this email with the link to your post, or use the link below to submit your post URL:</p>
       <div class="cta"><a href="${confirmUrl}">Confirm your spot (submit LinkedIn post link)</a></div>
-      <p>If we don't receive your LinkedIn post within 48 hours, your spot will be released to the waitlist. This isn't a formality—it's your first act of commitment.</p>
+      <p>If we don't receive your LinkedIn post within 48 hours, your spot will be released to the waitlist. This isn't a formality-it's your first act of commitment.</p>
       <p>We look forward to seeing your post and welcoming you into the cohort.</p>
       <p class="signoff">Best,<br>The CVerse Team</p>
     </div>
@@ -64,7 +64,7 @@ export async function sendAcceptanceEmail({ email, firstName }) {
 </html>
   `.trim();
 
-  const text = `Hi ${displayName},\n\nCongratulations — you've been selected for a sponsored spot in the CVerse Data Science Academy.\n\nA sponsor has made this opportunity possible because they believe in investing in people ready to commit. Your application stood out, and we're excited to have you.\n\nTo confirm your spot, you must complete one action within 48 hours:\n\nPublish a LinkedIn post that includes:\n• That you've been accepted into the CVerse Data Science Academy\n• One thing you're committed to achieving through this program\n• Tag @CVerse\n\nOnce you've posted, reply to this email with the link to your post, or confirm here: ${confirmUrl}\n\nIf we don't receive your LinkedIn post within 48 hours, your spot will be released to the waitlist. This isn't a formality—it's your first act of commitment.\n\nWe look forward to seeing your post and welcoming you into the cohort.\n\nBest,\nThe CVerse Team`;
+  const text = `Hi ${displayName},\n\nCongratulations - you've been selected for a sponsored spot in the CVerse Data Science Academy.\n\nA sponsor has made this opportunity possible because they believe in investing in people ready to commit. Your application stood out, and we're excited to have you.\n\nTo confirm your spot, you must complete one action within 48 hours:\n\nPublish a LinkedIn post that includes:\n• That you've been accepted into the CVerse Data Science Academy\n• One thing you're committed to achieving through this program\n• Tag @CVerse\n\nOnce you've posted, reply to this email with the link to your post, or confirm here: ${confirmUrl}\n\nIf we don't receive your LinkedIn post within 48 hours, your spot will be released to the waitlist. This isn't a formality-it's your first act of commitment.\n\nWe look forward to seeing your post and welcoming you into the cohort.\n\nBest,\nThe CVerse Team`;
 
   try {
     await resend.emails.send({
@@ -111,7 +111,7 @@ export async function sendRejectionEmail({ email, firstName }) {
     <div class="content">
       <p class="greeting">Hi ${displayName},</p>
       <p>Thank you for applying to the CVerse Data Science Academy sponsored cohort.</p>
-      <p>After reviewing all applications, we were unable to offer you a spot in this cohort. This was a difficult decision—we received many strong applications and had limited sponsored seats available.</p>
+      <p>After reviewing all applications, we were unable to offer you a spot in this cohort. This was a difficult decision-we received many strong applications and had limited sponsored seats available.</p>
       <p>This doesn't mean data science isn't for you. If you're serious about learning, here are a few ways to continue:</p>
       <ul>
         <li>Follow CVerse on LinkedIn for free resources and future cohort announcements</li>
@@ -125,7 +125,7 @@ export async function sendRejectionEmail({ email, firstName }) {
 </html>
   `.trim();
 
-  const text = `Hi ${displayName},\n\nThank you for applying to the CVerse Data Science Academy sponsored cohort.\n\nAfter reviewing all applications, we were unable to offer you a spot in this cohort. This was a difficult decision—we received many strong applications and had limited sponsored seats available.\n\nThis doesn't mean data science isn't for you. If you're serious about learning, here are a few ways to continue:\n• Follow CVerse on LinkedIn for free resources and future cohort announcements\n• Apply again when we open the next sponsored cohort\n\nWe appreciate your interest and wish you the best in your learning journey.\n\nBest,\nThe CVerse Team`;
+  const text = `Hi ${displayName},\n\nThank you for applying to the CVerse Data Science Academy sponsored cohort.\n\nAfter reviewing all applications, we were unable to offer you a spot in this cohort. This was a difficult decision-we received many strong applications and had limited sponsored seats available.\n\nThis doesn't mean data science isn't for you. If you're serious about learning, here are a few ways to continue:\n• Follow CVerse on LinkedIn for free resources and future cohort announcements\n• Apply again when we open the next sponsored cohort\n\nWe appreciate your interest and wish you the best in your learning journey.\n\nBest,\nThe CVerse Team`;
 
   try {
     await resend.emails.send({
@@ -149,7 +149,7 @@ export async function sendWaitlistEmail({ email, firstName }) {
   const fromEmail = getFromEmail();
   const displayName = (firstName && firstName.trim()) ? firstName.trim() : 'there';
 
-  const subject = "You're on the Waitlist — CVerse Data Science Academy";
+  const subject = "You're on the Waitlist - CVerse Data Science Academy";
   const html = `
 <!DOCTYPE html>
 <html>

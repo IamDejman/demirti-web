@@ -12,24 +12,24 @@ import { formatTimeLagos } from '@/lib/dateUtils';
 function renderPage(row) {
   if (row.action === 'page.view') {
     const path = row.details?.path ?? row.target_id;
-    return path || '—';
+    return path || '-';
   }
-  return '—';
+  return '-';
 }
 
 function renderDetails(row) {
-  if (row.action === 'page.view') return '—';
-  if (!row.details) return '—';
+  if (row.action === 'page.view') return '-';
+  if (!row.details) return '-';
   if (typeof row.details === 'string') return row.details;
   const obj = row.details;
   if (obj && typeof obj === 'object' && Object.keys(obj).length > 0) {
     const filtered = { ...obj };
     delete filtered.actor_email;
     delete filtered.path;
-    if (Object.keys(filtered).length === 0) return '—';
+    if (Object.keys(filtered).length === 0) return '-';
     return JSON.stringify(filtered);
   }
-  return '—';
+  return '-';
 }
 
 const labelStyle = {
@@ -51,7 +51,7 @@ function ActionBadge({ action }) {
   const isPageView = action === 'page.view';
   const color = isPageView ? '#6b7280' : '#2563eb';
   const bg = isPageView ? 'rgba(107, 114, 128, 0.1)' : 'rgba(37, 99, 235, 0.1)';
-  const label = isPageView ? 'Viewed page' : (action || '—');
+  const label = isPageView ? 'Viewed page' : (action || '-');
 
   return (
     <span

@@ -709,9 +709,26 @@ export default function AdminCohortDetailPage() {
 
   return (
     <div className="admin-dashboard admin-dashboard-content admin-cohort-detail admin-cohort-detail-loaded">
+      {/* Back nav — outside the header card */}
+      <nav style={{ marginBottom: '0.75rem' }}>
+        <Link
+          href="/admin/cohorts"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.375rem',
+            fontSize: '0.875rem',
+            color: 'var(--text-light)',
+            textDecoration: 'none',
+            fontWeight: 500,
+          }}
+        >
+          ← Cohorts
+        </Link>
+      </nav>
+
       {/* Header */}
       <AdminPageHeader
-        breadcrumb={<Link href="/admin/cohorts" style={{ color: 'var(--text-light)', fontSize: '0.875rem', textDecoration: 'none' }}>← Cohorts</Link>}
         title={cohort.name}
         description={
           <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem 1rem', fontSize: '0.9375rem' }}>

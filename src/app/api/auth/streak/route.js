@@ -35,7 +35,7 @@ function calculateStreaks(dates) {
   let checkDate = new Date(today);
   checkDate.setHours(0, 0, 0, 0);
 
-  // If no activity today yet, check yesterday — the streak is still alive
+  // If no activity today yet, check yesterday - the streak is still alive
   // until the end of today (user hasn't missed a day yet)
   if (!dateSet.has(checkDate.getTime())) {
     const yesterday = new Date(checkDate);

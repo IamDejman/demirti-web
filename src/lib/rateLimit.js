@@ -31,7 +31,7 @@ async function initUpstash() {
   if (!url || !token) {
     if (process.env.NODE_ENV === 'production' && !warnedInMemory) {
       warnedInMemory = true;
-      console.warn('[security] UPSTASH_REDIS_REST_URL/TOKEN not set — rate limiting uses ephemeral in-memory store. Configure Upstash Redis for production.');
+      console.warn('[security] UPSTASH_REDIS_REST_URL/TOKEN not set - rate limiting uses ephemeral in-memory store. Configure Upstash Redis for production.');
     }
   }
   if (url && token) {

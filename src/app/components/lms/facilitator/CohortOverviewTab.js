@@ -28,7 +28,7 @@ export default function CohortOverviewTab({ cohort, weeks, liveClasses, formatDa
           <div className="flex flex-col" style={{ gap: '0.5rem' }}>
             <div className="lms-row-item">
               <span className="lms-row-item-name">Track</span>
-              <span className="lms-row-item-detail">{cohort.track_name || '—'}</span>
+              <span className="lms-row-item-detail">{cohort.track_name || '-'}</span>
             </div>
             <div className="lms-row-item">
               <span className="lms-row-item-name">Start</span>

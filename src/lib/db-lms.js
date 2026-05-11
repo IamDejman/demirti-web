@@ -93,7 +93,7 @@ export async function ensureLmsSchema() {
             END IF;
           END $$;
         `.catch((e) => console.error('Weeks migration error:', e));
-        // Fix incorrect single-column unique constraint — should be composite (cohort_id, week_number)
+        // Fix incorrect single-column unique constraint - should be composite (cohort_id, week_number)
         await sql`
           DO $$
           BEGIN
@@ -143,6 +143,11 @@ export async function ensureLmsSchema() {
           );
         `.catch((e) => console.error('announcement_dismissals migration error:', e));
         await sql`CREATE INDEX IF NOT EXISTS idx_announcement_dismissals_user ON announcement_dismissals(user_id);`.catch(() => {});
+      }
+      // Migration: widen link_url and file_url from VARCHAR(500) to TEXT to handle long URLs
+      if (existing.has('assignment_submissions')) {
+        await sql`ALTER TABLE assignment_submissions ALTER COLUMN link_url TYPE TEXT;`.catch(() => {});
+        await sql`ALTER TABLE assignment_submissions ALTER COLUMN file_url TYPE TEXT;`.catch(() => {});
       }
       lmsInitialized = true;
     } catch (e) {
@@ -468,8 +473,8 @@ export async function initializeLmsSchema() {
       student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       submission_type VARCHAR(50),
-      file_url VARCHAR(500),
-      link_url VARCHAR(500),
+      file_url TEXT,
+      link_url TEXT,
       text_content TEXT,
       status submission_status NOT NULL DEFAULT 'submitted',
       score INTEGER,

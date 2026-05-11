@@ -141,7 +141,7 @@ export default function RegisterPage() {
               </button>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-lighter)', marginTop: '0.25rem' }}>
-              Optional — you can set it later.
+              Optional - you can set it later.
             </p>
           </div>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAssignmentById, getSubmissionByAssignmentAndStudent, createSubmission, recordLmsEvent, isStudentInCohort } from '@/lib/db-lms';
-import { reportError } from '@/lib/logger';
+import { reportError, safeErrorMessage } from '@/lib/logger';
 import { getUserFromRequest } from '@/lib/auth';
 import { isAllowedFileType, isWithinSizeLimit } from '@/lib/storage';
 import { recordAuditLog } from '@/lib/audit';
@@ -48,7 +48,7 @@ export async function POST(request, { params }) {
       linkUrl: linkUrl || null,
       textContent: textContent || null,
     });
-    await recordLmsEvent(user.id, 'assignment_submitted', { assignmentId: id, submissionId: submission.id });
+    recordLmsEvent(user.id, 'assignment_submitted', { assignmentId: id, submissionId: submission.id }).catch(() => {});
 
     recordAuditLog({
       userId: String(user.id),
@@ -63,6 +63,6 @@ export async function POST(request, { params }) {
     return NextResponse.json({ submission });
   } catch (e) {
     reportError(e, { route: 'POST /api/assignments/[id]/submit' });
-    return NextResponse.json({ error: 'Failed to submit' }, { status: 500 });
+    return NextResponse.json({ error: safeErrorMessage(e, 'Failed to submit') }, { status: 500 });
   }
 }

@@ -188,7 +188,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 1 — Data Science Foundations
+                    WEEK 1 - Data Science Foundations
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -234,7 +234,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 2 — Python for Data Analysis
+                    WEEK 2 - Python for Data Analysis
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -284,7 +284,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 3 — Data Wrangling & Cleaning
+                    WEEK 3 - Data Wrangling & Cleaning
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -338,7 +338,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 4 — Data Visualization & Storytelling
+                    WEEK 4 - Data Visualization & Storytelling
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -388,7 +388,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 5 — Statistics for Data Science
+                    WEEK 5 - Statistics for Data Science
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -438,7 +438,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 6 — Machine Learning Foundations
+                    WEEK 6 - Machine Learning Foundations
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -492,7 +492,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 7 — Supervised Learning Algorithms
+                    WEEK 7 - Supervised Learning Algorithms
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -546,7 +546,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 8 — Unsupervised Learning Algorithms
+                    WEEK 8 - Unsupervised Learning Algorithms
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -592,7 +592,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 9 — Model Optimization & Interpretability
+                    WEEK 9 - Model Optimization & Interpretability
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -634,7 +634,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 10 — From Script to Application
+                    WEEK 10 - From Script to Application
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -672,7 +672,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 11 — Professional Data Workflows
+                    WEEK 11 - Professional Data Workflows
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',
@@ -714,7 +714,7 @@ export default function DataSciencePage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#0066cc' }}>
-                    WEEK 12 — Capstone & Career Launch
+                    WEEK 12 - Capstone & Career Launch
                   </h3>
                   <span style={{
                     fontSize: '1.2rem',

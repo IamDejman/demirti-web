@@ -105,7 +105,7 @@ export default function SponsoredApplicationsPage() {
     }
   };
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleString() : '—');
+  const formatDate = (d) => (d ? new Date(d).toLocaleString() : '-');
   const getConfirmByDate = (acceptedAt) => {
     if (!acceptedAt) return null;
     return new Date(new Date(acceptedAt).getTime() + 48 * 60 * 60 * 1000);
@@ -469,24 +469,24 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
                 </div>
                 <div>
                   <div style={labelStyle}>Phone</div>
-                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.phone || '—'}</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.phone || '-'}</div>
                 </div>
                 <div>
                   <div style={labelStyle}>City</div>
-                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.city || '—'}</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.city || '-'}</div>
                 </div>
                 <div>
                   <div style={labelStyle}>LinkedIn Profile</div>
                   <div style={{ fontSize: '0.9375rem' }}>
                     {viewApp.linkedin_url
                       ? <a href={viewApp.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0052a3' }}>{viewApp.linkedin_url}</a>
-                      : <span style={{ color: '#6b7280' }}>—</span>
+                      : <span style={{ color: '#6b7280' }}>-</span>
                     }
                   </div>
                 </div>
                 <div>
                   <div style={labelStyle}>Occupation</div>
-                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.occupation || '—'}</div>
+                  <div style={{ fontSize: '0.9375rem', color: '#111827' }}>{viewApp.occupation || '-'}</div>
                 </div>
                 <div>
                   <div style={labelStyle}>Review Status</div>
@@ -517,7 +517,7 @@ h1{font-size:1.5rem;margin-bottom:1.5rem;border-bottom:2px solid #0066cc;padding
               <div style={{ marginTop: '1.25rem' }}>
                 <div style={labelStyle}>Essay</div>
                 <div style={{ fontSize: '0.9375rem', color: '#111827', whiteSpace: 'pre-wrap', lineHeight: 1.6, marginTop: '0.25rem' }}>
-                  {viewApp.essay || '—'}
+                  {viewApp.essay || '-'}
                 </div>
               </div>
 

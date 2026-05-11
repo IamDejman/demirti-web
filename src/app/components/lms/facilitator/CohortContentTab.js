@@ -503,7 +503,7 @@ export default function CohortContentTab({ cohortId: _cohortId, weeks }) {
                   </div>
                 ))}
 
-                {/* Materials — with a subtle separator if both exist */}
+                {/* Materials - with a subtle separator if both exist */}
                 {weekContent.length > 0 && weekMaterials.length > 0 && (
                   <div style={{ borderTop: '1px dashed var(--neutral-200)', margin: 'var(--lms-space-3) 0' }} />
                 )}

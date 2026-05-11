@@ -64,12 +64,12 @@ export async function POST(request) {
     try { mfa = await getAdminMfa(admin.id); } catch { /* MFA table may not exist yet */ }
 
     if (mfa && mfa.is_enabled) {
-      // Credentials valid, but MFA required — issue a short-lived challenge token
+      // Credentials valid, but MFA required - issue a short-lived challenge token
       const mfaToken = await createMfaChallenge(admin.id, ip);
       return NextResponse.json({ requiresMfa: true, mfaToken });
     }
 
-    // No MFA — create session directly
+    // No MFA - create session directly
     const token = crypto.randomBytes(32).toString('hex');
     await createAdminSession(admin.id, token);
 

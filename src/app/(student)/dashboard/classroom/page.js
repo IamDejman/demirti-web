@@ -70,7 +70,7 @@ export default function ClassroomPage() {
     <div className="flex flex-col" style={{ gap: 'var(--lms-space-6)' }}>
       <LmsPageHeader
         title="Classroom"
-        subtitle="Your learning hub — weeks, assignments, office hours, and AI assistant."
+        subtitle="Your learning hub - weeks, assignments, office hours, and AI assistant."
         icon={LmsIcons.graduation}
       />
 

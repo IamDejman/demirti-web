@@ -420,7 +420,7 @@ export default function BulkEmailPage() {
   };
 
   const loadDataScienceCohortTemplate = () => {
-    setSubject('Join the next CVerse Data Science cohort — Spots are limited');
+    setSubject('Join the next CVerse Data Science cohort - Spots are limited');
     setHtmlContent(`<!DOCTYPE html>
 <html>
 <head>

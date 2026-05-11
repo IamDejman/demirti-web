@@ -9,7 +9,7 @@ import { getLmsAuthHeaders } from '@/lib/authClient';
 import { formatDateLagos } from '@/lib/dateUtils';
 
 function deadlineStatus(dateStr) {
-  if (!dateStr) return { label: '—', color: 'neutral' };
+  if (!dateStr) return { label: '-', color: 'neutral' };
   const now = new Date();
   const d = new Date(dateStr);
   const diff = d - now;

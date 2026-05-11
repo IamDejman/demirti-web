@@ -25,7 +25,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'A 6-digit code is required' }, { status: 400 });
     }
 
-    // Peek at challenge first (don't consume yet) — verify IP binding
+    // Peek at challenge first (don't consume yet) - verify IP binding
     const adminId = await peekMfaChallenge(mfaToken, ip);
     if (!adminId) {
       return NextResponse.json({ error: 'MFA session expired. Please login again.', code: 'MFA_EXPIRED' }, { status: 401 });
@@ -48,7 +48,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 401 });
     }
 
-    // TOTP verified — now consume the challenge
+    // TOTP verified - now consume the challenge
     const consumed = await consumeMfaChallenge(mfaToken);
     if (!consumed) {
       // Race condition: another request already consumed it

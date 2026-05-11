@@ -239,7 +239,7 @@ export default function ProfilePage() {
         title="Profile"
       />
 
-      {/* Profile hero — always visible above tabs */}
+      {/* Profile hero - always visible above tabs */}
       <LmsCard>
         <div className="profile-hero">
           <div className="profile-hero-avatar-wrap">

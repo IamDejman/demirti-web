@@ -198,7 +198,7 @@ export default function AdminUserDetailPage() {
                     <li key={e.id} className="admin-list-item">
                       <p className="admin-list-item-title">{e.cohort_name}</p>
                       <p className="admin-list-item-meta">
-                        Track: {e.track_name || '—'} · Status: {formatRole(e.status)}
+                        Track: {e.track_name || '-'} · Status: {formatRole(e.status)}
                       </p>
                     </li>
                   ))}

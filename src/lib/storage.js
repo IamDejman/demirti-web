@@ -49,7 +49,7 @@ export function getPublicUrl(key) {
 /**
  * Normalize a stored file URL so it's publicly accessible.
  * Converts private R2/S3 API URLs to proxy URLs (/api/uploads/...) if no STORAGE_PUBLIC_URL is set.
- * Safe to call on any URL — returns it unchanged if it's already a public/proxy URL.
+ * Safe to call on any URL - returns it unchanged if it's already a public/proxy URL.
  */
 export function normalizeFileUrl(url) {
   if (!url || typeof url !== 'string') return url;

@@ -29,7 +29,7 @@ export async function POST(request, { params }) {
     if (!userId && email) {
       let user = await getUserByEmail(email);
       if (!user) {
-        // New user — generate temp password
+        // New user - generate temp password
         isNewUser = true;
         tempPassword = crypto.randomBytes(6).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
         const passwordHash = await bcrypt.hash(tempPassword, 10);

@@ -19,7 +19,7 @@ export default function SponsoredCohortPage() {
             marginBottom: '2rem'
           }}>
             <h1 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-              CVerse Data Science Academy — Sponsored Cohort Application
+              CVerse Data Science Academy - Sponsored Cohort Application
             </h1>
             <p style={{ fontSize: '1rem', color: '#666666', marginBottom: '0.5rem' }}>
               Monday 2nd – Friday 6th February 2026

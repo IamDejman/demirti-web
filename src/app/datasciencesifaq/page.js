@@ -262,9 +262,9 @@ const FAQ_ITEMS = [
         a: <>
           Yes! Consider using:
           <ul className="faq-list">
-            <li><strong>Google Colab</strong> — Free Jupyter notebooks in the cloud</li>
-            <li><strong>Kaggle Notebooks</strong> — Free cloud-based data science environment</li>
-            <li><strong>Anaconda Cloud</strong> — Cloud-based Anaconda environment</li>
+            <li><strong>Google Colab</strong> - Free Jupyter notebooks in the cloud</li>
+            <li><strong>Kaggle Notebooks</strong> - Free cloud-based data science environment</li>
+            <li><strong>Anaconda Cloud</strong> - Cloud-based Anaconda environment</li>
           </ul>
           <p style={{ marginTop: '0.75rem', marginBottom: 0 }}>These can be good temporary solutions while you resolve local installation issues. For guidance on using these platforms, reach out to us on Telegram or via email.</p>
         </>,
@@ -338,7 +338,7 @@ export default function DataScienceSIFaqPage() {
             Data Science Software Installation FAQs
           </h1>
           <p style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto', opacity: 0.95 }}>
-            Data Science Academy — answers to common questions about installing Python, Anaconda, Jupyter Notebook, and VS Code.
+            Data Science Academy - answers to common questions about installing Python, Anaconda, Jupyter Notebook, and VS Code.
           </p>
           <Link
             href="/datascience"

@@ -372,7 +372,7 @@ export default function AdminDashboard() {
 
                           {/* Amount */}
                           <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', flexShrink: 0, minWidth: 80, textAlign: 'right' }}>
-                            {app.amount ? formatCurrency(app.amount) : '—'}
+                            {app.amount ? formatCurrency(app.amount) : '-'}
                           </div>
 
                           {/* Delete button */}
@@ -408,19 +408,19 @@ export default function AdminDashboard() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Phone</div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.phone || '—'}</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.phone || '-'}</div>
                               </div>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Referral Source</div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.referral_source || '—'}</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.referral_source || '-'}</div>
                               </div>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Payment Reference</div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.payment_reference || '—'}</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.payment_reference || '-'}</div>
                               </div>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Discount Code</div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.discount_code || '—'}</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.discount_code || '-'}</div>
                               </div>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Application ID</div>
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
                               </div>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Paid</div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.paid_at ? formatDate(app.paid_at) : '—'}</div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827' }}>{app.paid_at ? formatDate(app.paid_at) : '-'}</div>
                               </div>
                             </div>
                           </div>

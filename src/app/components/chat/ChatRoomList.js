@@ -49,7 +49,7 @@ export default function ChatRoomList({
             className="lms-input"
           />
 
-          {/* User search for starting new DMs — hidden in community mode */}
+          {/* User search for starting new DMs - hidden in community mode */}
           {showDmSearch && (
             <>
               <input

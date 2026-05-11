@@ -157,7 +157,7 @@ export default function StudentDashboardPage() {
               gap: 'var(--lms-space-6)',
             }}
           >
-            {/* Main column — activity feed */}
+            {/* Main column - activity feed */}
             <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)', order: 2 }}>
               {/* Next live class */}
               {nextLiveClass && (() => {
@@ -279,7 +279,7 @@ export default function StudentDashboardPage() {
               )}
             </div>
 
-            {/* Sidebar — stats + progress */}
+            {/* Sidebar - stats + progress */}
             <div className="flex flex-col" style={{ gap: 'var(--lms-space-4)', order: 1 }}>
               {/* Progress card with visual bar */}
               <div

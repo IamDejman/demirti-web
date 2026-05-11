@@ -1,6 +1,6 @@
 /**
  * TOTP (Time-based One-Time Password) implementation for admin MFA.
- * RFC 6238 compliant. No external dependencies — uses Node.js crypto.
+ * RFC 6238 compliant. No external dependencies - uses Node.js crypto.
  */
 import crypto from 'crypto';
 import { sql } from '@/lib/postgres';

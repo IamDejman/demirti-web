@@ -132,18 +132,18 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
     <div style="background:#f8f9fa; border-radius:8px; padding:16px; margin-bottom:16px;">
       <p style="margin:0 0 10px; font-weight:600;">Here's what you'll find on your dashboard:</p>
       <ul style="margin:0; padding-left:20px; line-height:2;">
-        <li>📅 <strong>Live classes</strong> — links to join scheduled sessions will appear here</li>
-        <li>📢 <strong>Announcements</strong> — important updates from your facilitator</li>
-        <li>💬 <strong>Chat</strong> — connect with your cohort and facilitators</li>
-        <li>📝 <strong>Assignments</strong> — submit your work and track your progress</li>
-        <li>✅ <strong>Weekly checklists</strong> — stay on top of each week's tasks</li>
+        <li>📅 <strong>Live classes</strong> - links to join scheduled sessions will appear here</li>
+        <li>📢 <strong>Announcements</strong> - important updates from your facilitator</li>
+        <li>💬 <strong>Chat</strong> - connect with your cohort and facilitators</li>
+        <li>📝 <strong>Assignments</strong> - submit your work and track your progress</li>
+        <li>✅ <strong>Weekly checklists</strong> - stay on top of each week's tasks</li>
       </ul>
     </div>
   `;
 
   if (tempPassword) {
-    // New user — send credentials
-    const subject = `Welcome to CVERSE — Your Login Details for ${cohortName}`;
+    // New user - send credentials
+    const subject = `Welcome to CVERSE - Your Login Details for ${cohortName}`;
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
         <h2 style="color:#0066cc; margin-bottom:8px;">Welcome to CVERSE Academy!</h2>
@@ -166,7 +166,7 @@ export async function sendEnrollmentEmail({ recipient, cohort, tempPassword }) {
       console.error('Resend enrollment email failed', error);
     }
   } else {
-    // Existing user — enrollment notification only
+    // Existing user - enrollment notification only
     const subject = `You've been enrolled in ${cohortName}`;
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
@@ -194,7 +194,7 @@ export async function sendFacilitatorWelcomeEmail({ recipient, cohort, tempPassw
   const cohortName = cohort?.name || 'a cohort';
 
   if (tempPassword) {
-    const subject = `Welcome to CVERSE — Your Facilitator Login Details`;
+    const subject = `Welcome to CVERSE - Your Facilitator Login Details`;
     const html = `
       <div style="font-family:Arial, sans-serif; color:#1a1a1a; line-height:1.6; max-width:520px; margin:0 auto;">
         <h2 style="color:#0066cc; margin-bottom:8px;">Welcome to CVERSE Academy!</h2>

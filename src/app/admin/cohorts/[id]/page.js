@@ -1066,6 +1066,7 @@ export default function AdminCohortDetailPage() {
           liveClassForm={liveClassForm}
           setLiveClassForm={setLiveClassForm}
           liveClasses={liveClasses}
+          editingLiveClassId={editingLiveClassId}
           assignmentForm={assignmentForm}
           setAssignmentForm={setAssignmentForm}
           savingAssignment={savingAssignment}

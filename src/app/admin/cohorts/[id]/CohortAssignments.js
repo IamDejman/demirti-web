@@ -57,6 +57,7 @@ export default function CohortAssignments({
   liveClassForm,
   setLiveClassForm,
   liveClasses,
+  editingLiveClassId,
   handleDeleteLiveClass,
   handleEditLiveClass,
   assignmentForm,

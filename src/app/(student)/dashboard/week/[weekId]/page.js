@@ -226,13 +226,45 @@ export default function WeekPage() {
         </LmsCard>
       )}
 
+      {/* Recordings section - surfaced separately for discoverability */}
+      {contentItems.some((c) => c.type === 'recording') && (
+        <LmsCard title="Recordings" icon={LmsIcons.video} hoverable={false}>
+          <ul className="mt-2 space-y-2">
+            {contentItems.filter((c) => c.type === 'recording').map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between rounded-xl px-4 py-3 transition-all"
+                style={{ border: '1px solid var(--neutral-100)', background: 'var(--neutral-50)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-200)'; e.currentTarget.style.background = 'var(--primary-50)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--neutral-100)'; e.currentTarget.style.background = 'var(--neutral-50)'; e.currentTarget.style.transform = 'translateX(0)'; }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary-50)', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  </div>
+                  <span className="font-medium" style={{ fontSize: '0.9375rem', color: 'var(--neutral-800)' }}>{item.title}</span>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  {item.file_url && (
+                    <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-primary" style={{ minHeight: 30, padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>Watch</a>
+                  )}
+                  {item.external_url && (
+                    <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="lms-btn lms-btn-sm lms-btn-primary" style={{ minHeight: 30, padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>Watch</a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </LmsCard>
+      )}
+
       {/* 2-column grid for Content + Materials */}
-      {(contentItems.length > 0 || materials.length > 0) && (
+      {(contentItems.some((c) => c.type !== 'recording') || materials.length > 0) && (
         <div className="lms-week-resources-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--lms-space-6)' }}>
-          {contentItems.length > 0 && (
+          {contentItems.some((c) => c.type !== 'recording') && (
             <LmsCard title="Content" icon={LmsIcons.book} hoverable={false}>
                 <ul className="mt-2 space-y-2">
-                  {contentItems.map((item) => (
+                  {contentItems.filter((c) => c.type !== 'recording').map((item) => (
                     <li
                       key={item.id}
                       className="flex items-center justify-between rounded-xl px-4 py-3 transition-all"

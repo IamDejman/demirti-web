@@ -130,7 +130,7 @@ export const assignmentSchema = z.object({
   weekId: posInt,
   dueDate: z.string().optional(),
   maxScore: z.coerce.number().min(0).default(100),
-  submissionType: z.enum(['text', 'url', 'file_upload', 'multiple']).default('text'),
+  submissionType: z.enum(['text', 'link', 'file_upload', 'multiple']).default('text'),
 });
 
 export const idParam = safeId;

@@ -19,13 +19,14 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     const body = await request.json();
-    const { weekId, scheduledAt, endTime, googleMeetLink } = body;
+    const { weekId, scheduledAt, endTime, googleMeetLink, recordingUrl } = body;
     if (!scheduledAt) return NextResponse.json({ error: 'scheduledAt is required' }, { status: 400 });
     const updated = await updateLiveClass(id, {
       weekId,
       scheduledAt,
       endTime: endTime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
+      recordingUrl: recordingUrl?.trim() || null,
     });
 
     recordAuditLog({

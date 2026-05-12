@@ -1692,15 +1692,15 @@ export async function getLiveClassesByWeekId(weekId) {
   return result.rows;
 }
 
-export async function createLiveClass({ weekId, cohortId, scheduledAt, endTime, googleMeetLink }) {
+export async function createLiveClass({ weekId, cohortId, scheduledAt, endTime, googleMeetLink, recordingUrl }) {
   await ensureLmsSchema();
   if (!liveClassEndTimeColAdded) {
     await sql`ALTER TABLE live_classes ADD COLUMN IF NOT EXISTS end_time TIMESTAMP;`.catch(() => {});
     liveClassEndTimeColAdded = true;
   }
   const result = await sql`
-    INSERT INTO live_classes (week_id, cohort_id, scheduled_at, end_time, google_meet_link, status)
-    VALUES (${weekId}, ${cohortId}, ${scheduledAt}, ${endTime || null}, ${googleMeetLink || null}, 'scheduled')
+    INSERT INTO live_classes (week_id, cohort_id, scheduled_at, end_time, google_meet_link, recording_url, status)
+    VALUES (${weekId}, ${cohortId}, ${scheduledAt}, ${endTime || null}, ${googleMeetLink || null}, ${recordingUrl || null}, 'scheduled')
     RETURNING *;
   `;
   return result.rows[0];

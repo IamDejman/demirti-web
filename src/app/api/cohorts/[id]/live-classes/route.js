@@ -45,7 +45,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     const body = await request.json();
-    const { weekId, scheduledAt, endTime, googleMeetLink } = body;
+    const { weekId, scheduledAt, endTime, googleMeetLink, recordingUrl } = body;
     if (!weekId || !scheduledAt) {
       return NextResponse.json({ error: 'weekId and scheduledAt are required' }, { status: 400 });
     }
@@ -55,6 +55,7 @@ export async function POST(request, { params }) {
       scheduledAt,
       endTime: endTime || null,
       googleMeetLink: googleMeetLink?.trim() || null,
+      recordingUrl: recordingUrl?.trim() || null,
     });
 
     recordAuditLog({

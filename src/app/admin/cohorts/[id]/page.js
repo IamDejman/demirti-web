@@ -124,6 +124,7 @@ export default function AdminCohortDetailPage() {
     scheduledAt: '',
     endTime: '',
     googleMeetLink: '',
+    recordingUrl: '',
   });
   const [editingLiveClassId, setEditingLiveClassId] = useState(null);
   const [lmsMessage, setLmsMessage] = useState('');
@@ -571,6 +572,7 @@ export default function AdminCohortDetailPage() {
       scheduledAt: toWatLocal(lc.scheduled_at),
       endTime: toWatLocal(lc.end_time),
       googleMeetLink: lc.google_meet_link || '',
+      recordingUrl: lc.recording_url || '',
     });
     setLmsMessage('');
     setLiveClassModalOpen(true);
@@ -578,7 +580,7 @@ export default function AdminCohortDetailPage() {
 
   const handleCancelEditLiveClass = () => {
     setEditingLiveClassId(null);
-    setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+    setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '', recordingUrl: '' });
     setLiveClassModalOpen(false);
     setLmsMessage('');
   };
@@ -746,13 +748,14 @@ export default function AdminCohortDetailPage() {
             scheduledAt: toWatIso(liveClassForm.scheduledAt),
             endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
             googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
+            recordingUrl: liveClassForm.recordingUrl?.trim() || null,
           }),
         });
         data = await res.json();
         if (res.ok && data.liveClass) {
           await refreshLiveClasses();
           setEditingLiveClassId(null);
-          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '', recordingUrl: '' });
           setLiveClassModalOpen(false);
           setLmsMessage('Live class updated.');
         } else {
@@ -767,12 +770,13 @@ export default function AdminCohortDetailPage() {
             scheduledAt: toWatIso(liveClassForm.scheduledAt),
             endTime: liveClassForm.endTime ? toWatIso(liveClassForm.endTime) : null,
             googleMeetLink: liveClassForm.googleMeetLink?.trim() || null,
+            recordingUrl: liveClassForm.recordingUrl?.trim() || null,
           }),
         });
         data = await res.json();
         if (res.ok && data.liveClass) {
           await refreshLiveClasses();
-          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '' });
+          setLiveClassForm({ weekId: '', scheduledAt: '', endTime: '', googleMeetLink: '', recordingUrl: '' });
           setLmsMessage('Live class scheduled.');
         } else {
           setLmsMessage(data.error || 'Failed to schedule live class');
@@ -1384,6 +1388,10 @@ export default function AdminCohortDetailPage() {
             <div className="admin-form-field">
               <label className="admin-form-label">Google Meet link</label>
               <input type="text" placeholder="https://meet.google.com/..." value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
+            </div>
+            <div className="admin-form-field">
+              <label className="admin-form-label">Recording URL</label>
+              <input type="text" placeholder="https://..." value={liveClassForm.recordingUrl} onChange={(e) => setLiveClassForm((f) => ({ ...f, recordingUrl: e.target.value }))} />
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
               <button type="button" className="admin-btn admin-btn-ghost" onClick={handleCancelEditLiveClass}>Cancel</button>

@@ -441,6 +441,10 @@ export default function CohortAssignments({
             <label className="admin-form-label">Google Meet link</label>
             <input type="text" placeholder="https://meet.google.com/..." value={liveClassForm.googleMeetLink} onChange={(e) => setLiveClassForm((f) => ({ ...f, googleMeetLink: e.target.value }))} />
           </div>
+          <div className="admin-form-field" style={{ flex: '2 1 200px' }}>
+            <label className="admin-form-label">Recording URL</label>
+            <input type="text" placeholder="https://..." value={liveClassForm.recordingUrl || ''} onChange={(e) => setLiveClassForm((f) => ({ ...f, recordingUrl: e.target.value }))} />
+          </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
             <button type="submit" disabled={savingLiveClass} className="admin-btn admin-btn-primary">
               {savingLiveClass ? 'Scheduling...' : 'Schedule'}

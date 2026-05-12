@@ -229,7 +229,7 @@ export default function AssignmentDetailPage() {
               <div>
                 <label className="lms-form-label block mb-1.5">Link</label>
                 <input
-                  type="url"
+                  type="text"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   className="lms-form-input border-token block w-full px-3 py-2 rounded-lg"

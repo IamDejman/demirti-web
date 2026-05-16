@@ -148,6 +148,41 @@ export async function ensureLmsSchema() {
       if (existing.has('assignment_submissions')) {
         await sql`ALTER TABLE assignment_submissions ALTER COLUMN link_url TYPE TEXT;`.catch(() => {});
         await sql`ALTER TABLE assignment_submissions ALTER COLUMN file_url TYPE TEXT;`.catch(() => {});
+        // Migration: drop erroneous single-column UNIQUE(student_id) constraint that blocks
+        // students from submitting more than one assignment. The correct constraint is
+        // UNIQUE(assignment_id, student_id). ON CONFLICT targets the composite constraint but
+        // the rogue single-column one fires first, causing 500 errors on every submission.
+        await sql`
+          DO $$
+          BEGIN
+            IF EXISTS (
+              SELECT 1 FROM information_schema.table_constraints
+              WHERE table_schema = 'public'
+                AND table_name = 'assignment_submissions'
+                AND constraint_name = 'assignment_submissions_student_id_key'
+                AND constraint_type = 'UNIQUE'
+            ) THEN
+              ALTER TABLE assignment_submissions DROP CONSTRAINT assignment_submissions_student_id_key;
+            END IF;
+          END $$;
+        `.catch((e) => console.error('assignment_submissions student_id_key drop error:', e));
+        // Ensure the correct composite constraint exists
+        await sql`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.table_constraints
+              WHERE table_schema = 'public'
+                AND table_name = 'assignment_submissions'
+                AND constraint_name = 'assignment_submissions_assignment_id_student_id_key'
+                AND constraint_type = 'UNIQUE'
+            ) THEN
+              ALTER TABLE assignment_submissions
+                ADD CONSTRAINT assignment_submissions_assignment_id_student_id_key
+                UNIQUE(assignment_id, student_id);
+            END IF;
+          END $$;
+        `.catch((e) => console.error('assignment_submissions composite constraint add error:', e));
       }
       lmsInitialized = true;
     } catch (e) {

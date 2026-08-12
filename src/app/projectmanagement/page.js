@@ -901,7 +901,7 @@ export default function ProjectManagementPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 Demirti Limited. All rights reserved.</p>
+            <p>&copy; 2025 Demirti Technology Limited. All rights reserved.</p>
             <CookiePreferencesLink />
           </div>
         </div>

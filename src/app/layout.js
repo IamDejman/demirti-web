@@ -23,6 +23,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       name: 'CVERSE by Demirti',
+      legalName: 'Demirti Technology Limited',
       url: origin,
       logo: `${origin}/logo.png`,
     },

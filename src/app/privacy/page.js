@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
         <div style={{ color: 'var(--text-color)', fontSize: '0.9375rem', lineHeight: 1.7 }}>
           <p style={{ marginBottom: '1rem' }}>
-            Last updated: February 2025. CVERSE Academy (&quot;CVERSE&quot;, &quot;we&quot;, &quot;our&quot;) is committed to protecting your privacy. This policy describes how we collect, use, and safeguard your information when you use our education platform.
+            Last updated: February 2025. CVERSE Academy is a brand operated by Demirti Technology Limited. CVERSE Academy (&quot;CVERSE&quot;, &quot;we&quot;, &quot;our&quot;) is committed to protecting your privacy. This policy describes how we collect, use, and safeguard your information when you use our education platform.
           </p>
 
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '2rem', marginBottom: '0.75rem' }}>1. Information We Collect</h2>

@@ -11,3 +11,6 @@ demirti-web@0.1.0
 
 # One-off migration script (contains DB URLs)
 scripts/migrate-db-once.sh
+
+# per-machine Claude Code permissions
+.claude/settings.local.json

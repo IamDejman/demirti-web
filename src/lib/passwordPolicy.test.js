@@ -1,14 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-let validatePassword;
-try {
-  const mod = await import('./passwordPolicy');
-  validatePassword = mod.validatePassword;
-} catch {
-  validatePassword = null;
-}
+import { validatePassword } from './passwordPolicy';
 
-describe.skipIf(!validatePassword)('validatePassword', () => {
+describe('validatePassword', () => {
   it('accepts a strong password', () => {
     const result = validatePassword('MyStr0ngP@ss');
     expect(result.valid).toBe(true);
